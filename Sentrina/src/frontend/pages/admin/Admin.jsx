@@ -1,11 +1,10 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
-import Header from '../../components/Header';
+import Header from '../../../components/Header';
 import Dashboard from './pages/Dashboard';
 import Gis from './pages/Gis';
 import Residents from './pages/Residents';
-import Lots from './pages/Lots';
 import Billing from './pages/Billing';
 import Payments from './pages/Payments';
 import Violations from './pages/Violations';
@@ -36,10 +35,7 @@ function Admin({ user, onLogout }) {
             <Header pageName="Residents" user={user} />
             <Residents />
           </>} />
-          <Route path="/lots" element={<>
-            <Header pageName="Lots" user={user} />
-            <Lots />
-          </>} />
+
           <Route path="/billing" element={<>
             <Header pageName="Billing" user={user} />
             <Billing />

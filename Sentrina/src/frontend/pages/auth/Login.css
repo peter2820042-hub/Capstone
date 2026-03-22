@@ -46,6 +46,21 @@
   font-weight: 600;
 }
 
+.back-button {
+  display: inline-block;
+  color: #2563eb;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 20px;
+  transition: color 0.3s ease;
+}
+
+.back-button:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
 .login-subtitle {
   text-align: center;
   color: #666;

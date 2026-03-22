@@ -1,9 +1,9 @@
 import React from 'react';
 
-function Lots() {
+const Dashboard = () => {
   return (
     <></>
   );
-}
+};
 
-export default Lots;
+export default Dashboard;

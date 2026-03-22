@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './Sidebar.css';
-import logo from '../../../assets/logo.png';
+import logo from '../../../../assets/logo.png';
 
 const Sidebar = ({ onLogout }) => {
   const navigate = useNavigate();
@@ -11,7 +11,6 @@ const Sidebar = ({ onLogout }) => {
     { label: "DASHBOARD", path: "/dashboard" },
     { label: "GIS MAP", path: "/gis" },
     { label: "RESIDENTS", path: "/residents" },
-    { label: "LOTS", path: "/lots" },
     { label: "BILLING", path: "/billing" },
     { label: "PAYMENTS", path: "/payments" },
     { label: "VIOLATIONS", path: "/violations" },

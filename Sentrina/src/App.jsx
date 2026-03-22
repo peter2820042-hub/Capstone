@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
-import Login from './pages/auth/Login'
-import Admin from './pages/admin/Admin'
-import User from './pages/user/User'
+import Landing from './frontend/pages/landing/Landing'
+import Login from './frontend/pages/auth/Login'
+import Admin from './frontend/pages/admin/Admin'
+import User from './frontend/pages/user/User'
 import './App.css'
 
 function App() {
@@ -21,15 +22,19 @@ function App() {
 
   const handleLogout = () => {
     setCurrentUser(null)
-    navigate('/login')
+    // Use setTimeout to ensure navigation happens after state update
+    setTimeout(() => {
+      navigate('/login', { replace: true })
+    }, 0)
   }
 
   return (
     <div className="app">
       {!currentUser ? (
         <Routes>
+          <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login onLogin={handleLogin} />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       ) : currentUser.role === 'admin' ? (
         <Routes>

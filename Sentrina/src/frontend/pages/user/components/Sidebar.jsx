@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './Sidebar.css';
-import logo from '../../../assets/logo.png';
+import logo from '../../../../assets/logo.png';
 
 const Sidebar = ({ onLogout }) => {
   const navigate = useNavigate();

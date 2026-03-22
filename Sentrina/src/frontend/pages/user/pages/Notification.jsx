@@ -1,9 +1,9 @@
 import React from 'react';
 
-const Dashboard = () => {
+const Notification = () => {
   return (
     <></>
   );
 };
 
-export default Dashboard;     
+export default Notification;
