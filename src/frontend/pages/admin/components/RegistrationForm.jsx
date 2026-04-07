@@ -15,7 +15,7 @@ const RegistrationForm = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Simpleng validation para sa role
@@ -24,8 +24,24 @@ const RegistrationForm = () => {
       return;
     }
 
-    console.log('Submitted Data:', formData);
-    // Dito mo i-ka-call ang API mo
+    try {
+      const response = await fetch('http://localhost:3001/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        alert('Registration successful!');
+        setFormData({ username: '', password: '', role: '', block: '', lot: '' });
+      } else {
+        alert(data.error || 'Registration failed');
+      }
+    } catch (err) {
+      alert('Error connecting to server: ' + err.message);
+    }
   };
 
   return (

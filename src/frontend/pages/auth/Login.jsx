@@ -2,47 +2,31 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import './Login.css'
 
-const users = [
-  {
-    id: 1,
-    username: 'admin',
-    password: 'admin123',
-    role: 'admin',
-    name: 'Administrator'
-  },
-  {
-    id: 2,
-    username: 'user',
-    password: 'user123',
-    role: 'user',
-    name: 'Regular User'
-  },
-  {
-    id: 3,
-    username: 'staff',
-    password: 'staff123',
-    role: 'staff',
-    name: 'Staff Member'
-  }
-]
-
 function Login({ onLogin }) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
 
-    const user = users.find(
-      (u) => u.username === username && u.password === password
-    )
-
-    if (user) {
-      onLogin(user)
-    } else {
-      setError('Invalid username or password')
+    try {
+      const response = await fetch('http://localhost:3001/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        onLogin(data.user);
+      } else {
+        setError(data.error || 'Invalid username or password');
+      }
+    } catch {
+      setError('Cannot connect to server. Make sure server is running.');
     }
   }
 

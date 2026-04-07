@@ -44,10 +44,7 @@ function User({ user, onLogout }) {
             <Header pageName="Notification" user={user} />
             <Notification />
           </>} />
-          <Route path="/profile" element={<>
-            <Header pageName="Profile" user={user} />
-            <Profile user={user} />
-          </>} />
+          <Route path="/profile" element={<Profile user={user} />} />
         </Routes>
       </div>
     </div>

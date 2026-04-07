@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Header from '../../../components/Header';
 import Dashboard from './pages/Dashboard';
@@ -14,53 +14,64 @@ import Profile from './pages/Profile';
 import './components/Dashboard.css';
 
 function Admin({ user, onLogout }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Default to dashboard
+  const currentPath = location.pathname === '/' ? '/dashboard' : location.pathname;
+  
   return (
     <div className="admin-container">
       <Sidebar onLogout={onLogout} />
       <div className="admin-content">
-        <Routes>
-          <Route path="/" element={<>
+        {currentPath === '/dashboard' || currentPath === '/' ? (
+          <>
             <Header pageName="Dashboard" user={user} />
-            <Dashboard user={user} />
-          </>} />
-          <Route path="/dashboard" element={<>
-            <Header pageName="Dashboard" user={user} />
-            <Dashboard user={user} />
-          </>} />
-          <Route path="/gis" element={<>
+            <Dashboard />
+          </>
+        ) : currentPath === '/gis' ? (
+          <>
             <Header pageName="GIS" user={user} />
             <Gis />
-          </>} />
-          <Route path="/residents" element={<>
-            <Header pageName="Account Management" user={user} />
+          </>
+        ) : currentPath === '/residents' ? (
+          <>
+            <Header pageName="Resident" user={user} />
             <Residents />
-          </>} />
-
-          <Route path="/billing" element={<>
+          </>
+        ) : currentPath === '/billing' ? (
+          <>
             <Header pageName="Billing" user={user} />
             <Billing />
-          </>} />
-          <Route path="/payments" element={<>
+          </>
+        ) : currentPath === '/payments' ? (
+          <>
             <Header pageName="Payments" user={user} />
             <Payments />
-          </>} />
-          <Route path="/violations" element={<>
+          </>
+        ) : currentPath === '/violations' ? (
+          <>
             <Header pageName="Violations" user={user} />
             <Violations />
-          </>} />
-          <Route path="/reports" element={<>
-            <Header pageName="Reports" user={user} />
+          </>
+        ) : currentPath === '/reports' ? (
+          <>
+            <Header pageName="Reports & Analytics" user={user} />
             <Reports />
-          </>} />
-          <Route path="/audit-logs" element={<>
+          </>
+        ) : currentPath === '/audit-logs' ? (
+          <>
             <Header pageName="Audit Logs" user={user} />
             <AuditLogs />
-          </>} />
-          <Route path="/profile" element={<>
-            <Header pageName="Profile" user={user} />
-            <Profile user={user} />
-          </>} />
-        </Routes>
+          </>
+        ) : currentPath === '/profile' ? (
+          <Profile user={user} />
+        ) : (
+          <>
+            <Header pageName="Dashboard" user={user} />
+            <Dashboard />
+          </>
+        )}
       </div>
     </div>
   );

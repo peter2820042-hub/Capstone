@@ -24,7 +24,7 @@ function Staff({ user, onLogout }) {
             <Dashboard user={user} />
           </>} />
           <Route path="/residents" element={<>
-            <Header pageName="Account Management" user={user} />
+            <Header pageName="Residents" user={user} />
             <Residents />
           </>} />
           <Route path="/violations" element={<>
@@ -35,10 +35,9 @@ function Staff({ user, onLogout }) {
             <Header pageName="Reports" user={user} />
             <Reports />
           </>} />
-          <Route path="/profile" element={<>
-            <Header pageName="Profile" user={user} />
+          <Route path="/profile" element={
             <Profile user={user} />
-          </>} />
+          } />
         </Routes>
       </div>
     </div>

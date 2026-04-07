@@ -1,21 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './Sidebar.css';
 import logo from '../../../../assets/logo.png';
 
-const Sidebar = ({ onLogout }) => {
+const Sidebar = ({ onLogout, isDropdown = false }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [isOpen, setIsOpen] = useState(false);
 
   const menuItems = [
     { label: "DASHBOARD", path: "/dashboard" },
     { label: "GIS MAP", path: "/gis" },
-    { label: "ACCOUNT MANAGEMENT", path: "/residents" },
+    { label: "RESIDENT", path: "/residents" },
     { label: "BILLING", path: "/billing" },
     { label: "PAYMENTS", path: "/payments" },
     { label: "VIOLATIONS", path: "/violations" },
     { label: "REPORTS", path: "/reports" },
     { label: "AUDIT LOGS", path: "/audit-logs" },
+    { label: "PROFILE", path: "/profile" },
   ];
 
   const handleLogout = () => {
@@ -24,6 +26,53 @@ const Sidebar = ({ onLogout }) => {
     }
   };
 
+  const handleItemClick = (path) => {
+    navigate(path);
+    if (isDropdown) {
+      setIsOpen(false);
+    }
+  };
+
+  const toggleDropdown = () => {
+    setIsOpen(!isOpen);
+  };
+
+  // Dropdown mode - used in header
+  if (isDropdown) {
+    return (
+      <div className="sidebar-dropdown">
+        <button 
+          className="dropdown-toggle"
+          onClick={toggleDropdown}
+          aria-label="Toggle menu"
+        >
+          <span className="menu-icon">☰</span>
+        </button>
+        <div className={`dropdown-content ${isOpen ? 'open' : ''}`}>
+          {menuItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            return (
+              <button
+                key={item.path}
+                onClick={() => handleItemClick(item.path)}
+                className={`dropdown-item ${isActive ? 'active' : ''}`}
+              >
+                {item.label}
+              </button>
+            );
+          })}
+          <button 
+            onClick={handleLogout}
+            className="dropdown-item logout"
+          >
+            Logout
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Original sidebar mode
   return (
     <aside className="sidebar">
       

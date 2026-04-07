@@ -53,8 +53,16 @@ input {
 
 /* Focus styles for accessibility */
 *:focus {
-  outline: 2px solid #667eea;
+  outline: 2px solid #0B2239;
   outline-offset: 2px;
+}
+
+.profile-section *:focus,
+.profile-initial:focus,
+.profile-picture:focus,
+.profile-img:focus {
+  outline: none !important;
+  outline-offset: 0 !important;
 }
 
 /* Responsive grid helpers */
@@ -69,18 +77,27 @@ input {
 .user-container {
   display: flex;
   min-height: 100vh;
+  position: relative;
 }
 
 /* Admin container */
 .admin-container {
   display: flex;
   min-height: 100vh;
+  position: relative;
+}
+
+/* Staff container */
+.staff-container {
+  display: flex;
+  min-height: 100vh;
+  position: relative;
 }
 
 /* Main content area */
 .main-content {
   flex: 1;
-  padding: 40px;
+  padding: 0 2px 0 5px;
   background-color: #f5f7fa;
   overflow-y: auto;
 }
@@ -88,7 +105,15 @@ input {
 /* Admin content area */
 .admin-content {
   flex: 1;
-  padding: 40px;
+  padding: 0 2px 0 5px;
+  background-color: #f5f7fa;
+  overflow-y: auto;
+}
+
+/* Staff content area */
+.staff-content {
+  flex: 1;
+  padding: 0 2px 0 5px;
   background-color: #f5f7fa;
   overflow-y: auto;
 }

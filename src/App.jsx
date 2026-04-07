@@ -12,12 +12,15 @@ function App() {
   const navigate = useNavigate()
 
   const handleLogin = (user) => {
+    console.log('Logging in user:', user)
     setCurrentUser(user)
     // Redirect to dashboard based on user role
     if (user.role === 'admin') {
-      navigate('/dashboard')
+      navigate('/dashboard', { replace: true })
+    } else if (user.role === 'staff') {
+      navigate('/dashboard', { replace: true })
     } else {
-      navigate('/dashboard')
+      navigate('/', { replace: true })
     }
   }
 

@@ -48,7 +48,7 @@
 
 .back-button {
   display: inline-block;
-  color: #2563eb;
+  color: #0B2239;
   text-decoration: none;
   font-size: 0.9rem;
   font-weight: 500;
@@ -57,7 +57,7 @@
 }
 
 .back-button:hover {
-  color: #1d4ed8;
+  color: #1a3a5c;
   text-decoration: underline;
 }
 
@@ -96,8 +96,8 @@
 
 .form-group input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #0B2239;
+  box-shadow: 0 0 0 3px rgba(11, 34, 57, 0.1);
 }
 
 .error-message {
@@ -120,13 +120,13 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  background-color: #2563eb;
+  background-color: #0B2239;
 }
 
 .login-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(37, 99, 235, 0.4);
-  background-color: #1d4ed8;
+  box-shadow: 0 5px 15px rgba(11, 34, 57, 0.4);
+  background-color: #1a3a5c;
 }
 
 .login-button:active {

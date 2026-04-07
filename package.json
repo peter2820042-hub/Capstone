@@ -8,11 +8,19 @@
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "db:init": "node src/backend/config/init-db.js",
+    "db:tables": "node src/backend/config/create-tables.js",
+    "db:seed": "node src/backend/config/seed-users.js",
+    "server": "node server/server.js"
   },
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
+    "date-fns": "^4.1.0",
+    "dotenv": "^17.3.1",
     "express": "^5.2.1",
+    "lucide-react": "^1.7.0",
     "pg": "^8.20.0",
     "pg-pool": "^3.13.0",
     "react": "^19.2.0",

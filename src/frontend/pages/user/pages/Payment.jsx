@@ -1,9 +1,429 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import './Payment.css';
 
-const Payment = () => {
+function Payment() {
+  // Payment form states
+  const [selectedBills, setSelectedBills] = useState([]);
+  const [paymentMethod, setPaymentMethod] = useState('');
+  // Amount is calculated from selected bills
+  // const [amount, setAmount] = useState('');
+  const [referenceNumber, setReferenceNumber] = useState('');
+  const [notes, setNotes] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
+
+  // Bills data - will be fetched from database
+  const [bills, setBills] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Transaction history
+  const [transactions, setTransactions] = useState([]);
+
+  // Payment methods
+  const paymentMethods = [
+    { id: 'cash', name: 'Cash', icon: '💵' },
+    { id: 'gcash', name: 'GCash', icon: '📱' },
+    { id: 'maya', name: 'Maya', icon: '💳' },
+    { id: 'bank', name: 'Bank Transfer', icon: '🏦' }
+  ];
+
+  // TODO: Fetch bills from database
+  useEffect(() => {
+    const fetchBills = async () => {
+      try {
+        setLoading(true);
+        // TODO: Replace with actual API call
+        // const response = await fetch('/api/user/bills/unpaid');
+        // const data = await response.json();
+        // setBills(data);
+        
+        // For now, set empty array until database is connected
+        setBills([]);
+        setError(null);
+      } catch (err) {
+        setError('Failed to fetch bills');
+        console.error('Error fetching bills:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBills();
+  }, []);
+
+  // TODO: Fetch transaction history from database
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        // TODO: Replace with actual API call
+        // const response = await fetch('/api/user/transactions');
+        // const data = await response.json();
+        // setTransactions(data);
+        
+        // For now, set empty array until database is connected
+        setTransactions([]);
+      } catch (err) {
+        console.error('Error fetching transactions:', err);
+      }
+    };
+
+    fetchTransactions();
+  }, []);
+
+  // Calculate total amount
+  const totalAmount = selectedBills.reduce((sum, billId) => {
+    const bill = bills.find(b => b.id === billId);
+    return sum + (bill ? bill.amount : 0);
+  }, 0);
+
+  // Format currency
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-PH', {
+      style: 'currency',
+      currency: 'PHP'
+    }).format(amount);
+  };
+
+  // Format date
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-PH', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  // Handle bill selection
+  const handleBillSelection = (billId) => {
+    setSelectedBills(prev => {
+      if (prev.includes(billId)) {
+        return prev.filter(id => id !== billId);
+      } else {
+        return [...prev, billId];
+      }
+    });
+  };
+
+  // Handle select all bills
+  const handleSelectAll = () => {
+    if (selectedBills.length === bills.length) {
+      setSelectedBills([]);
+    } else {
+      setSelectedBills(bills.map(bill => bill.id));
+    }
+  };
+
+  // Handle payment submission
+  const handleSubmitPayment = async (e) => {
+    e.preventDefault();
+    
+    if (selectedBills.length === 0) {
+      setSubmitError('Please select at least one bill to pay');
+      return;
+    }
+
+    if (!paymentMethod) {
+      setSubmitError('Please select a payment method');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      // TODO: Replace with actual API call
+      // const response = await fetch('/api/user/payments', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({
+      //     billIds: selectedBills,
+      //     paymentMethod,
+      //     amount: totalAmount,
+      //     referenceNumber,
+      //     notes
+      //   })
+      // });
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setSubmitSuccess(true);
+      setSelectedBills([]);
+      setPaymentMethod('');
+
+      setReferenceNumber('');
+      setNotes('');
+      
+      // Reset success message after 3 seconds
+      setTimeout(() => setSubmitSuccess(false), 3000);
+    } catch (err) {
+      setSubmitError('Failed to submit payment. Please try again.');
+      console.error('Error submitting payment:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Clear form
+  const clearForm = () => {
+    setSelectedBills([]);
+    setPaymentMethod('');
+    setReferenceNumber('');
+    setNotes('');
+    setSubmitError(null);
+  };
+
+  if (loading) {
+    return (
+      <div className="payment-container">
+        <div className="loading-state">
+          <div className="loading-spinner"></div>
+          <p>Loading payment information...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="payment-container">
+        <div className="error-state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          <p>{error}</p>
+          <button onClick={() => window.location.reload()}>Retry</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-<></>
+    <div className="payment-container">
+
+      {/* Success Message */}
+      {submitSuccess && (
+        <div className="success-message">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+            <polyline points="22 4 12 14.01 9 11.01" />
+          </svg>
+          <span>Payment submitted successfully!</span>
+        </div>
+      )}
+
+      <div className="payment-content">
+        {/* Payment Form */}
+        <div className="payment-form-section">
+          <div className="section-header">
+            <h2>Payment Details</h2>
+            <button className="clear-btn" onClick={clearForm}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+              Clear
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmitPayment} className="payment-form">
+            {/* Select Bills */}
+            <div className="form-group">
+              <label>Select Bills to Pay</label>
+              <div className="bills-selection">
+                {bills.length > 0 ? (
+                  <>
+                    <div className="select-all-row">
+                      <label className="checkbox-label">
+                        <input
+                          type="checkbox"
+                          checked={selectedBills.length === bills.length}
+                          onChange={handleSelectAll}
+                        />
+                        <span className="checkmark"></span>
+                        Select All ({bills.length} bills)
+                      </label>
+                    </div>
+                    <div className="bills-list">
+                      {bills.map(bill => (
+                        <div
+                          key={bill.id}
+                          className={`bill-item ${selectedBills.includes(bill.id) ? 'selected' : ''}`}
+                          onClick={() => handleBillSelection(bill.id)}
+                        >
+                          <label className="checkbox-label">
+                            <input
+                              type="checkbox"
+                              checked={selectedBills.includes(bill.id)}
+                              onChange={() => handleBillSelection(bill.id)}
+                            />
+                            <span className="checkmark"></span>
+                          </label>
+                          <div className="bill-info">
+                            <span className="bill-number">{bill.billNumber}</span>
+                            <span className="bill-description">{bill.description}</span>
+                          </div>
+                          <div className="bill-amount">
+                            {formatCurrency(bill.amount)}
+                          </div>
+                          <div className="bill-due-date">
+                            Due: {formatDate(bill.dueDate)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <div className="no-bills">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                      <polyline points="22 4 12 14.01 9 11.01" />
+                    </svg>
+                    <p>All caught up!</p>
+                    <span className="hint">You have no outstanding bills</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Payment Method */}
+            <div className="form-group">
+              <label>Payment Method</label>
+              <div className="payment-methods">
+                {paymentMethods.map(method => (
+                  <div
+                    key={method.id}
+                    className={`payment-method-option ${paymentMethod === method.id ? 'selected' : ''}`}
+                    onClick={() => setPaymentMethod(method.id)}
+                  >
+                    <span className="method-icon">{method.icon}</span>
+                    <span className="method-name">{method.name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Amount */}
+            <div className="form-group">
+              <label>Amount</label>
+              <div className="amount-display">
+                <span className="currency">₱</span>
+                <input
+                  type="text"
+                  value={totalAmount > 0 ? totalAmount.toFixed(2) : ''}
+                  readOnly
+                  placeholder="0.00"
+                />
+              </div>
+              {selectedBills.length > 0 && (
+                <span className="amount-hint">
+                  Total for {selectedBills.length} selected bill(s)
+                </span>
+              )}
+            </div>
+
+            {/* Reference Number */}
+            <div className="form-group">
+              <label>Reference Number (Optional)</label>
+              <input
+                type="text"
+                value={referenceNumber}
+                onChange={(e) => setReferenceNumber(e.target.value)}
+                placeholder="Enter reference number"
+              />
+            </div>
+
+            {/* Notes */}
+            <div className="form-group">
+              <label>Notes (Optional)</label>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Add any notes about this payment"
+                rows="3"
+              />
+            </div>
+
+            {/* Error Message */}
+            {submitError && (
+              <div className="error-message">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                <span>{submitError}</span>
+              </div>
+            )}
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              className="submit-btn"
+              disabled={isSubmitting || selectedBills.length === 0 || !paymentMethod}
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="btn-spinner"></div>
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                    <line x1="1" y1="10" x2="23" y2="10" />
+                  </svg>
+                  Pay {totalAmount > 0 ? formatCurrency(totalAmount) : ''}
+                </>
+              )}
+            </button>
+          </form>
+        </div>
+
+        {/* Transaction History */}
+        <div className="transactions-section">
+          <div className="section-header">
+            <h2>Recent Transactions</h2>
+            <a href="/user/billing" className="view-all">View All</a>
+          </div>
+          <div className="transactions-list">
+            {transactions.length > 0 ? (
+              transactions.map((transaction, index) => (
+                <div key={index} className="transaction-item">
+                  <div className="transaction-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                      <polyline points="22 4 12 14.01 9 11.01" />
+                    </svg>
+                  </div>
+                  <div className="transaction-content">
+                    <span className="transaction-title">{transaction.description}</span>
+                    <span className="transaction-date">{formatDate(transaction.date)}</span>
+                  </div>
+                  <div className="transaction-amount">
+                    {formatCurrency(transaction.amount)}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="no-transactions">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                  <line x1="1" y1="10" x2="23" y2="10" />
+                </svg>
+                <p>No recent transactions</p>
+                <span className="hint">Your payment history will appear here</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
   );
-};
+}
 
 export default Payment;

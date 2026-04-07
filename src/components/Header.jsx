@@ -4,25 +4,34 @@ import './Header.css';
 
 const Header = ({ pageName, user }) => {
   const navigate = useNavigate();
-
+  
   const handleProfileClick = () => {
     navigate('/profile');
   };
-
+  
+  // Get profile image from localStorage or user object
+  const profileImage = localStorage.getItem('userProfileImage') || user?.profileImage || null;
+  
   return (
     <header className="header">
       <div className="header-content">
         <h1 className="page-name">{pageName}</h1>
-        <div className="profile-section">
-          <div 
-            className="profile-picture" 
-            onClick={handleProfileClick}
-            role="button"
-            tabIndex={0}
-            onKeyPress={(e) => e.key === 'Enter' && handleProfileClick()}
-          >
-            {user?.name?.charAt(0)?.toUpperCase() || 'U'}
-          </div>
+        <div className="profile">
+          {profileImage ? (
+            <img 
+              id="profile-icon"
+              src={profileImage} 
+              alt="Profile" 
+              className="profile-icon" 
+              onClick={handleProfileClick}
+            />
+          ) : (
+            <span 
+              id="profile-icon"
+              className="profile-icon" 
+              onClick={handleProfileClick}
+            >&#9679;</span>
+          )}
         </div>
       </div>
     </header>

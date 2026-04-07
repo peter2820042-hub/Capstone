@@ -1,17 +1,55 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import './Landing.css';
+import {
+  SmartManagementIcon,
+  RealTimeUpdatesIcon,
+  FinancialTrackingIcon,
+  ResidentPortalIcon,
+  GisMappingIcon,
+  SafetySecurityIcon,
+} from './components/FeatureIcons';
+
+const features = [
+  {
+    icon: SmartManagementIcon,
+    title: 'Smart Management',
+    description: 'Streamline all Calamba community operations with our intuitive dashboard and powerful tools.',
+  },
+  {
+    icon: RealTimeUpdatesIcon,
+    title: 'Real-time Updates',
+    description: 'Stay informed with instant notifications, alerts, and Calamba community updates.',
+  },
+  {
+    icon: FinancialTrackingIcon,
+    title: 'Financial Tracking',
+    description: 'Manage billing, payments, and financial reports for Calamba residents with complete transparency.',
+  },
+  {
+    icon: ResidentPortalIcon,
+    title: 'Resident Portal',
+    description: 'Give Calamba residents easy access to their accounts, payments, and community information.',
+  },
+  {
+    icon: GisMappingIcon,
+    title: 'GIS Mapping',
+    description: 'Visualize Calamba communities with interactive maps and location-based information.',
+  },
+  {
+    icon: SafetySecurityIcon,
+    title: 'Safety & Security',
+    description: 'Comprehensive security features for Calamba including violation tracking and audit logs.',
+  },
+];
 
 const Landing = () => {
-  console.log('Landing component loaded');
-  console.log('Current URL:', window.location.pathname);
-  
   return (
     <div className="landing-page">
       {/* Hero Section */}
       <section className="hero">
         <div className="hero-content">
-           <div className="hero-text">
+          <div className="hero-text">
             <h1 className="hero-title">
               Welcome to <span className="brand-name">Calamba Sentrina</span>
             </h1>
@@ -25,15 +63,9 @@ const Landing = () => {
               <a href="#features" className="btn btn-primary">
                 Explore Features
               </a>
-              <button
-                onClick={() => {
-                  console.log('Get Started button clicked');
-                  window.location.href = '/login';
-                }}
-                className="btn btn-secondary"
-              >
+              <Link to="/login" className="btn btn-secondary">
                 Get Started
-              </button>
+              </Link>
             </div>
           </div>
         </div>
@@ -47,67 +79,15 @@ const Landing = () => {
             Everything you need to manage Calamba communities efficiently
           </p>
           <div className="features-grid">
-            <div className="feature-card">
-              <div className="feature-icon">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 2L2 7L12 12L22 7L12 2Z" />
-                  <path d="M2 17L12 22L22 17" />
-                  <path d="M2 12L12 17L22 12" />
-                </svg>
+            {features.map((feature, index) => (
+              <div key={index} className="feature-card">
+                <div className="feature-icon">
+                  <feature.icon />
+                </div>
+                <h3>{feature.title}</h3>
+                <p>{feature.description}</p>
               </div>
-              <h3>Smart Management</h3>
-              <p>Streamline all Calamba community operations with our intuitive dashboard and powerful tools.</p>
-            </div>
-            <div className="feature-card">
-              <div className="feature-icon">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10" />
-                  <polyline points="12 6 12 12 16 14" />
-                </svg>
-              </div>
-              <h3>Real-time Updates</h3>
-              <p>Stay informed with instant notifications, alerts, and Calamba community updates.</p>
-            </div>
-            <div className="feature-card">
-              <div className="feature-icon">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5m-4 0h4" />
-                </svg>
-              </div>
-              <h3>Financial Tracking</h3>
-              <p>Manage billing, payments, and financial reports for Calamba residents with complete transparency.</p>
-            </div>
-            <div className="feature-card">
-              <div className="feature-icon">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                </svg>
-              </div>
-              <h3>Resident Portal</h3>
-              <p>Give Calamba residents easy access to their accounts, payments, and community information.</p>
-            </div>
-            <div className="feature-card">
-              <div className="feature-icon">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                  <circle cx="12" cy="10" r="3" />
-                </svg>
-              </div>
-              <h3>GIS Mapping</h3>
-              <p>Visualize Calamba communities with interactive maps and location-based information.</p>
-            </div>
-            <div className="feature-card">
-              <div className="feature-icon">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                </svg>
-              </div>
-              <h3>Safety & Security</h3>
-              <p>Comprehensive security features for Calamba including violation tracking and audit logs.</p>
-            </div>
+            ))}
           </div>
         </div>
       </section>

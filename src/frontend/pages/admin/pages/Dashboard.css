@@ -1,0 +1,727 @@
+/* Dashboard Page Styles */
+
+.dashboard-container {
+  padding: 2rem;
+  background: #f8fafc;
+  min-height: calc(100vh - 60px);
+}
+
+/* KPI Cards Section */
+.kpi-section {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.kpi-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.kpi-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.kpi-icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.kpi-icon.residents {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.kpi-icon.lots {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.kpi-icon.dues {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.kpi-icon.delinquencies {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.kpi-icon.violations {
+  background: #fce7f3;
+  color: #9d174d;
+}
+
+.kpi-icon.occupancy {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.kpi-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.kpi-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.kpi-label {
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+/* Charts Section */
+.charts-section {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.chart-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.chart-header h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+}
+
+.chart-filter select {
+  padding: 0.5rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #0f172a;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.chart-filter select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.chart-content {
+  min-height: 250px;
+}
+
+/* Area Chart */
+.area-chart {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.area-chart svg {
+  flex: 1;
+  width: 100%;
+}
+
+.chart-labels {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 0.5rem;
+  border-top: 1px solid #e2e8f0;
+  margin-top: 0.5rem;
+}
+
+.chart-labels span {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+/* Chart Empty State */
+.chart-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 200px;
+  color: #94a3b8;
+}
+
+.chart-empty svg {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 1rem;
+}
+
+.chart-empty p {
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+/* Collection Status Bars */
+.status-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.status-bar-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.status-bar-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.status-bar-label span:first-child {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.status-percentage {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.status-bar-track {
+  height: 12px;
+  background: #e2e8f0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.status-bar-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.5s ease;
+}
+
+.status-bar-fill.paid {
+  background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.status-bar-fill.pending {
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+
+.status-bar-fill.overdue {
+  background: linear-gradient(90deg, #ef4444, #dc2626);
+}
+
+/* Bottom Section */
+.dashboard-bottom {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.activity-feed-card,
+.recent-transactions-card,
+.upcoming-dates-card,
+.notifications-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+}
+
+.card-header {
+  margin-bottom: 1.5rem;
+}
+
+.card-header h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+}
+
+/* Activity Feed */
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.activity-item {
+  display: flex;
+  gap: 1rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: #f8fafc;
+  transition: background 0.2s ease;
+}
+
+.activity-item:hover {
+  background: #f1f5f9;
+}
+
+.activity-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.activity-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.activity-payment .activity-icon {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.activity-violation .activity-icon {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.activity-resident .activity-icon {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.activity-status .activity-icon {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.activity-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.activity-message {
+  font-size: 0.875rem;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.activity-amount {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #059669;
+}
+
+.activity-time {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+/* Recent Transactions */
+.transactions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.transaction-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: #f8fafc;
+  transition: background 0.2s ease;
+}
+
+.transaction-item:hover {
+  background: #f1f5f9;
+}
+
+.transaction-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.transaction-lot {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #3b82f6;
+}
+
+.transaction-resident {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.transaction-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
+.transaction-amount {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.transaction-status {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.transaction-status.paid {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.transaction-status.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.transaction-status.overdue {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Upcoming Due Dates */
+.due-dates-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.due-date-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: #f8fafc;
+  transition: background 0.2s ease;
+}
+
+.due-date-item:hover {
+  background: #f1f5f9;
+}
+
+.due-date-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.due-lot {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #3b82f6;
+}
+
+.due-resident {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.due-date-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
+.due-amount {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.due-days {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.due-days.urgent {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Notifications */
+.notifications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.notification-item {
+  display: flex;
+  gap: 1rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: #f8fafc;
+  transition: background 0.2s ease;
+}
+
+.notification-item:hover {
+  background: #f1f5f9;
+}
+
+.notification-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.notification-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.notification-item.warning .notification-icon {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.notification-item.info .notification-icon {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.notification-item.alert .notification-icon {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.notification-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.notification-message {
+  font-size: 0.875rem;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.notification-time {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: #94a3b8;
+}
+
+.empty-state svg {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 1rem;
+}
+
+.empty-state p {
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+/* Quick Actions Section */
+.quick-actions-section {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+}
+
+.quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.quick-action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border: 2px dashed #e2e8f0;
+  border-radius: 12px;
+  background: #f8fafc;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quick-action-btn:hover {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.quick-action-btn svg {
+  width: 32px;
+  height: 32px;
+  color: #64748b;
+  transition: color 0.2s ease;
+}
+
+.quick-action-btn:hover svg {
+  color: #3b82f6;
+}
+
+.quick-action-btn span {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  transition: color 0.2s ease;
+}
+
+.quick-action-btn:hover span {
+  color: #3b82f6;
+}
+
+/* Responsive Design */
+@media (max-width: 1400px) {
+  .kpi-section {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .dashboard-bottom {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .quick-actions-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 1200px) {
+  .charts-section {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 1rem;
+  }
+
+  .kpi-section {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .kpi-card {
+    padding: 1rem;
+  }
+
+  .kpi-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .kpi-icon svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .kpi-value {
+    font-size: 1.25rem;
+  }
+
+  .dashboard-bottom {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-actions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .kpi-section {
+    grid-template-columns: 1fr;
+  }
+
+  .kpi-card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .kpi-content {
+    align-items: center;
+  }
+}
