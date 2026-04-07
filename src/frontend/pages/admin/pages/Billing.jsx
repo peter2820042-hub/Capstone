@@ -12,7 +12,7 @@ function Billing() {
     const fetchBills = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:3001/api/bills');
+        const response = await fetch('/api/bills');
         if (!response.ok) throw new Error('Failed to fetch bills');
         const data = await response.json();
         setBills(data);

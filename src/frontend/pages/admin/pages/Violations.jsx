@@ -12,7 +12,7 @@ function Violations() {
     const fetchViolations = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:3001/api/violations');
+        const response = await fetch('/api/violations');
         if (!response.ok) throw new Error('Failed to fetch violations');
         const data = await response.json();
         setViolations(data);

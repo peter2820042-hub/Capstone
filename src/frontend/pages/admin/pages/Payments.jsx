@@ -12,7 +12,7 @@ function Payments() {
     const fetchPayments = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:3001/api/payments');
+        const response = await fetch('/api/payments');
         if (!response.ok) throw new Error('Failed to fetch payments');
         const data = await response.json();
         setPayments(data);

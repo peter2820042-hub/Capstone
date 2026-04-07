@@ -12,7 +12,7 @@ function Residents() {
     const fetchResidents = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:3001/api/residents');
+        const response = await fetch('/api/residents');
         if (!response.ok) throw new Error('Failed to fetch residents');
         const data = await response.json();
         // API now returns data in frontend format (fullName, lotNumber, etc.)

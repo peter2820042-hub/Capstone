@@ -26,12 +26,12 @@ function Reports() {
     setLoading(true);
     try {
       if (reportType === 'residents') {
-        const response = await fetch('http://localhost:3001/api/residents');
+        const response = await fetch('/api/residents');
         const result = await response.json();
         setData(result.residents || []);
         setStats(prev => ({ ...prev, totalResidents: result.residents?.length || 0 }));
       } else if (reportType === 'violations') {
-        const response = await fetch('http://localhost:3001/api/violations');
+        const response = await fetch('/api/violations');
         const result = await response.json();
         setData(result.violations || []);
         const violations = result.violations || [];

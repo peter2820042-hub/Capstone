@@ -235,7 +235,7 @@ function AuditLogs() {
     const fetchAuditLogs = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:3001/api/audit-logs');
+        const response = await fetch('/api/audit-logs');
         const data = await response.json();
         
         // Map API response to component format

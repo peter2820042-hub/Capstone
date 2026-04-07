@@ -31,7 +31,7 @@ function Residents() {
 
   const fetchResidents = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/residents');
+      const response = await fetch('/api/residents');
       const data = await response.json();
       setResidents(data.residents || []);
     } catch (error) {
@@ -52,7 +52,7 @@ function Residents() {
     setMessage({ type: '', text: '' });
 
     try {
-      const response = await fetch('http://localhost:3001/api/register', {
+      const response = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -40,7 +40,7 @@ function Violations() {
 
   const fetchViolations = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/violations');
+      const response = await fetch('/api/violations');
       const data = await response.json();
       setViolations(data.violations || []);
     } catch (error) {

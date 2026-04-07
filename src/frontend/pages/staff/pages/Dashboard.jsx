@@ -22,11 +22,11 @@ function Dashboard({ user }) {
   const fetchDashboardData = async () => {
     try {
       // Fetch residents count
-      const residentsRes = await fetch('http://localhost:3001/api/residents');
+      const residentsRes = await fetch('/api/residents');
       const residentsData = await residentsRes.json();
 
       // Fetch violations
-      const violationsRes = await fetch('http://localhost:3001/api/violations');
+      const violationsRes = await fetch('/api/violations');
       const violationsData = await violationsRes.json();
 
       if (residentsData.residents) {
