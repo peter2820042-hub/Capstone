@@ -13,10 +13,10 @@ dist-ssr
 *.local
 .vite
 
-# Environment variables (contains sensitive data)
-.env
-.env.local
-.env.*.local
+# Environment variables
+# .env files are now uploaded to GitHub for public access
+# .env.local
+# .env.*.local
 
 # Editor directories and files
 .vscode/*
