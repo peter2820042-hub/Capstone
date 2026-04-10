@@ -22,7 +22,6 @@ function Dashboard() {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        setLoading(true);
         // TODO: Replace with actual API call
         // const response = await fetch('/api/user/profile');
         // const data = await response.json();
@@ -102,17 +101,6 @@ function Dashboard() {
     });
   };
 
-  if (loading) {
-    return (
-      <div className="dashboard-container">
-        <div className="loading-state">
-          <div className="loading-spinner"></div>
-          <p>Loading dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div className="dashboard-container">
@@ -129,14 +117,21 @@ function Dashboard() {
     );
   }
 
+  if (loading) {
+    return (
+      <div className="dashboard-container">
+        <div className="loading-state">
+          <div className="loading-spinner"></div>
+          <p>Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="dashboard-container">
-      {/* Welcome Section */}
+      {/* Welcome Section - Date Only */}
       <div className="welcome-section">
-        <div className="welcome-content">
-          <h1>Welcome back, {userData?.name || 'Resident'}!</h1>
-          <p>Here's what's happening with your account</p>
-        </div>
         <div className="welcome-date">
           <span className="date">{new Date().toLocaleDateString('en-PH', { 
             weekday: 'long', 
@@ -211,55 +206,6 @@ function Dashboard() {
               <span className="card-hint">Pending resolution</span>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="quick-actions-section">
-        <h2>Quick Actions</h2>
-        <div className="actions-grid">
-          <a href="/user/payment" className="action-card">
-            <div className="action-icon pay">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
-                <line x1="1" y1="10" x2="23" y2="10" />
-              </svg>
-            </div>
-            <span className="action-label">Pay Bills</span>
-          </a>
-
-          <a href="/user/billing" className="action-card">
-            <div className="action-icon billing">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-                <line x1="16" y1="13" x2="8" y2="13" />
-                <line x1="16" y1="17" x2="8" y2="17" />
-              </svg>
-            </div>
-            <span className="action-label">View Bills</span>
-          </a>
-
-          <a href="/user/profile" className="action-card">
-            <div className="action-icon profile">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-            </div>
-            <span className="action-label">My Profile</span>
-          </a>
-
-          <a href="/user/violation" className="action-card">
-            <div className="action-icon violation">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                <line x1="12" y1="9" x2="12" y2="13" />
-                <line x1="12" y1="17" x2="12.01" y2="17" />
-              </svg>
-            </div>
-            <span className="action-label">My Violations</span>
-          </a>
         </div>
       </div>
 

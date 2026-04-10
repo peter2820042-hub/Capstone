@@ -33,7 +33,6 @@ function Payment() {
   useEffect(() => {
     const fetchBills = async () => {
       try {
-        setLoading(true);
         // TODO: Replace with actual API call
         // const response = await fetch('/api/user/bills/unpaid');
         // const data = await response.json();
@@ -175,17 +174,6 @@ function Payment() {
     setSubmitError(null);
   };
 
-  if (loading) {
-    return (
-      <div className="payment-container">
-        <div className="loading-state">
-          <div className="loading-spinner"></div>
-          <p>Loading payment information...</p>
-        </div>
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div className="payment-container">
@@ -197,6 +185,17 @@ function Payment() {
           </svg>
           <p>{error}</p>
           <button onClick={() => window.location.reload()}>Retry</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="payment-container">
+        <div className="loading-state">
+          <div className="loading-spinner"></div>
+          <p>Loading payment information...</p>
         </div>
       </div>
     );

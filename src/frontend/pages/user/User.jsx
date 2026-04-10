@@ -38,11 +38,11 @@ function User({ user, onLogout }) {
           </>} />
           <Route path="/violation" element={<>
             <Header pageName="Violation" user={user} />
-            <Violation />
+            <Violation user={user} />
           </>} />
           <Route path="/notification" element={<>
             <Header pageName="Notification" user={user} />
-            <Notification />
+            <Notification user={user} />
           </>} />
           <Route path="/profile" element={<Profile user={user} />} />
         </Routes>

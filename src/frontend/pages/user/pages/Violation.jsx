@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import './Violation.css';
 
-function Violation() {
+function Violation(props) {
+  // Get user from props or fall back to localStorage
+  const user = props.user || JSON.parse(localStorage.getItem('user') || '{}');
   // Filter states
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
@@ -20,18 +22,33 @@ function Violation() {
   // Selected violation for details
   const [selectedViolation, setSelectedViolation] = useState(null);
 
-  // TODO: Fetch violations from database
+  // Fetch violations from database
   useEffect(() => {
     const fetchViolations = async () => {
       try {
-        setLoading(true);
-        // TODO: Replace with actual API call
-        // const response = await fetch('/api/user/violations');
-        // const data = await response.json();
-        // setViolations(data);
+        // Get lot number from user prop
+        const lotNumber = user?.lotNumber;
         
-        // For now, set empty array until database is connected
-        setViolations([]);
+        if (lotNumber) {
+          const response = await fetch(`/api/violations/user/${encodeURIComponent(lotNumber)}`);
+          const data = await response.json();
+          
+          // Map API response to frontend format
+          const mappedData = data.map(v => ({
+            id: v.id,
+            violationId: `VIO-${String(v.id).padStart(4, '0')}`,
+            type: v.violationType,
+            description: v.description,
+            location: `Lot ${v.lotNumber}`,
+            date: v.dateIssued,
+            fine: parseFloat(v.penalty) || 0,
+            status: v.status || 'pending'
+          }));
+          
+          setViolations(mappedData);
+        } else {
+          setViolations([]);
+        }
         setError(null);
       } catch (err) {
         setError('Failed to fetch violations');
@@ -42,7 +59,7 @@ function Violation() {
     };
 
     fetchViolations();
-  }, []);
+  }, [user?.lotNumber]);
 
   // Get unique statuses for filter
   const uniqueStatuses = useMemo(() => {
@@ -140,17 +157,6 @@ function Violation() {
     setCurrentPage(1);
   };
 
-  if (loading) {
-    return (
-      <div className="violation-container">
-        <div className="loading-state">
-          <div className="loading-spinner"></div>
-          <p>Loading violations...</p>
-        </div>
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div className="violation-container">
@@ -162,6 +168,17 @@ function Violation() {
           </svg>
           <p>{error}</p>
           <button onClick={() => window.location.reload()}>Retry</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="violation-container">
+        <div className="loading-state">
+          <div className="loading-spinner"></div>
+          <p>Loading violations...</p>
         </div>
       </div>
     );

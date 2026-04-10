@@ -1,8 +1,21 @@
 /* Staff Dashboard Styles */
 .dashboard-container {
-  padding: 24px;
+  padding: 2rem;
+  background: #f8fafc;
+  min-height: calc(100vh - 60px);
   max-width: 1400px;
   margin: 0 auto;
+}
+
+/* Date Display */
+.current-date {
+  margin-bottom: 1.5rem;
+  text-align: right;
+}
+
+.current-date span {
+  font-size: 0.875rem;
+  color: #64748b;
 }
 
 /* Welcome Section */
@@ -20,6 +33,30 @@
 .welcome-section p {
   color: #6b7280;
   font-size: 15px;
+}
+
+/* Section Header */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.section-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin: 0;
+}
+
+.total-count {
+  font-size: 14px;
+  font-weight: 600;
+  color: #3b82f6;
+  background: #eff6ff;
+  padding: 6px 12px;
+  border-radius: 20px;
 }
 
 /* KPI Grid */
@@ -107,6 +144,13 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
+.dashboard-section .section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
 .dashboard-section h3 {
   font-size: 18px;
   font-weight: 600;
@@ -192,36 +236,37 @@
   color: #6b7280;
 }
 
-/* Quick Actions */
-.quick-actions {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
+/* Residents Table */
+.residents-table {
+  overflow-x: auto;
 }
 
-.quick-action-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
+.residents-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.residents-table th,
+.residents-table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.residents-table th {
+  font-weight: 600;
+  color: #374151;
   background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #1a1a2e;
-  text-decoration: none;
-  transition: all 0.2s;
+  font-size: 0.875rem;
 }
 
-.quick-action-btn:hover {
-  background: #f3f4f6;
-  border-color: #d1d5db;
+.residents-table td {
+  color: #6b7280;
+  font-size: 0.875rem;
 }
 
-.quick-action-btn svg {
-  width: 18px;
-  height: 18px;
+.residents-table tr:hover td {
+  background: #f9fafb;
 }
 
 /* Empty State */

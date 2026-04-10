@@ -10,15 +10,13 @@ function Dashboard({ user }) {
     resolvedViolations: 0
   });
 
+  // Residents list
+  const [residents, setResidents] = useState([]);
+
   // Recent activity
   const [recentActivity, setRecentActivity] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   // Fetch data from API
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
-
   const fetchDashboardData = async () => {
     try {
       // Fetch residents count
@@ -29,35 +27,42 @@ function Dashboard({ user }) {
       const violationsRes = await fetch('/api/violations');
       const violationsData = await violationsRes.json();
 
-      if (residentsData.residents) {
-        const pending = violationsData.violations?.filter(v => v.status === 'pending').length || 0;
-        const resolved = violationsData.violations?.filter(v => v.status === 'resolved').length || 0;
+      // Handle API response - could be array or object with residents property
+      const residentsArray = Array.isArray(residentsData) ? residentsData : (residentsData.residents || []);
+      const violationsArray = Array.isArray(violationsData) ? violationsData : (violationsData.violations || []);
 
-        setKpis({
-          totalResidents: residentsData.residents.length,
-          activeViolations: violationsData.violations?.length || 0,
-          pendingViolations: pending,
-          resolvedViolations: resolved
-        });
+      const pending = violationsArray.filter(v => v.status === 'pending').length || 0;
+      const resolved = violationsArray.filter(v => v.status === 'resolved').length || 0;
 
-        // Create activity feed from violations
-        const activities = violationsData.violations?.slice(0, 5).map(v => ({
-          id: v.id,
-          type: 'violation',
-          description: `Violation logged for Lot ${v.lotNumber}`,
-          details: v.violationType,
-          date: v.dateIssued,
-          status: v.status
-        })) || [];
+      setKpis({
+        totalResidents: residentsArray.length,
+        activeViolations: violationsArray.length,
+        pendingViolations: pending,
+        resolvedViolations: resolved
+      });
 
-        setRecentActivity(activities);
-      }
+      // Set residents list (show max 10)
+      setResidents(residentsArray.slice(0, 10));
+
+      // Create activity feed from violations
+      const activities = violationsArray.slice(0, 5).map(v => ({
+        id: v.id,
+        type: 'violation',
+        description: `Violation logged for Lot ${v.lotNumber}`,
+        details: v.violationType,
+        date: v.dateIssued,
+        status: v.status
+      }));
+
+      setRecentActivity(activities);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
-    } finally {
-      setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
 
   const getActivityIcon = (type) => {
     if (type === 'violation') {
@@ -87,24 +92,21 @@ function Dashboard({ user }) {
     });
   };
 
-  if (loading) {
-    return (
-      <div className="dashboard-container">
-        <div className="loading-state">
-          <div className="spinner"></div>
-          <p>Loading dashboard...</p>
-        </div>
-      </div>
-    );
-  }
+  const currentDate = new Date().toLocaleDateString('en-PH', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
 
   return (
     <div className="dashboard-container">
-      {/* Welcome Section */}
-      <div className="welcome-section">
-        <h2>Welcome back, {user?.username || 'Staff Member'}!</h2>
-        <p>Here's what's happening in your subdivision today.</p>
+      {/* Date Display */}
+      <div className="current-date">
+        <span>{currentDate}</span>
       </div>
+
+      {/* KPI Section */}
 
       {/* KPI Cards */}
       <div className="kpi-grid">
@@ -164,6 +166,42 @@ function Dashboard({ user }) {
         </div>
       </div>
 
+      {/* Registered Residents */}
+      <div className="dashboard-section">
+        <div className="section-header">
+          <h3>Registered Residents</h3>
+          <span className="total-count">Total: {kpis.totalResidents} residents</span>
+        </div>
+        {residents.length === 0 ? (
+          <div className="empty-state">
+            <p>No registered residents yet.</p>
+          </div>
+        ) : (
+          <div className="residents-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Block</th>
+                  <th>Lot</th>
+                </tr>
+              </thead>
+              <tbody>
+                {residents.map((resident) => (
+                  <tr key={resident.id}>
+                    <td>{resident.fullName}</td>
+                    <td>{resident.email}</td>
+                    <td>{resident.block || '-'}</td>
+                    <td>{resident.lotNumber || '-'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
       {/* Recent Activity */}
       <div className="dashboard-section">
         <h3>Recent Activity</h3>
@@ -193,37 +231,6 @@ function Dashboard({ user }) {
         )}
       </div>
 
-      {/* Quick Actions */}
-      <div className="dashboard-section">
-        <h3>Quick Actions</h3>
-        <div className="quick-actions">
-          <a href="/residents" className="quick-action-btn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-              <circle cx="8.5" cy="7" r="4" />
-              <line x1="20" y1="8" x2="20" y2="14" />
-              <line x1="23" y1="11" x2="17" y2="11" />
-            </svg>
-            Add Resident
-          </a>
-          <a href="/violations" className="quick-action-btn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-              <line x1="12" y1="9" x2="12" y2="13" />
-              <line x1="12" y1="17" x2="12.01" y2="17" />
-            </svg>
-            Log Violation
-          </a>
-          <a href="/reports" className="quick-action-btn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="18" y1="20" x2="18" y2="10" />
-              <line x1="12" y1="20" x2="12" y2="4" />
-              <line x1="6" y1="20" x2="6" y2="14" />
-            </svg>
-            View Reports
-          </a>
-        </div>
-      </div>
     </div>
   );
 }

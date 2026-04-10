@@ -33,11 +33,10 @@ function Residents() {
     try {
       const response = await fetch('/api/residents');
       const data = await response.json();
-      setResidents(data.residents || []);
+      // Handle API response - could be array or object with residents property
+      setResidents(Array.isArray(data) ? data : (data.residents || []));
     } catch (error) {
       console.error('Error fetching residents:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -56,7 +55,13 @@ function Residents() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...formData,
+          username: formData.username,
+          password: formData.password,
+          full_name: formData.fullName,
+          lot_number: formData.lot,
+          block: formData.block,
+          email: formData.email,
+          phone: formData.phoneNumber,
           role: 'user'
         })
       });
@@ -102,22 +107,13 @@ function Residents() {
     );
   });
 
-  if (loading) {
-    return (
-      <div className="residents-container">
-        <div className="loading-state">
-          <div className="spinner"></div>
-          <p>Loading residents...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="residents-container">
       {/* Header */}
       <div className="residents-header">
-        <h2>Resident Management</h2>
+        <div className="header-title">
+          <p className="header-subtitle">Manage and view all registered residents and their account information</p>
+        </div>
         <button 
           className="add-btn"
           onClick={() => setShowAddModal(true)}
@@ -152,14 +148,15 @@ function Residents() {
               <th>Username</th>
               <th>Full Name</th>
               <th>Email</th>
-              <th>Block/Lot</th>
+              <th>Block</th>
+              <th>Lot</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {filteredResidents.length === 0 ? (
               <tr>
-                <td colSpan="5" className="empty-row">
+                <td colSpan="6" className="empty-row">
                   {searchTerm ? 'No residents found matching your search' : 'No residents registered yet'}
                 </td>
               </tr>
@@ -169,7 +166,8 @@ function Residents() {
                   <td>{resident.username}</td>
                   <td>{resident.fullName || '-'}</td>
                   <td>{resident.email || '-'}</td>
-                  <td>{resident.block && resident.lot ? `${resident.block}-${resident.lot}` : '-'}</td>
+                  <td>{resident.block || '-'}</td>
+                  <td>{resident.lotNumber || '-'}</td>
                   <td>
                     <button
                       className="view-btn"
@@ -190,13 +188,13 @@ function Residents() {
         <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Add New Resident</h3>
               <button className="close-btn" onClick={() => setShowAddModal(false)}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <line x1="18" y1="6" x2="6" y2="18" />
                   <line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
               </button>
+              <h3>Add New Resident</h3>
             </div>
             <form onSubmit={handleAddSubmit} className="modal-form">
               {message.text && (
@@ -304,13 +302,13 @@ function Residents() {
         <div className="modal-overlay" onClick={() => setShowViewModal(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Resident Details</h3>
               <button className="close-btn" onClick={() => setShowViewModal(false)}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <line x1="18" y1="6" x2="6" y2="18" />
                   <line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
               </button>
+              <h3>Resident Details</h3>
             </div>
             <div className="modal-content">
               <div className="detail-grid">

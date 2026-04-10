@@ -86,6 +86,10 @@
   margin: 0;
 }
 
+.welcome-date {
+  margin-left: auto;
+}
+
 .welcome-date .date {
   font-size: 0.875rem;
   color: #64748b;
@@ -135,23 +139,23 @@
 }
 
 .summary-card.balance .card-icon {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  color: #ffffff;
+  background: #dbeafe;
+  color: #1e40af;
 }
 
 .summary-card.due-dates .card-icon {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  color: #ffffff;
+  background: #fef3c7;
+  color: #92400e;
 }
 
 .summary-card.payments .card-icon {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: #ffffff;
+  background: #d1fae5;
+  color: #065f46;
 }
 
 .summary-card.violations .card-icon {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  color: #ffffff;
+  background: #fee2e2;
+  color: #991b1b;
 }
 
 .card-content {

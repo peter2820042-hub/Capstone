@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import './Notification.css';
 
-function Notification() {
+function Notification(props) {
+  // Get user from props or fall back to localStorage
+  const user = props.user || JSON.parse(localStorage.getItem('user') || '{}');
   // Filter states
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -19,18 +21,33 @@ function Notification() {
   // Selected notification for details
   const [selectedNotification, setSelectedNotification] = useState(null);
 
-  // TODO: Fetch notifications from database
+  // Fetch notifications from database
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
         setLoading(true);
-        // TODO: Replace with actual API call
-        // const response = await fetch('/api/user/notifications');
-        // const data = await response.json();
-        // setNotifications(data);
         
-        // For now, set empty array until database is connected
-        setNotifications([]);
+        // Get user ID from user prop
+        const userId = user?.id;
+        
+        if (userId) {
+          const response = await fetch(`/api/notifications/user/${userId}`);
+          const data = await response.json();
+          
+          // Map API response to frontend format
+          const mappedData = data.map(n => ({
+            id: n.id,
+            type: n.type || 'System',
+            title: n.title,
+            message: n.message,
+            status: n.status === 'unread' ? 'Unread' : 'Read',
+            timestamp: n.created_at
+          }));
+          
+          setNotifications(mappedData);
+        } else {
+          setNotifications([]);
+        }
         setError(null);
       } catch (err) {
         setError('Failed to fetch notifications');
@@ -41,7 +58,7 @@ function Notification() {
     };
 
     fetchNotifications();
-  }, []);
+  }, [user?.id]);
 
   // Get unique types and statuses for filters
   const uniqueTypes = useMemo(() => {
@@ -200,17 +217,6 @@ function Notification() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="notification-container">
-        <div className="loading-state">
-          <div className="loading-spinner"></div>
-          <p>Loading notifications...</p>
-        </div>
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div className="notification-container">
@@ -222,6 +228,17 @@ function Notification() {
           </svg>
           <p>{error}</p>
           <button onClick={() => window.location.reload()}>Retry</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="notification-container">
+        <div className="loading-state">
+          <div className="loading-spinner"></div>
+          <p>Loading notifications...</p>
         </div>
       </div>
     );

@@ -102,6 +102,22 @@
   transition: transform 0.3s ease;
 }
 
+/* Navigation Icon */
+.nav-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-right: 12px;
+  vertical-align: middle;
+}
+
+.nav-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
 .nav-item.active .nav-text {
   transform: translateX(8px);
 }

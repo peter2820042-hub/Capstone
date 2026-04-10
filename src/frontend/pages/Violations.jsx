@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import './Violations.css';
 
-function Violations() {
+function Violations({ userRole = 'admin' }) {
   const [violations, setViolations] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-
-  // Resident search state
+  
+  // Search state
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -14,7 +14,6 @@ function Violations() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showNoticeModal, setShowNoticeModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
   const [selectedViolation, setSelectedViolation] = useState(null);
 
   // Form state
@@ -22,12 +21,22 @@ function Violations() {
     lotNumber: '',
     block: '',
     residentName: '',
-    residentEmail: '',
     violationType: '',
     description: '',
-    fine: '',
-    status: 'pending'
+    fine: ''
   });
+
+  // Notice form state
+  const [noticeData, setNoticeData] = useState({
+    lotNumber: '',
+    block: '',
+    residentName: '',
+    residentEmail: '',
+    title: '',
+    noticeMessage: ''
+  });
+  const [noticeSearchResults, setNoticeSearchResults] = useState([]);
+  const [isSearchingNotice, setIsSearchingNotice] = useState(false);
 
   const violationTypes = [
     'Noise Violation',
@@ -41,20 +50,8 @@ function Violations() {
   ];
 
   const [submitting, setSubmitting] = useState(false);
-  const [message, setMessage] = useState({ type: '', text: '' });
-  
-  // Notice form state
-  const [noticeData, setNoticeData] = useState({
-    lotNumber: '',
-    block: '',
-    residentName: '',
-    residentEmail: '',
-    title: '',
-    noticeMessage: ''
-  });
-  const [noticeSearchResults, setNoticeSearchResults] = useState([]);
-  const [isSearchingNotice, setIsSearchingNotice] = useState(false);
   const [sendingNotice, setSendingNotice] = useState(false);
+  const [message, setMessage] = useState({ type: '', text: '' });
 
   useEffect(() => {
     fetchViolations();
@@ -67,8 +64,6 @@ function Violations() {
       setViolations(data || []);
     } catch (error) {
       console.error('Error fetching violations:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -118,153 +113,6 @@ function Violations() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Resolve violation
-  const handleResolve = async (violationId) => {
-    try {
-      const response = await fetch(`/api/violations/${violationId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          status: 'resolved',
-          lotNumber: '',
-          residentName: '',
-          violationType: '',
-          description: '',
-          penalty: ''
-        })
-      });
-
-      if (response.ok) {
-        setMessage({ type: 'success', text: 'Violation resolved! Homeowner has been notified.' });
-        fetchViolations();
-        setShowViewModal(false);
-        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-      }
-    } catch (err) {
-      console.error('Error resolving violation:', err);
-    }
-  };
-
-  const handleAddSubmit = async (e) => {
-    e.preventDefault();
-    setSubmitting(true);
-    setMessage({ type: '', text: '' });
-
-    try {
-      const response = await fetch('/api/violations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          lotNumber: formData.lotNumber,
-          block: formData.block,
-          residentName: formData.residentName,
-          residentEmail: formData.residentEmail,
-          violationType: formData.violationType,
-          description: formData.description,
-          penalty: formData.fine,
-          dateIssued: new Date().toISOString(),
-          status: formData.status
-        })
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setMessage({ type: 'success', text: 'Violation logged successfully! Notification sent to homeowner.' });
-        setFormData({
-          lotNumber: '',
-          block: '',
-          residentName: '',
-          residentEmail: '',
-          violationType: '',
-          description: '',
-          fine: '',
-          status: 'pending'
-        });
-        setSearchQuery('');
-        fetchViolations();
-        setTimeout(() => setShowAddModal(false), 2000);
-      } else {
-        setMessage({ type: 'error', text: data.error || 'Failed to log violation' });
-      }
-    } catch (err) {
-      setMessage({ type: 'error', text: 'Cannot connect to server' });
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleViewViolation = (violation) => {
-    setSelectedViolation(violation);
-    setShowViewModal(true);
-  };
-
-  const handleEditViolation = (violation) => {
-    setSelectedViolation(violation);
-    setFormData({
-      lotNumber: violation.lotNumber || '',
-      residentName: violation.residentName || '',
-      violationType: violation.violationType || '',
-      description: violation.description || '',
-      fine: violation.fine || '',
-      status: violation.status || 'pending'
-    });
-    setShowEditModal(true);
-  };
-
-  const handleUpdateSubmit = async (e) => {
-    e.preventDefault();
-    setSubmitting(true);
-    setMessage({ type: '', text: '' });
-
-    try {
-      const response = await fetch(`/api/violations/${selectedViolation.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setMessage({ type: 'success', text: 'Violation updated successfully!' });
-        fetchViolations();
-        setTimeout(() => {
-          setShowEditModal(false);
-          setMessage({ type: '', text: '' });
-        }, 1500);
-      } else {
-        setMessage({ type: 'error', text: data.error || 'Failed to update violation' });
-      }
-    } catch (error) {
-      setMessage({ type: 'error', text: 'Cannot connect to server' });
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleDeleteViolation = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this violation?')) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/violations/${id}`, {
-        method: 'DELETE'
-      });
-
-      if (response.ok) {
-        setMessage({ type: 'success', text: 'Violation deleted successfully!' });
-        fetchViolations();
-        setTimeout(() => setMessage({ type: '', text: '' }), 2000);
-      } else {
-        setMessage({ type: 'error', text: 'Failed to delete violation' });
-      }
-    } catch (error) {
-      setMessage({ type: 'error', text: 'Cannot connect to server' });
-    }
-  };
-  
   const handleNoticeChange = (e) => {
     const { name, value } = e.target;
     setNoticeData(prev => ({ ...prev, [name]: value }));
@@ -307,6 +155,83 @@ function Violations() {
     setNoticeSearchResults([]);
   };
 
+  // Submit new violation
+  const handleAddSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setMessage({ type: '', text: '' });
+
+    try {
+      const response = await fetch('/api/violations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lotNumber: formData.lotNumber,
+          block: formData.block,
+          residentName: formData.residentName,
+          residentEmail: formData.residentEmail,
+          violationType: formData.violationType,
+          description: formData.description,
+          penalty: formData.fine,
+          dateIssued: new Date().toISOString(),
+          status: 'pending'
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setMessage({ type: 'success', text: 'Violation logged! Notification sent to homeowner, admin, and staff.' });
+        setFormData({
+          lotNumber: '',
+          block: '',
+          residentName: '',
+          residentEmail: '',
+          violationType: '',
+          description: '',
+          fine: ''
+        });
+        setSearchQuery('');
+        fetchViolations();
+        setTimeout(() => setShowAddModal(false), 2000);
+      } else {
+        setMessage({ type: 'error', text: data.error || 'Failed to log violation' });
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Cannot connect to server' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Resolve violation
+  const handleResolve = async (violationId) => {
+    try {
+      const response = await fetch(`/api/violations/${violationId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: 'resolved',
+          lotNumber: '',
+          residentName: '',
+          violationType: '',
+          description: '',
+          penalty: ''
+        })
+      });
+
+      if (response.ok) {
+        setMessage({ type: 'success', text: 'Violation resolved! Homeowner has been notified.' });
+        fetchViolations();
+        setShowViewModal(false);
+        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+      }
+    } catch (error) {
+      console.error('Error resolving violation:', error);
+    }
+  };
+
+  // Send notice
   const handleSendNotice = async (e) => {
     e.preventDefault();
     setSendingNotice(true);
@@ -345,11 +270,16 @@ function Violations() {
       } else {
         setMessage({ type: 'error', text: data.error || 'Failed to send notice' });
       }
-    } catch {
+    } catch (error) {
       setMessage({ type: 'error', text: 'Cannot connect to server' });
     } finally {
       setSendingNotice(false);
     }
+  };
+
+  const handleViewViolation = (violation) => {
+    setSelectedViolation(violation);
+    setShowViewModal(true);
   };
 
   const filteredViolations = violations.filter(violation => {
@@ -370,15 +300,19 @@ function Violations() {
     });
   };
 
+  if (loading) {
+    return (
+      <div className="violations-container">
+        <div className="loading-state">
+          <div className="spinner"></div>
+          <p>Loading violations...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="violations-container">
-      {/* Global Message */}
-      {message.text && (
-        <div className={`global-message ${message.type}`}>
-          {message.text}
-        </div>
-      )}
-
       {/* Header */}
       <div className="violations-header">
         <h2>Violation Management</h2>
@@ -405,6 +339,13 @@ function Violations() {
         </div>
       </div>
 
+      {/* Message */}
+      {message.text && (
+        <div className={`global-message ${message.type}`}>
+          {message.text}
+        </div>
+      )}
+
       {/* Stats */}
       <div className="stats-row">
         <div className="stat-card">
@@ -422,12 +363,6 @@ function Violations() {
             {violations.filter(v => v.status === 'resolved').length}
           </span>
           <span className="stat-label">Resolved</span>
-        </div>
-        <div className="stat-card paid">
-          <span className="stat-value">
-            {violations.filter(v => v.status === 'paid').length}
-          </span>
-          <span className="stat-label">Paid</span>
         </div>
       </div>
 
@@ -453,7 +388,6 @@ function Violations() {
               <th>Lot Number</th>
               <th>Resident Name</th>
               <th>Violation Type</th>
-              <th>Fine</th>
               <th>Date Issued</th>
               <th>Status</th>
               <th>Actions</th>
@@ -462,7 +396,7 @@ function Violations() {
           <tbody>
             {filteredViolations.length === 0 ? (
               <tr>
-                <td colSpan="7" className="empty-row">
+                <td colSpan="6" className="empty-row">
                   {searchTerm ? 'No violations found' : 'No violations logged yet'}
                 </td>
               </tr>
@@ -472,7 +406,6 @@ function Violations() {
                   <td>{violation.lotNumber}</td>
                   <td>{violation.residentName}</td>
                   <td>{violation.violationType}</td>
-                  <td>{violation.fine ? `PHP ${parseFloat(violation.fine).toFixed(2)}` : '-'}</td>
                   <td>{formatDate(violation.dateIssued)}</td>
                   <td>
                     <span className={`status-badge ${violation.status}`}>
@@ -480,26 +413,12 @@ function Violations() {
                     </span>
                   </td>
                   <td>
-                    <div className="action-buttons">
-                      <button
-                        className="view-btn"
-                        onClick={() => handleViewViolation(violation)}
-                      >
-                        View
-                      </button>
-                      <button
-                        className="edit-btn"
-                        onClick={() => handleEditViolation(violation)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="delete-btn"
-                        onClick={() => handleDeleteViolation(violation.id)}
-                      >
-                        Delete
-                      </button>
-                    </div>
+                    <button
+                      className="view-btn"
+                      onClick={() => handleViewViolation(violation)}
+                    >
+                      View
+                    </button>
                   </td>
                 </tr>
               ))
@@ -703,120 +622,6 @@ function Violations() {
                 </div>
               )}
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Violation Modal */}
-      {showEditModal && selectedViolation && (
-        <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Edit Violation</h3>
-              <button className="close-btn" onClick={() => setShowEditModal(false)}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
-            </div>
-            <form onSubmit={handleUpdateSubmit} className="modal-form">
-              {message.text && (
-                <div className={`message ${message.type}`}>
-                  {message.text}
-                </div>
-              )}
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Lot Number *</label>
-                  <input
-                    type="text"
-                    name="lotNumber"
-                    value={formData.lotNumber}
-                    onChange={handleChange}
-                    required
-                    placeholder="e.g., A-101"
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Resident Name</label>
-                  <input
-                    type="text"
-                    name="residentName"
-                    value={formData.residentName}
-                    onChange={handleChange}
-                    placeholder="e.g., John Doe"
-                  />
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label>Violation Type *</label>
-                <select
-                  name="violationType"
-                  value={formData.violationType}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">Select type</option>
-                  {violationTypes.map((type) => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label>Description</label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  rows="4"
-                  placeholder="Describe the violation..."
-                />
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Fine Amount (PHP)</label>
-                  <input
-                    type="number"
-                    name="fine"
-                    value={formData.fine}
-                    onChange={handleChange}
-                    placeholder="0.00"
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Status</label>
-                  <select
-                    name="status"
-                    value={formData.status}
-                    onChange={handleChange}
-                  >
-                    <option value="pending">Pending</option>
-                    <option value="resolved">Resolved</option>
-                    <option value="paid">Paid</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="modal-actions">
-                <button type="submit" className="submit-btn" disabled={submitting}>
-                  {submitting ? 'Updating...' : 'Update Violation'}
-                </button>
-                <button
-                  type="button"
-                  className="cancel-btn"
-                  onClick={() => setShowEditModal(false)}
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )}

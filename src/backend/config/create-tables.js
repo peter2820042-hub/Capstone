@@ -127,6 +127,7 @@ async function createTables() {
         module VARCHAR(100),
         description TEXT,
         ip_address VARCHAR(50),
+        profile_image TEXT,
         status VARCHAR(50) DEFAULT 'success',
         timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
@@ -291,10 +292,10 @@ async function createTables() {
 
     // Sample audit logs
     await client.query(`
-      INSERT INTO audit_logs (user_name, user_role, action, module, description, status) VALUES
-      ('admin', 'admin', 'Login', 'Authentication', 'Admin logged in successfully', 'success'),
-      ('staff', 'staff', 'View', 'Residents', 'Staff viewed residents list', 'success'),
-      ('admin', 'admin', 'Create', 'Billing', 'Admin created new bill', 'success')
+      INSERT INTO audit_logs (user_name, user_role, action, module, description, ip_address, profile_image, status) VALUES
+      ('Peter Admin', 'admin', 'Login', 'Authentication', 'Admin logged in successfully', '127.0.0.1', null, 'success'),
+      ('John Staff', 'staff', 'View', 'Residents', 'Staff viewed residents list', '127.0.0.1', null, 'success'),
+      ('Peter Admin', 'admin', 'Create', 'Billing', 'Admin created new bill', '127.0.0.1', null, 'success')
       ON CONFLICT DO NOTHING
     `);
     console.log('✅ Sample audit logs inserted');

@@ -1,57 +1,40 @@
-// Seed Script - Create test user accounts
+// Seed Script - Create 2 test resident accounts
 import pool from '../config/db.js';
 import bcrypt from 'bcrypt';
 
 async function seedUsers() {
   const client = await pool.connect();
-  
+   
   try {
     // Hash passwords for test accounts
-    const adminPassword = await bcrypt.hash('admin123', 10);
-    const staffPassword = await bcrypt.hash('staff123', 10);
     const userPassword = await bcrypt.hash('user123', 10);
     
-    // Create Admin account (without position column)
-    await client.query(`
-      INSERT INTO admins (username, password_hash, full_name, email, phone, status)
-      VALUES ($1, $2, $3, $4, $5, $6)
-      ON CONFLICT (username) DO NOTHING
-    `, ['admin', adminPassword, 'Administrator', 'admin@sentrina.com', '09123456789', 'active']);
-    console.log('✅ Admin account created (username: admin, password: admin123)');
+    // Delete all existing residents first
+    await client.query(`DELETE FROM residents`);
+    console.log('✅ All existing residents deleted');
     
-    // Create Staff account
+    // Create only 2 resident accounts
+    // Resident 1: Block 1, Lot 1
     await client.query(`
-      INSERT INTO staffs (username, password_hash, full_name, email, phone, position, status)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
-      ON CONFLICT (username) DO NOTHING
-    `, ['staff', staffPassword, 'Staff Member', 'staff@sentrina.com', '09123456790', 'Staff', 'active']);
-    console.log('✅ Staff account created (username: staff, password: staff123)');
+      INSERT INTO residents (username, password_hash, full_name, lot_number, block, phase, email, phone, role, status)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+    `, ['resident_1', userPassword, 'Juan Dela Cruz', '1', '1', '1', 'juan@email.com', '09123456789', 'homeowner', 'active']);
     
-    // Create Resident account
+    // Resident 2: Block 1, Lot 2
     await client.query(`
-      INSERT INTO residents (username, password_hash, full_name, lot_number, block, email, phone, status)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      ON CONFLICT (username) DO NOTHING
-    `, ['resident1', userPassword, 'John Doe', '101', 'A', 'john.doe@email.com', '09123456791', 'active']);
-    console.log('✅ Resident account created (username: resident1, password: user123)');
+      INSERT INTO residents (username, password_hash, full_name, lot_number, block, phase, email, phone, role, status)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+    `, ['resident_2', userPassword, 'Maria Santos', '2', '1', '1', 'maria@email.com', '09123456790', 'homeowner', 'active']);
     
-    // Create another Resident account
-    await client.query(`
-      INSERT INTO residents (username, password_hash, full_name, lot_number, block, email, phone, status)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      ON CONFLICT (username) DO NOTHING
-    `, ['resident2', userPassword, 'Jane Smith', '202', 'B', 'jane.smith@email.com', '09123456792', 'active']);
-    console.log('✅ Resident account created (username: resident2, password: user123)');
-    
-    console.log('\n🎉 All test accounts created successfully!');
+    console.log('✅ 2 Resident accounts created');
     console.log('\nTest Credentials:');
-    console.log('  Admin:   username: admin,    password: admin123');
-    console.log('  Staff:   username: staff,    password: staff123');
-    console.log('  Resident: username: resident1, password: user123');
-    console.log('  Resident: username: resident2, password: user123');
+    console.log('  Admin:   username: peter,    password: admin123');
+    console.log('  Staff:   username: john,      password: staff123');
+    console.log('  Resident 1: username: resident_1, password: user123 (Block 1, Lot 1)');
+    console.log('  Resident 2: username: resident_2, password: user123 (Block 1, Lot 2)');
     
   } catch (error) {
-    console.error('Error seeding users:', error);
+    console.error('❌ Error seeding users:', error);
   } finally {
     client.release();
     await pool.end();

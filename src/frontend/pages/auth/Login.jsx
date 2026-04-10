@@ -40,7 +40,7 @@ function Login({ onLogin }) {
           </svg>
         </Link>
         <h2>Login</h2>
-        <p className="login-subtitle"></p>
+        <p className="login-subtitle">Sign in to access your account</p>
         
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">

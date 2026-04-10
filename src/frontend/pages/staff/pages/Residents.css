@@ -8,7 +8,7 @@
 .residents-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 24px;
 }
 
@@ -16,6 +16,20 @@
   font-size: 28px;
   font-weight: 600;
   color: #1a1a2e;
+  margin: 0;
+}
+
+.header-title {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.header-subtitle {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+  font-weight: 400;
 }
 
 .add-btn {
@@ -93,7 +107,7 @@
 }
 
 .residents-table th {
-  background: #f9fafb;
+  background: #ffffff;
   font-size: 12px;
   font-weight: 600;
   color: #6b7280;
@@ -163,8 +177,9 @@
 
 .modal-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
+  gap: 0.5rem;
   padding: 20px 24px;
   border-bottom: 1px solid #e5e7eb;
 }

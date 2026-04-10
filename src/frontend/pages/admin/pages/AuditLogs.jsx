@@ -248,10 +248,7 @@ function AuditLogs() {
           description: log.description,
           status: log.status,
           timestamp: log.timestamp,
-          ipAddress: log.ip_address,
-          userAgent: log.user_agent,
-          sessionId: log.session_id,
-          requestId: log.request_id
+          profileImage: log.profile_image
         }));
         
         setLogs(mappedLogs);
@@ -314,8 +311,7 @@ function AuditLogs() {
           log.user?.toLowerCase().includes(query) ||
           log.action?.toLowerCase().includes(query) ||
           log.module?.toLowerCase().includes(query) ||
-          log.description?.toLowerCase().includes(query) ||
-          log.ipAddress?.toLowerCase().includes(query);
+          log.description?.toLowerCase().includes(query);
         if (!matchesSearch) return false;
       }
       
@@ -334,7 +330,7 @@ function AuditLogs() {
     
     await new Promise(resolve => setTimeout(resolve, 1500));
     
-    const headers = ['Timestamp', 'User', 'User Role', 'Action', 'Module', 'Description', 'IP Address', 'Status'];
+    const headers = ['Timestamp', 'User', 'User Role', 'Action', 'Module', 'Description'];
     const csvContent = [
       headers.join(','),
       ...filteredLogs.map(log => [
@@ -343,9 +339,7 @@ function AuditLogs() {
         log.userRole,
         log.action,
         log.module,
-        `"${log.description}"`,
-        log.ipAddress || '',
-        log.status
+        `"${log.description}"`
       ].join(','))
     ].join('\n');
 
@@ -449,6 +443,28 @@ function AuditLogs() {
                 )}
                 {isExportingPDF ? 'Exporting...' : 'Export PDF'}
               </button>
+              <button 
+                className="reset-table-btn" 
+                onClick={async () => {
+                  if (window.confirm('Are you sure you want to reset the audit logs table? This will clear all existing logs.')) {
+                    try {
+                      const response = await fetch('/api/reset-audit-logs', { method: 'POST' });
+                      if (response.ok) {
+                        alert('Audit logs table reset successfully!');
+                        // Refresh the logs
+                        window.location.reload();
+                      } else {
+                        alert('Failed to reset audit logs');
+                      }
+                    } catch (err) {
+                      alert('Error resetting audit logs');
+                    }
+                  }
+                }}
+              >
+                <RotateCcw size={16} />
+                Reset Table
+              </button>
             </div>
           </div>
         </div>
@@ -474,8 +490,6 @@ function AuditLogs() {
                   <th>Action</th>
                   <th>Module</th>
                   <th>Description</th>
-                  <th>IP Address</th>
-                  <th>Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -497,10 +511,14 @@ function AuditLogs() {
                         <td className="user-cell">
                           <div className="user-info">
                             <div className="user-avatar">
-                              {log.user?.charAt(0) || '?'}
+                              {log.profileImage ? (
+                                <img src={log.profileImage} alt={log.user} className="avatar-img" />
+                              ) : (
+                                log.user?.split(' ')[0]?.charAt(0) || '?'
+                              )}
                             </div>
                             <div className="user-details">
-                              <span className="user-name">{log.user}</span>
+                              <span className="user-name">{log.user?.split(' ')[0] || log.user}</span>
                               <span className="user-role">{log.userRole || 'N/A'}</span>
                             </div>
                           </div>
@@ -519,15 +537,6 @@ function AuditLogs() {
                         <td className="description-cell">
                           <span title={log.description}>{log.description}</span>
                         </td>
-                        <td className="ip-cell">
-                          {log.ipAddress || '-'}
-                        </td>
-                        <td className="status-cell">
-                          <span className={`status-badge ${statusCfg.bg} ${statusCfg.text}`}>
-                            <StatusIcon size={12} />
-                            {log.status}
-                          </span>
-                        </td>
                         <td className="actions-cell">
                           <div className="action-buttons">
                             <button
@@ -544,7 +553,7 @@ function AuditLogs() {
                   })
                 ) : (
                   <tr>
-                    <td colSpan="8" className="no-results">
+                    <td colSpan="6" className="no-results">
                       <div className="no-results-content">
                         <Search size={48} />
                         <p>No audit logs found</p>
@@ -657,14 +666,6 @@ function AuditLogs() {
               <div className="detail-row">
                 <label>Description:</label>
                 <span>{selectedLog.description}</span>
-              </div>
-              <div className="detail-row">
-                <label>IP Address:</label>
-                <span>{selectedLog.ipAddress || 'N/A'}</span>
-              </div>
-              <div className="detail-row">
-                <label>Status:</label>
-                <span>{selectedLog.status}</span>
               </div>
             </div>
             <div className="modal-footer">

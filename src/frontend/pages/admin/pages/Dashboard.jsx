@@ -37,6 +37,14 @@ const Dashboard = () => {
   // Chart filter state
   const [chartFilter, setChartFilter] = useState('year');
 
+  // Current date for display
+  const currentDate = new Date().toLocaleDateString('en-PH', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+
   // Fetch dashboard stats from API
   useEffect(() => {
     const fetchStats = async () => {
@@ -122,6 +130,11 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard-container">
+      {/* Date Display */}
+      <div className="current-date">
+        <span>{currentDate}</span>
+      </div>
+
       {/* KPI Cards Section */}
       <div className="kpi-section">
         <div className="kpi-card">
@@ -473,48 +486,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="quick-actions-section">
-        <div className="card-header">
-          <h3>Quick Actions</h3>
-        </div>
-        <div className="quick-actions-grid">
-          <button className="quick-action-btn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-              <circle cx="8.5" cy="7" r="4" />
-              <line x1="20" y1="8" x2="20" y2="14" />
-              <line x1="23" y1="11" x2="17" y2="11" />
-            </svg>
-            <span>Add Resident</span>
-          </button>
-          <button className="quick-action-btn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
-              <line x1="1" y1="10" x2="23" y2="10" />
-            </svg>
-            <span>Record Payment</span>
-          </button>
-          <button className="quick-action-btn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-              <line x1="16" y1="13" x2="8" y2="13" />
-              <line x1="16" y1="17" x2="8" y2="17" />
-              <polyline points="10 9 9 9 8 9" />
-            </svg>
-            <span>Generate Report</span>
-          </button>
-          <button className="quick-action-btn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-              <line x1="12" y1="9" x2="12" y2="13" />
-              <line x1="12" y1="17" x2="12.01" y2="17" />
-            </svg>
-            <span>File Violation</span>
-          </button>
-        </div>
-      </div>
     </div>
   );
 };

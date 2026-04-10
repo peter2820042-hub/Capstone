@@ -6,7 +6,9 @@ import Dashboard from './pages/Dashboard';
 import Residents from './pages/Residents';
 import Violations from './pages/Violations';
 import Reports from './pages/Reports';
+import Notification from './pages/Notification';
 import Profile from './pages/Profile';
+import '../Violations.css';
 import './components/Dashboard.css';
 
 function Staff({ user, onLogout }) {
@@ -34,6 +36,10 @@ function Staff({ user, onLogout }) {
           <Route path="/reports" element={<>
             <Header pageName="Reports" user={user} />
             <Reports />
+          </>} />
+          <Route path="/notification" element={<>
+            <Header pageName="Notification" user={user} />
+            <Notification />
           </>} />
           <Route path="/profile" element={
             <Profile user={user} />

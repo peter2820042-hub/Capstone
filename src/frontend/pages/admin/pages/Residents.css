@@ -162,8 +162,21 @@
 .table-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 1.5rem;
+}
+
+.table-header .header-title {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.table-header .header-subtitle {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+  font-weight: 400;
 }
 
 .table-header h2 {
@@ -218,7 +231,7 @@
 }
 
 .residents-table thead {
-  background: #f8fafc;
+  background: #ffffff;
 }
 
 .residents-table th {
@@ -420,8 +433,9 @@
 
 .modal-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
+  gap: 0.5rem;
   padding: 1.5rem;
   border-bottom: 1px solid #e2e8f0;
 }

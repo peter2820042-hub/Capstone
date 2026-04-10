@@ -42,8 +42,8 @@
   "overrides": {
     "vite": "^8.0.0-beta.13"
   },
-  "description": "This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.",
-  "main": "eslint.config.js",
+  "description": "Community management system for Calamba Sentrina",
+  "main": "server/server.js",
   "keywords": [],
   "author": "",
   "license": "ISC"

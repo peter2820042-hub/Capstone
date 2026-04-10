@@ -5,6 +5,18 @@ async function migrateTables() {
   const client = await pool.connect();
   
   try {
+    // Add profile_image column to audit_logs table
+    try {
+      await client.query(`ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS profile_image TEXT`);
+      console.log('✅ Added profile_image column to audit_logs');
+    } catch (e) { /* might exist */ }
+    
+    // Add status column to notifications table
+    try {
+      await client.query(`ALTER TABLE notifications ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'unread'`);
+      console.log('✅ Added status column to notifications');
+    } catch (e) { /* might exist */ }
+    
     // Add columns to admins table
     try {
       await client.query(`ALTER TABLE admins ADD COLUMN IF NOT EXISTS username VARCHAR(100) UNIQUE`);

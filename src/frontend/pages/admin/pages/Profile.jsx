@@ -3,57 +3,53 @@ import './Profile.css';
 
 const Profile = ({ user }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
   const [profileImage, setProfileImage] = useState(() => {
     return localStorage.getItem('userProfileImage') || user?.profileImage || null;
   });
+  const [formData, setFormData] = useState(() => {
+    if (user) {
+      return {
+        fullName: user.fullName || user.full_name || user.name || '',
+        email: user.email || '',
+        phone: user.phone || ''
+      };
+    }
+    return {
+      fullName: '',
+      email: '',
+      phone: ''
+    };
+  });
   const fileInputRef = useRef(null);
 
-  // Fetch profile from server
-  const fetchProfile = React.useCallback(async () => {
-    if (!user?.id || !user?.role) return;
-    
-    setIsLoading(true);
-    try {
-      const response = await fetch(`/api/profile/${user.id}/${user.role}`);
-      if (response.ok) {
-        const data = await response.json();
-        setFormData({
-          fullName: data.fullName || '',
-          email: data.email || '',
-          phone: data.phone || ''
-        });
-        if (data.profileImage) {
-          setProfileImage(data.profileImage);
-          localStorage.setItem('userProfileImage', data.profileImage);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-      // Fall back to localStorage or user prop
-      setFormData({
-        fullName: user?.fullName || user?.name || '',
-        email: user?.email || '',
-        phone: user?.phone || ''
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [user?.id, user?.role, user?.fullName, user?.name, user?.email, user?.phone]);
-
-  // Fetch initial profile data from server
+  // Fetch full profile including dates from API
+  const [profileDates, setProfileDates] = useState({ createdAt: null, lastLogin: null });
+  
   useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user?.id || !user?.role) return;
+      
+      try {
+        const response = await fetch(`/api/profile/${user.id}/${user.role}`);
+        if (response.ok) {
+          const data = await response.json();
+          setFormData({
+            fullName: data.fullName || data.full_name || '',
+            email: data.email || '',
+            phone: data.phone || ''
+          });
+          setProfileDates({
+            createdAt: data.createdAt,
+            lastLogin: data.lastLogin
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      }
+    };
+    
     fetchProfile();
-  }, [fetchProfile]);
-
-  const [formData, setFormData] = useState({
-    fullName: user?.fullName || user?.name || '',
-    email: user?.email || '',
-    phone: user?.phone || ''
-  });
+  }, [user?.id, user?.role]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -66,13 +62,11 @@ const Profile = ({ user }) => {
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Check file size (max 2MB)
       if (file.size > 2 * 1024 * 1024) {
-        setErrorMessage('Image size must be less than 2MB');
+        alert('Image size must be less than 2MB');
         return;
       }
       
-      // Create a preview URL for the uploaded image
       const reader = new FileReader();
       reader.onloadend = () => {
         setProfileImage(reader.result);
@@ -88,13 +82,9 @@ const Profile = ({ user }) => {
 
   const handleSave = async () => {
     if (!user?.id || !user?.role) {
-      setErrorMessage('User not found. Please log in again.');
+      alert('User not found. Please log in again.');
       return;
     }
-    
-    setIsSaving(true);
-    setErrorMessage('');
-    setSuccessMessage('');
     
     try {
       const endpoint = user.role === 'admin' 
@@ -105,8 +95,11 @@ const Profile = ({ user }) => {
       
       const response = await fetch(endpoint, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify({
+          user: user,
           full_name: formData.fullName,
           email: formData.email,
           phone: formData.phone,
@@ -117,67 +110,55 @@ const Profile = ({ user }) => {
       if (response.ok) {
         const data = await response.json();
         
-        // Save to localStorage as backup
         localStorage.setItem('userProfileData', JSON.stringify({
           ...formData,
           profileImage
         }));
         
-        // Update localStorage user object if needed
         const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
         localStorage.setItem('user', JSON.stringify({
           ...storedUser,
           ...data.user
         }));
         
-        // Create audit log entry
-        try {
-          await fetch('http://localhost:3001/api/audit-logs', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              user_name: user?.username || 'User',
-              user_role: user?.role || 'user',
-              action: 'Update Profile',
-              module: 'Profile',
-              description: `Updated profile - Name: ${formData.fullName}, Email: ${formData.email}, Phone: ${formData.phone}`,
-              status: 'success'
-            })
-          });
-        } catch (auditError) {
-          console.error('Error creating audit log:', auditError);
+        // Also update the profile image in localStorage for header
+        if (data.user.profileImage) {
+          localStorage.setItem('userProfileImage', data.user.profileImage);
+        } else if (profileImage) {
+          localStorage.setItem('userProfileImage', profileImage);
         }
         
-        setSuccessMessage('Profile updated successfully!');
-        setIsEditing(false);
+        // Save full name for logout tracking
+        if (data.user.fullName) {
+          localStorage.setItem('lastFullName', data.user.fullName);
+        }
         
-        // Clear success message after 3 seconds
-        setTimeout(() => setSuccessMessage(''), 3000);
+        alert('Profile updated successfully!');
+        setIsEditing(false);
       } else {
         const error = await response.json();
-        setErrorMessage(error.error || 'Failed to update profile');
+        alert(error.error || 'Failed to update profile');
       }
     } catch (error) {
       console.error('Error saving profile:', error);
-      setErrorMessage('An error occurred while saving. Please try again.');
-    } finally {
-      setIsSaving(false);
+      // More detailed error message
+      if (error.message) {
+        alert('Error: ' + error.message);
+      } else {
+        alert('An error occurred while saving. Please try again.');
+      }
     }
   };
 
   const handleCancel = () => {
-    // Reset to original values from server or user prop
     setFormData({
       fullName: user?.fullName || user?.name || '',
       email: user?.email || '',
       phone: user?.phone || ''
     });
-    // Also reset profile image
     const storedImage = localStorage.getItem('userProfileImage');
     setProfileImage(storedImage || user?.profileImage || null);
     setIsEditing(false);
-    setErrorMessage('');
-    setSuccessMessage('');
   };
 
   const handleRemoveImage = () => {
@@ -188,29 +169,28 @@ const Profile = ({ user }) => {
     }
   };
 
-  // Show loading while fetching profile
-  if (isLoading) {
-    return (
-      <div className="profile-page">
-        <h1 className="profile-page-title">My Profile</h1>
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <p>Loading profile...</p>
-        </div>
-      </div>
-    );
-  }
+  // Format date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  };
 
   return (
     <div className="profile-page">
       <h1 className="profile-page-title">My Profile</h1>
+      
       <div className="profile-header">
         <div className="profile-avatar-container">
           {profileImage ? (
             <img src={profileImage} alt="Profile" className="profile-avatar-image" />
           ) : (
             <div className="profile-avatar">
-              {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+              {formData.fullName ? formData.fullName.charAt(0).toUpperCase() : 'A'}
             </div>
           )}
           {isEditing && (
@@ -241,10 +221,12 @@ const Profile = ({ user }) => {
             style={{ display: 'none' }}
           />
         </div>
+        
         <div className="profile-title">
-          <h2>{user?.name || 'User'}</h2>
-          <p className="profile-role">{user?.role || 'Admin'}</p>
+          <h2>{formData.fullName || user?.name || 'Admin'}</h2>
+          <p className="profile-role">{user?.role || 'Administrator'}</p>
         </div>
+        
         {!isEditing && (
           <button className="edit-btn" onClick={handleEdit}>
             Edit Profile
@@ -254,17 +236,8 @@ const Profile = ({ user }) => {
 
       <div className="profile-content">
         <div className="profile-section">
-          <h3>Account Information</h3>
-          <div className="info-grid">
-            <div className="info-item">
-              <label>Username</label>
-              <span>{user?.username || 'N/A'}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="profile-section">
-          <h3>Personal Information</h3>
+          <h3>Profile Information</h3>
+          
           {isEditing ? (
             <div className="edit-form">
               <div className="form-grid">
@@ -303,28 +276,13 @@ const Profile = ({ user }) => {
                 </div>
               </div>
               
-              {/* Error Message */}
-              {errorMessage && (
-                <div className="error-message">
-                  {errorMessage}
-                </div>
-              )}
-              
-              {/* Success Message */}
-              {successMessage && (
-                <div className="success-message">
-                  {successMessage}
-                </div>
-              )}
-              
               <div className="form-actions">
                 <button 
                   type="button" 
                   className="save-btn" 
                   onClick={handleSave}
-                  disabled={isSaving}
                 >
-                  {isSaving ? 'Saving...' : 'Save Changes'}
+                  Save Changes
                 </button>
                 <button type="button" className="cancel-btn" onClick={handleCancel}>
                   Cancel
@@ -335,15 +293,23 @@ const Profile = ({ user }) => {
             <div className="info-grid">
               <div className="info-item">
                 <label>Full Name</label>
-                <span>{user?.fullName || user?.name || 'Not provided'}</span>
+                <span>{formData.fullName || 'Not provided'}</span>
               </div>
               <div className="info-item">
                 <label>Email</label>
-                <span>{user?.email || 'Not provided'}</span>
+                <span>{formData.email || 'Not provided'}</span>
               </div>
               <div className="info-item">
                 <label>Phone Number</label>
-                <span>{user?.phone || 'Not provided'}</span>
+                <span>{formData.phone || 'Not provided'}</span>
+              </div>
+              <div className="info-item">
+                <label>Date Joined</label>
+                <span>{profileDates.createdAt ? formatDate(profileDates.createdAt) : 'N/A'}</span>
+              </div>
+              <div className="info-item">
+                <label>Last Login</label>
+                <span>{profileDates.lastLogin ? formatDate(profileDates.lastLogin) : 'N/A'}</span>
               </div>
             </div>
           )}

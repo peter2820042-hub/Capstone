@@ -6,6 +6,16 @@
   min-height: calc(100vh - 60px);
 }
 
+.current-date {
+  margin-bottom: 1.5rem;
+  text-align: right;
+}
+
+.current-date span {
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
 /* KPI Cards Section */
 .kpi-section {
   display: grid;
@@ -592,61 +602,6 @@
   margin: 0;
 }
 
-/* Quick Actions Section */
-.quick-actions-section {
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e2e8f0;
-}
-
-.quick-actions-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
-}
-
-.quick-action-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1.5rem;
-  border: 2px dashed #e2e8f0;
-  border-radius: 12px;
-  background: #f8fafc;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.quick-action-btn:hover {
-  border-color: #3b82f6;
-  background: #eff6ff;
-}
-
-.quick-action-btn svg {
-  width: 32px;
-  height: 32px;
-  color: #64748b;
-  transition: color 0.2s ease;
-}
-
-.quick-action-btn:hover svg {
-  color: #3b82f6;
-}
-
-.quick-action-btn span {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #374151;
-  transition: color 0.2s ease;
-}
-
-.quick-action-btn:hover span {
-  color: #3b82f6;
-}
-
 /* Responsive Design */
 @media (max-width: 1400px) {
   .kpi-section {
@@ -657,9 +612,6 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .quick-actions-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
 }
 
 @media (max-width: 1200px) {
@@ -697,10 +649,6 @@
   }
 
   .dashboard-bottom {
-    grid-template-columns: 1fr;
-  }
-
-  .quick-actions-grid {
     grid-template-columns: 1fr;
   }
 

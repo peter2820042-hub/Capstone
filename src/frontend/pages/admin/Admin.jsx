@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Header from '../../../components/Header';
 import Dashboard from './pages/Dashboard';
@@ -10,15 +10,14 @@ import Payments from './pages/Payments';
 import Violations from './pages/Violations';
 import Reports from './pages/Reports';
 import AuditLogs from './pages/AuditLogs';
+import Notification from './pages/Notification';
 import Profile from './pages/Profile';
+import '../Violations.css';
 import './components/Dashboard.css';
 
 function Admin({ user, onLogout }) {
-  const navigate = useNavigate();
-  const location = useLocation();
-  
   // Default to dashboard
-  const currentPath = location.pathname === '/' ? '/dashboard' : location.pathname;
+  const currentPath = window.location.pathname === '/' ? '/dashboard' : window.location.pathname;
   
   return (
     <div className="admin-container">
@@ -56,13 +55,18 @@ function Admin({ user, onLogout }) {
           </>
         ) : currentPath === '/reports' ? (
           <>
-            <Header pageName="Reports & Analytics" user={user} />
+            <Header pageName="Reports" user={user} />
             <Reports />
           </>
         ) : currentPath === '/audit-logs' ? (
           <>
             <Header pageName="Audit Logs" user={user} />
             <AuditLogs />
+          </>
+        ) : currentPath === '/notification' ? (
+          <>
+            <Header pageName="Notification" user={user} />
+            <Notification />
           </>
         ) : currentPath === '/profile' ? (
           <Profile user={user} />

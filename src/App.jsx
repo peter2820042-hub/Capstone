@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import Landing from './frontend/pages/landing/Landing'
 import Login from './frontend/pages/auth/Login'
 import Admin from './frontend/pages/admin/Admin'
@@ -7,15 +7,70 @@ import User from './frontend/pages/user/User'
 import Staff from './frontend/pages/staff/Staff'
 import './App.css'
 
+/*
+ * SECURITY WARNING: localStorage Usage
+ * 
+ * WARNING: localStorage stores data in plain text and is vulnerable to XSS (Cross-Site Scripting) attacks.
+ * Any malicious JavaScript code injected into the page can read, modify, or delete localStorage data.
+ * 
+ * - Sensitive data stored in localStorage is accessible to any JavaScript running on the page
+ * - Data persists across browser sessions and is not encrypted
+ * - Should NOT be used for highly sensitive information in untrusted environments
+ * 
+ * This application uses localStorage for session persistence (no JWT implementation exists).
+ * Always ensure sensitive data is properly cleared on logout.
+ */
+
 function App() {
-  const [currentUser, setCurrentUser] = useState(null)
+  const [currentUser, setCurrentUser] = useState(() => {
+    // Check localStorage on initial load to persist user session
+    // WARNING: This data is vulnerable to XSS attacks - do not store sensitive information unencrypted
+    const stored = localStorage.getItem('user');
+    return stored ? JSON.parse(stored) : null;
+  });
   const navigate = useNavigate()
+  const location = useLocation()
+
+  // Save current path to localStorage when navigating
+  // WARNING: Storing path data in localStorage - ensure no sensitive data is exposed
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem('lastPath', location.pathname);
+    }
+  }, [location.pathname, currentUser]);
+
+  // Redirect to last saved path on page refresh when user is already logged in
+  useEffect(() => {
+    if (currentUser) {
+      const lastPath = localStorage.getItem('lastPath');
+      if (lastPath && lastPath !== location.pathname && lastPath !== '/login' && lastPath !== '/') {
+        navigate(lastPath, { replace: true });
+      }
+    }
+  }, []); // Empty dependency array - only run once on mount
 
   const handleLogin = (user) => {
-    console.log('Logging in user:', user)
     setCurrentUser(user)
-    // Redirect to dashboard based on user role
-    if (user.role === 'admin') {
+    // WARNING: Storing user object in localStorage - vulnerable to XSS attacks
+    // Sensitive user data is stored without encryption
+    localStorage.setItem('user', JSON.stringify(user));
+    
+    // Save profile image separately for header
+    // WARNING: Profile image data stored in localStorage - potential XSS vector if not properly sanitized
+    if (user.profileImage) {
+      localStorage.setItem('userProfileImage', user.profileImage);
+    }
+    
+    // Save full name for logout tracking
+    // WARNING: Personal data stored in localStorage
+    localStorage.setItem('lastFullName', user.fullName || user.username || '');
+    
+    // Check if there's a saved path to redirect to
+    const lastPath = localStorage.getItem('lastPath');
+    if (lastPath && lastPath !== '/login' && lastPath !== '/') {
+      localStorage.removeItem('lastPath');
+      navigate(lastPath, { replace: true });
+    } else if (user.role === 'admin') {
       navigate('/dashboard', { replace: true })
     } else if (user.role === 'staff') {
       navigate('/dashboard', { replace: true })
@@ -24,12 +79,41 @@ function App() {
     }
   }
 
-  const handleLogout = () => {
-    setCurrentUser(null)
-    // Use setTimeout to ensure navigation happens after state update
-    setTimeout(() => {
-      navigate('/login', { replace: true })
-    }, 0)
+  const handleLogout = async () => {
+    try {
+      // Get user from localStorage
+      // WARNING: Reading sensitive user data from localStorage - vulnerable to XSS
+      const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+      const userProfileData = JSON.parse(localStorage.getItem('userProfileData') || '{}');
+      
+      // Get the full name (from login or from profile updates)
+      const fullName = localStorage.getItem('lastFullName') || storedUser.full_name || storedUser.username;
+      
+      // Call logout endpoint to log the action
+      const response = await fetch('/api/logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          user: storedUser,
+          full_name: fullName,
+          profile_image: userProfileData.profile_image || storedUser.profileImage || null
+        })
+      });
+      
+      await response.json();
+    } catch (error) {
+      console.error('Error logging logout:', error);
+    }
+    
+    // Clear localStorage and navigate
+    // SECURITY: Clear ALL sensitive localStorage items on logout to prevent XSS data theft
+    localStorage.removeItem('user');
+    localStorage.removeItem('userProfileData');
+    localStorage.removeItem('userProfileImage');
+    localStorage.removeItem('lastPath');
+    localStorage.removeItem('lastFullName');
+    setCurrentUser(null);
+    navigate('/login', { replace: true });
   }
 
   return (
