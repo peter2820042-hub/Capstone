@@ -61,7 +61,13 @@ router.get('/', async (req, res) => {
 });
 
 // ============ CREATE VIOLATION ============
+// Authorization: Admin and Staff only
 router.post('/', async (req, res) => {
+  // Authorization check: only admin and staff can create violations
+  const authUser = req.headers['x-user'] ? JSON.parse(req.headers['x-user']) : null;
+  if (!authUser || (authUser.role !== 'admin' && authUser.role !== 'staff')) {
+    return res.status(403).json({ error: 'Unauthorized: Only admin and staff can create violations' });
+  }
   const { lotNumber, block, residentName, violationType, description, penalty, dateIssued, status } = req.body;
   const lot_number = lotNumber;
   const violation_type = violationType;
@@ -118,7 +124,13 @@ router.post('/', async (req, res) => {
 });
 
 // ============ UPDATE VIOLATION ============
+// Authorization: Admin and Staff only
 router.put('/:id', async (req, res) => {
+  // Authorization check: only admin and staff can update violations
+  const authUser = req.headers['x-user'] ? JSON.parse(req.headers['x-user']) : null;
+  if (!authUser || (authUser.role !== 'admin' && authUser.role !== 'staff')) {
+    return res.status(403).json({ error: 'Unauthorized: Only admin and staff can update violations' });
+  }
   const { lotNumber, residentName, violationType, description, penalty, status } = req.body;
   
   try {
@@ -148,7 +160,13 @@ router.put('/:id', async (req, res) => {
 });
 
 // ============ DELETE VIOLATION ============
+// Authorization: Admin only
 router.delete('/:id', async (req, res) => {
+  // Authorization check: only admin can delete violations
+  const authUser = req.headers['x-user'] ? JSON.parse(req.headers['x-user']) : null;
+  if (!authUser || authUser.role !== 'admin') {
+    return res.status(403).json({ error: 'Unauthorized: Only admin can delete violations' });
+  }
   try {
     const result = await pool.query('DELETE FROM violations WHERE id = $1 RETURNING *', [req.params.id]);
     if (result.rows.length === 0) {

@@ -304,6 +304,41 @@ async function createTables() {
     `);
     console.log('\n📋 All tables in database:', tables.rows.map(r => r.table_name));
 
+    // Add performance indexes for frequently queried columns
+    console.log('\n📝 Adding database indexes...');
+    
+    // Indexes for residents table
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_residents_lot_number ON residents(lot_number)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_residents_block ON residents(block)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_residents_status ON residents(status)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_residents_username ON residents(username)`);
+    
+    // Indexes for violations table
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_violations_lot_number ON violations(lot_number)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_violations_status ON violations(status)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_violations_date_issued ON violations(date_issued)`);
+    
+    // Indexes for bills table
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_bills_lot_number ON bills(lot_number)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_bills_status ON bills(status)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_bills_due_date ON bills(due_date)`);
+    
+    // Indexes for payments table
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_payments_lot_number ON payments(lot_number)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_payments_payment_date ON payments(payment_date)`);
+    
+    // Indexes for audit_logs table
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_audit_logs_user_name ON audit_logs(user_name)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_audit_logs_user_role ON audit_logs(user_role)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_audit_logs_timestamp ON audit_logs(timestamp)`);
+    
+    // Indexes for notifications table
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_notifications_status ON notifications(status)`);
+    
+    console.log('✅ Database indexes added');
+
     console.log('\n🎉 Database setup completed successfully!');
     
   } catch (error) {

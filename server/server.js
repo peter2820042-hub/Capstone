@@ -209,30 +209,11 @@ app.post('/api/send-notice', async (req, res) => {
   }
 });
 
-// Add legacy route for dashboard-stats (hyphenated)
-app.get('/api/dashboard-stats', async (req, res) => {
-  try {
-    const totalResidents = await pool.query('SELECT COUNT(*) as count FROM residents');
-    const totalViolations = await pool.query('SELECT COUNT(*) as count FROM violations');
-    const totalBills = await pool.query('SELECT COUNT(*) as count FROM bills');
-    const totalPayments = await pool.query('SELECT COUNT(*) as count FROM payments WHERE status = $1', ['approved']);
-    const pendingPayments = await pool.query('SELECT COUNT(*) as count FROM payments WHERE status = $1', ['pending']);
-    const pendingBills = await pool.query('SELECT COUNT(*) as count FROM bills WHERE status IN ($1, $2)', ['unpaid', 'overdue']);
-    const pendingViolations = await pool.query('SELECT COUNT(*) as count FROM violations WHERE status = $1', ['pending']);
-    
-    res.json({
-      totalResidents: parseInt(totalResidents.rows[0].count),
-      totalViolations: parseInt(totalViolations.rows[0].count),
-      totalBills: parseInt(totalBills.rows[0].count),
-      totalPayments: parseInt(totalPayments.rows[0].count),
-      pendingPayments: parseInt(pendingPayments.rows[0].count),
-      pendingBills: parseInt(pendingBills.rows[0].count),
-      pendingViolations: parseInt(pendingViolations.rows[0].count)
-    });
-  } catch (error) {
-    console.error('Error fetching dashboard stats:', error);
-    res.status(500).json({ error: error.message });
-  }
+// Add legacy route for dashboard-stats (hyphenated) - redirects to dashboard route
+app.get('/api/dashboard-stats', (req, res) => {
+  // Forward to dashboard route
+  req.url = '/stats';
+  dashboardRoutes(req, res, () => {});
 });
 
 // ============ SERVER START ============

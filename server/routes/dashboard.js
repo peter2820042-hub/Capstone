@@ -90,20 +90,32 @@ router.delete('/clear-all-data', async (req, res) => {
   }
   
   try {
-    await pool.query('DELETE FROM payments');
-    await pool.query('DELETE FROM bills');
-    await pool.query('DELETE FROM violations');
-    await pool.query('DELETE FROM residents');
-    await pool.query('DELETE FROM audit_logs');
-    
-    // Reset sequences
-    await pool.query('ALTER SEQUENCE payments_id_seq RESTART WITH 1');
-    await pool.query('ALTER SEQUENCE bills_id_seq RESTART WITH 1');
-    await pool.query('ALTER SEQUENCE violations_id_seq RESTART WITH 1');
-    await pool.query('ALTER SEQUENCE residents_id_seq RESTART WITH 1');
-    await pool.query('ALTER SEQUENCE audit_logs_id_seq RESTART WITH 1');
-    
-    res.json({ success: true, message: 'All data cleared successfully' });
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      
+      await client.query('DELETE FROM payments');
+      await client.query('DELETE FROM bills');
+      await client.query('DELETE FROM violations');
+      await client.query('DELETE FROM residents');
+      await client.query('DELETE FROM audit_logs');
+      
+      // Reset sequences
+      await client.query('ALTER SEQUENCE payments_id_seq RESTART WITH 1');
+      await client.query('ALTER SEQUENCE bills_id_seq RESTART WITH 1');
+      await client.query('ALTER SEQUENCE violations_id_seq RESTART WITH 1');
+      await client.query('ALTER SEQUENCE residents_id_seq RESTART WITH 1');
+      await client.query('ALTER SEQUENCE audit_logs_id_seq RESTART WITH 1');
+      
+      await client.query('COMMIT');
+      
+      res.json({ success: true, message: 'All data cleared successfully' });
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
   } catch (error) {
     console.error('Error clearing data:', error);
     res.status(500).json({ error: error.message });

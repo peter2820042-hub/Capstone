@@ -103,6 +103,24 @@ router.post('/register', async (req, res) => {
   const { username, password, full_name, lot_number, block, email, phone } = req.body;
   
   try {
+    // Input validation
+    if (!username || username.trim().length < 3) {
+      return res.status(400).json({ error: 'Username must be at least 3 characters' });
+    }
+    
+    if (!password || password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    }
+    
+    // Email format validation (if provided)
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'Invalid email format' });
+    }
+    
+    // Phone format validation (if provided) - accepts Philippine format
+    if (phone && !/^09\d{9}$/.test(phone)) {
+      return res.status(400).json({ error: 'Phone must be 11 digits starting with 09' });
+    }
     const hashedPassword = await bcrypt.hash(password, 10);
     
     const result = await pool.query(
