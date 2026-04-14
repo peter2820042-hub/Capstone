@@ -1,0 +1,207 @@
+# DATABASE TABLES AND RECORDS - Sentrina Application
+
+## Table: admins (Admin User Accounts)
+- id: SERIAL PRIMARY KEY (auto-increment)
+- username: VARCHAR(100) UNIQUE NOT NULL
+- password_hash: VARCHAR(255) NOT NULL
+- full_name: VARCHAR(255) NOT NULL
+- email: VARCHAR(255)
+- phone: VARCHAR(50)
+- position: VARCHAR(100)
+- profile_image: TEXT
+- status: VARCHAR(50) DEFAULT 'active'
+- last_login: TIMESTAMP
+- created_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+- updated_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+Records:
+| id | username | password_hash | full_name | email | phone | position | status |
+|----|-----------|---------------|-----------|-------|-------|----------|--------|
+| 1 | admin | $2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy | System Administrator | admin@sentrina.com | | | active |
+
+Default Login: admin / admin123
+
+---
+
+## Table: staffs (Staff User Accounts)
+- id: SERIAL PRIMARY KEY
+- username: VARCHAR(100) UNIQUE NOT NULL
+- password_hash: VARCHAR(255) NOT NULL
+- full_name: VARCHAR(255) NOT NULL
+- email: VARCHAR(255)
+- phone: VARCHAR(50)
+- position: VARCHAR(100)
+- profile_image: TEXT
+- status: VARCHAR(50) DEFAULT 'active'
+- last_login: TIMESTAMP
+- created_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+- updated_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+Records:
+| id | username | password_hash | full_name | email | position | status |
+|----|-----------|---------------|-----------|-------|----------|--------|
+| 1 | staff | $2a$10$KvTqM9uLOickgx2ZMRZoMyeLJZAacfl7p92ldGxad68LJZdL17lhWy | Staff Member | staff@sentrina.com | General Staff | active |
+
+Default Login: staff / staff123
+
+---
+
+## Table: residents (Homeowners)
+- id: SERIAL PRIMARY KEY
+- username: VARCHAR(100) UNIQUE
+- password_hash: VARCHAR(255)
+- full_name: VARCHAR(255) NOT NULL
+- lot_number: VARCHAR(50)
+- block: VARCHAR(50)
+- phase: VARCHAR(50)
+- email: VARCHAR(255)
+- phone: VARCHAR(50)
+- profile_image: TEXT
+- role: VARCHAR(50) DEFAULT 'homeowner'
+- status: VARCHAR(50) DEFAULT 'active'
+- date_registered: DATE DEFAULT CURRENT_DATE
+- last_login: TIMESTAMP
+- created_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+- updated_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+Records:
+| id | full_name | lot_number | block | phase | email | phone | role | status |
+|----|-----------|------------|-------|-------|-------|-------|------|--------|
+| 1 | Juan dela Cruz | 101 | A | | juan@example.com | 091234567890 | homeowner | active |
+| 2 | Maria Santos | 102 | A | | maria@example.com | 091234567891 | homeowner | active |
+| 3 | Pedro Garcia | 201 | B | | pedro@example.com | 091234567892 | homeowner | active |
+| 4 | Ana Reyes | 202 | B | | ana@example.com | 091234567893 | homeowner | active |
+
+---
+
+## Table: violations
+- id: SERIAL PRIMARY KEY
+- lot_number: VARCHAR(50)
+- resident_name: VARCHAR(255)
+- block: VARCHAR(50)
+- violation_type: VARCHAR(100)
+- description: TEXT
+- date_issued: DATE DEFAULT CURRENT_DATE
+- status: VARCHAR(50) DEFAULT 'pending'
+- penalty: DECIMAL(10,2)
+- created_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+- updated_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+Records:
+| id | lot_number | resident_name | block | violation_type | description | date_issued | status | penalty |
+|----|------------|---------------|-------|----------------|-------------|-------------|--------|--------|
+| 1 | 101 | Juan dela Cruz | A | Noise Violation | Loud music after 10 PM | 2026-03-15 | pending | 500.00 |
+| 2 | 102 | Maria Santos | A | Illegal Parking | Parked in front of fire exit | 2026-03-20 | settled | 300.00 |
+| 3 | 201 | Pedro Garcia | B | Garbage Violation | Improper waste disposal | 2026-03-25 | pending | 200.00 |
+
+---
+
+## Table: bills (Billing)
+- id: SERIAL PRIMARY KEY
+- lot_number: VARCHAR(50)
+- resident_name: VARCHAR(255)
+- bill_type: VARCHAR(100)
+- bill_reference: VARCHAR(100)
+- billing_period: VARCHAR(100)
+- amount: DECIMAL(10,2) NOT NULL
+- due_date: DATE
+- status: VARCHAR(50) DEFAULT 'unpaid'
+- date_paid: DATE
+- payment_method: VARCHAR(50)
+- amount_paid: DECIMAL(10,2)
+- related_id: INTEGER
+- related_type: VARCHAR(50)
+- created_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+- updated_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+Records: (Empty - no default data)
+
+---
+
+## Table: payments
+- id: SERIAL PRIMARY KEY
+- lot_number: VARCHAR(50)
+- resident_name: VARCHAR(255)
+- bill_reference: VARCHAR(100)
+- amount: DECIMAL(10,2) NOT NULL
+- payment_date: DATE DEFAULT CURRENT_DATE
+- payment_method: VARCHAR(50)
+- status: VARCHAR(50) DEFAULT 'pending'
+- approved_date: DATE
+- created_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+- updated_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+Records:
+| id | lot_number | resident_name | bill_reference | amount | payment_date | payment_method | status |
+|----|------------|---------------|----------------|--------|--------------|----------------|--------|
+| 1 | 102 | Maria Santos | BILL-102-001 | 1500.00 | 2026-04-01 | GCash | approved |
+| 2 | 101 | Juan dela Cruz | BILL-101-001 | 1500.00 | 2026-04-05 | Cash | pending |
+
+---
+
+## Table: audit_logs (Activity Logs)
+- id: SERIAL PRIMARY KEY
+- user_name: VARCHAR(255)
+- user_role: VARCHAR(50)
+- action: VARCHAR(100)
+- module: VARCHAR(100)
+- description: TEXT
+- ip_address: VARCHAR(50)
+- profile_image: TEXT
+- status: VARCHAR(50) DEFAULT 'success'
+- timestamp: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+Records:
+| id | user_name | user_role | action | module | description | ip_address | status |
+|----|-----------|-----------|--------|--------|-------------|------------|--------|
+| 1 | Peter Admin | admin | Login | Authentication | Admin logged in successfully | 127.0.0.1 | success |
+| 2 | John Staff | staff | View | Residents | Staff viewed residents list | 127.0.0.1 | success |
+| 3 | Peter Admin | admin | Create | Billing | Admin created new bill | 127.0.0.1 | success |
+
+---
+
+## Table: notifications
+- id: SERIAL PRIMARY KEY
+- user_id: INTEGER
+- type: VARCHAR(50)
+- title: VARCHAR(255)
+- message: TEXT
+- status: VARCHAR(20) DEFAULT 'unread'
+- related_id: INTEGER
+- related_type: VARCHAR(50)
+- created_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+Records: (Empty - populated when users receive notifications)
+
+---
+
+# DATABASE INDEXES (for performance)
+- idx_residents_lot_number ON residents(lot_number)
+- idx_residents_block ON residents(block)
+- idx_residents_status ON residents(status)
+- idx_residents_username ON residents(username)
+- idx_violations_lot_number ON violations(lot_number)
+- idx_violations_status ON violations(status)
+- idx_violations_date_issued ON violations(date_issued)
+- idx_bills_lot_number ON bills(lot_number)
+- idx_bills_status ON bills(status)
+- idx_bills_due_date ON bills(due_date)
+- idx_payments_lot_number ON payments(lot_number)
+- idx_payments_status ON payments(status)
+- idx_payments_payment_date ON payments(payment_date)
+- idx_audit_logs_user_name ON audit_logs(user_name)
+- idx_audit_logs_user_role ON audit_logs(user_role)
+- idx_audit_logs_timestamp ON audit_logs(timestamp)
+- idx_notifications_user_id ON notifications(user_id)
+- idx_notifications_status ON notifications(status)
+
+---
+
+# LOGIN CREDENTIALS (DEFAULT)
+| Role | Username | Password |
+|------|----------|----------|
+| Admin | admin | admin123 |
+| Staff | staff | staff123 |
+| Resident | (Register through app) | - |
+
+Note: Passwords are hashed using bcrypt with salt rounds 10.
