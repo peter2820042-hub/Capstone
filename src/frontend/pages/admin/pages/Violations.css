@@ -328,7 +328,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px 24px;
-  background: linear-gradient(135deg, #0B2239 0%, #1a3a5c 100%);
+  background: #ffffff;
   border-radius: 20px 20px 0 0;
   flex-shrink: 0;
 }
@@ -337,7 +337,7 @@
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: white;
+  color: #1e293b;
   letter-spacing: 0.3px;
 }
 
@@ -347,7 +347,7 @@
   justify-content: center;
   width: 36px;
   height: 36px;
-  background: rgba(255, 255, 255, 0.1);
+  background: #f3f4f6;
   border: none;
   border-radius: 10px;
   cursor: pointer;
@@ -355,13 +355,13 @@
 }
 
 .add-violation-modal-close:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: #e2e8f0;
 }
 
 .add-violation-modal-close svg {
   width: 20px;
   height: 20px;
-  color: white;
+  color: #64748b;
 }
 
 @keyframes modalSlideIn {

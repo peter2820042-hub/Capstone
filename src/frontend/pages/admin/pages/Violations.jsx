@@ -3,9 +3,11 @@ import './Violations.css';
 
 function Violations() {
   const [violations, setViolations] = useState([]);
-  const [, setResidents] = useState([]);
-  const [, setBlocks] = useState([]);
-  const [, setLots] = useState([]);
+  const [residents, setResidents] = useState([]);
+  const [blocks, setBlocks] = useState([]);
+  const [lots, setLots] = useState([]);
+  const [selectedBlock, setSelectedBlock] = useState('');
+  const [selectedLot, setSelectedLot] = useState('');
 
   // Filter state
   const [filters, setFilters] = useState({
@@ -17,7 +19,6 @@ function Violations() {
 
   // Resident search state
   const [searchQuery, setSearchQuery] = useState('');
-  const [blockSearchQuery, setBlockSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
 
@@ -217,19 +218,11 @@ function Violations() {
     }
   };
 
-  // Handle search input change (for Lot)
+  // Handle search input change
   const handleSearchChange = (e) => {
     const query = e.target.value;
     setSearchQuery(query);
-    setFormData(prev => ({ ...prev, lotNumber: query, block: query }));
-    searchResident(query);
-  };
-
-  // Handle block input change
-  const handleBlockChange = (e) => {
-    const query = e.target.value;
-    setBlockSearchQuery(query);
-    setFormData(prev => ({ ...prev, block: query, lotNumber: query }));
+    setFormData(prev => ({ ...prev, lotNumber: query }));
     searchResident(query);
   };
 
@@ -243,7 +236,6 @@ function Violations() {
       residentEmail: resident.email || ''
     }));
     setSearchQuery(resident.lot_number || '');
-    setBlockSearchQuery(resident.block || '');
     setSearchResults([]);
   };
 
@@ -277,7 +269,7 @@ function Violations() {
       const data = await response.json();
 
       if (response.ok) {
-        setMessage({ type: 'success', text: 'Violation logged successfully!' });
+        setMessage({ type: 'success', text: 'Violation logged successfully! Notification sent to homeowner.' });
         setFormData({
           lotNumber: '',
           block: '',
@@ -317,13 +309,40 @@ function Violations() {
       });
 
       if (response.ok) {
-        setMessage({ type: 'success', text: 'Violation resolved!' });
+        setMessage({ type: 'success', text: 'Violation resolved! Homeowner has been notified.' });
         fetchViolations();
         setShowViewModal(false);
         setTimeout(() => setMessage({ type: '', text: '' }), 3000);
       }
     } catch (err) {
       console.error('Error resolving violation:', err);
+    }
+  };
+
+  // Mark violation as paid
+  const handleMarkAsPaid = async (violationId) => {
+    try {
+      const response = await fetch(`/api/violations/${violationId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: 'paid',
+          lotNumber: '',
+          residentName: '',
+          violationType: '',
+          description: '',
+          penalty: ''
+        })
+      });
+
+      if (response.ok) {
+        setMessage({ type: 'success', text: 'Violation marked as paid! Homeowner has been notified.' });
+        fetchViolations();
+        setShowViewModal(false);
+        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+      }
+    } catch (err) {
+      console.error('Error marking violation as paid:', err);
     }
   };
 
@@ -401,23 +420,24 @@ function Violations() {
   const handleNoticeChange = (e) => {
     const { name, value } = e.target;
     setNoticeData(prev => ({ ...prev, [name]: value }));
-    
-    // If lotNumber changes, search for resident
-    if (name === 'lotNumber') {
-      searchNoticeResident(value);
-    }
   };
 
-  // Search resident for notice modal
-  const searchNoticeResident = async (query) => {
-    if (!query || query.length < 1) {
+  // Search resident for notice modal - called from useEffect
+  const searchNoticeResident = async () => {
+    const block = noticeData.block;
+    const lot = noticeData.lotNumber;
+    
+    if ((!block || block.trim() === '') && (!lot || lot.trim() === '')) {
       setNoticeSearchResults([]);
       return;
     }
     
     setIsSearchingNotice(true);
     try {
-      const response = await fetch(`/api/residents/search?query=${encodeURIComponent(query)}`);
+      const params = new URLSearchParams();
+      if (block && block.trim()) params.append('block', block.trim());
+      if (lot && lot.trim()) params.append('lot', lot.trim());
+      const response = await fetch(`/api/residents/search?${params.toString()}`);
       const data = await response.json();
       setNoticeSearchResults(data.residents || []);
     } catch (error) {
@@ -427,6 +447,22 @@ function Violations() {
       setIsSearchingNotice(false);
     }
   };
+
+  // Debounced search effect - requires BOTH block AND lot
+  useEffect(() => {
+    const hasBlock = noticeData.block.trim() !== '';
+    const hasLot = noticeData.lotNumber.trim() !== '';
+    
+    // Only search when BOTH block and lot are filled
+    if (hasBlock && hasLot && showNoticeModal) {
+      const timeoutId = setTimeout(() => {
+        searchNoticeResident();
+      }, 300);
+      return () => clearTimeout(timeoutId);
+    } else {
+      setNoticeSearchResults([]);
+    }
+  }, [noticeData.block, noticeData.lotNumber, showNoticeModal]);
 
   // Select a resident from notice search results
   const selectNoticeResident = (resident) => {
@@ -560,7 +596,7 @@ function Violations() {
       </div>
 
       {/* Stats */}
-      <div className="stats-row">
+      <div className="stats-row" style={{ display: 'flex', flexDirection: 'row', gap: '16px' }}>
         <div className="stat-card">
           <div className="stat-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -707,25 +743,27 @@ function Violations() {
                       </span>
                     </td>
                     <td>
-                      <div className="action-buttons">
-                        <button
-                          className="view-btn"
-                          onClick={() => handleViewViolation(violation)}
-                        >
-                          View
-                        </button>
-                        <button
-                          className="edit-btn"
-                          onClick={() => handleEditViolation(violation)}
-                        >
-                          Edit
-                        </button>
+                      <div className="action-buttons" style={{ display: 'flex', flexDirection: 'row', gap: '8px' }}>
                         <button
                           className="delete-btn"
                           onClick={() => handleDeleteViolation(violation.id)}
                         >
                           Delete
                         </button>
+                        <button
+                          className="view-btn"
+                          onClick={() => handleViewViolation(violation)}
+                        >
+                          View
+                        </button>
+                        {violation.status === 'pending' && (
+                          <button
+                            className="paid-btn"
+                            onClick={() => handleMarkAsPaid(violation.id)}
+                          >
+                            Paid
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -738,11 +776,11 @@ function Violations() {
 
       {/* Add Violation Modal */}
       {showAddModal && (
-        <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Log New Violation</h3>
-              <button className="close-btn" onClick={() => setShowAddModal(false)}>
+        <div className="add-violation-modal-overlay" onClick={() => setShowAddModal(false)}>
+          <div className="add-violation-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="add-violation-modal-header">
+              <h3>Add Violation</h3>
+              <button className="add-violation-modal-close" onClick={() => setShowAddModal(false)}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <line x1="18" y1="6" x2="6" y2="18" />
                   <line x1="6" y1="6" x2="18" y2="18" />
@@ -763,8 +801,8 @@ function Violations() {
                   <div className="search-input-wrapper">
                     <input
                       type="text"
-                      value={blockSearchQuery}
-                      onChange={handleBlockChange}
+                      value={searchQuery}
+                      onChange={handleSearchChange}
                       placeholder="Enter block..."
                       autoComplete="off"
                     />
@@ -802,28 +840,20 @@ function Violations() {
               </div>
 
               {/* Selected Resident Info */}
-              <div className="selected-resident-info">
-                <div className="info-row">
-                  <span className="label">Resident Name:</span>
-                  <span className="value">{formData.residentName || 'None'}</span>
+              {(formData.lotNumber || formData.residentName) && (
+                <div className="selected-resident-info">
+                  <div className="info-row">
+                    <span className="label">Selected:</span>
+                    <span className="value">Lot {formData.lotNumber} - {formData.residentName}</span>
+                  </div>
+                  {formData.block && (
+                    <div className="info-row">
+                      <span className="label">Block:</span>
+                      <span className="value">{formData.block}</span>
+                    </div>
+                  )}
                 </div>
-                {(formData.lotNumber || formData.block) && (
-                  <>
-                    {formData.lotNumber && (
-                      <div className="info-row">
-                        <span className="label">Lot:</span>
-                        <span className="value">{formData.lotNumber}</span>
-                      </div>
-                    )}
-                    {formData.block && (
-                      <div className="info-row">
-                        <span className="label">Block:</span>
-                        <span className="value">{formData.block}</span>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
+              )}
 
               <div className="form-group">
                 <label>Violation Type *</label>
@@ -865,15 +895,15 @@ function Violations() {
               </div>
 
               <div className="modal-actions">
-                <button type="submit" className="submit-btn" disabled={submitting}>
-                  {submitting ? 'Submitting...' : 'Violation'}
-                </button>
                 <button
                   type="button"
                   className="cancel-btn"
                   onClick={() => setShowAddModal(false)}
                 >
-                  Cancel Send
+                  Cancel
+                </button>
+                <button type="submit" className="submit-btn" disabled={submitting}>
+                  {submitting ? 'Submitting...' : 'Send'}
                 </button>
               </div>
             </form>
@@ -883,76 +913,86 @@ function Violations() {
 
       {/* View Violation Modal */}
       {showViewModal && selectedViolation && (
-        <div className="modal-overlay" onClick={() => setShowViewModal(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Violation Details</h3>
-              <button className="close-btn" onClick={() => setShowViewModal(false)}>
+        <div className="violation-view-modal-overlay" onClick={() => setShowViewModal(false)}>
+          <div className="violation-view-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="violation-view-modal-header">
+              <div className="violation-view-modal-header-info">
+                <h3>Violation Details</h3>
+                <span className="violation-view-modal-id">ID: {selectedViolation.id || '-'}</span>
+              </div>
+              <button className="violation-view-modal-close" onClick={() => setShowViewModal(false)}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <line x1="18" y1="6" x2="6" y2="18" />
                   <line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
               </button>
             </div>
-            <div className="modal-content">
-              <div className="detail-grid">
-                <div className="detail-item">
-                  <span className="detail-label">ID</span>
-                  <span className="detail-value">{selectedViolation.id}</span>
+            <div className="violation-view-modal-content">
+              <div className="violation-view-modal-section">
+                <div className="violation-view-modal-section-title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                  Resident Information
                 </div>
-                <div className="detail-item">
-                  <span className="detail-label">Lot Number</span>
-                  <span className="detail-value">{selectedViolation.lotNumber}</span>
-                </div>
-                <div className="detail-item">
-                  <span className="detail-label">Resident Name</span>
-                  <span className="detail-value">{selectedViolation.residentName || 'N/A'}</span>
-                </div>
-                <div className="detail-item">
-                  <span className="detail-label">Violation Type</span>
-                  <span className="detail-value">{selectedViolation.violationType}</span>
-                </div>
-                <div className="detail-item">
-                  <span className="detail-label">Description</span>
-                  <span className="detail-value">{selectedViolation.description || 'N/A'}</span>
-                </div>
-                <div className="detail-item">
-                  <span className="detail-label">Fine Amount</span>
-                  <span className="detail-value">
-                    {selectedViolation.fine 
-                      ? `PHP ${parseFloat(selectedViolation.fine).toFixed(2)}` 
-                      : 'N/A'}
-                  </span>
-                </div>
-                <div className="detail-item">
-                  <span className="detail-label">Date Issued</span>
-                  <span className="detail-value">{formatDate(selectedViolation.dateIssued)}</span>
-                </div>
-                <div className="detail-item">
-                  <span className="detail-label">Status</span>
-                  <span className={`status-badge ${selectedViolation.status}`}>
-                    {selectedViolation.status}
-                  </span>
+                <div className="violation-view-modal-grid">
+                  <div className="violation-view-modal-item">
+                    <span className="violation-view-modal-label">Lot Number</span>
+                    <span className="violation-view-modal-value">{selectedViolation.lotNumber || '-'}</span>
+                  </div>
+                  <div className="violation-view-modal-item">
+                    <span className="violation-view-modal-label">Resident Name</span>
+                    <span className="violation-view-modal-value">{selectedViolation.residentName || '-'}</span>
+                  </div>
                 </div>
               </div>
-              
-              {/* Resolve Button - Only show for pending violations */}
-              {selectedViolation.status === 'pending' && (
-                <div className="resolve-section">
-                  <button 
-                    type="button" 
-                    className="resolve-btn"
-                    onClick={() => handleResolve(selectedViolation.id)}
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                      <polyline points="22 4 12 14.01 9 11.01" />
-                    </svg>
-                    Mark as Resolved
-                  </button>
-                  <p className="resolve-note">This will notify the homeowner that the violation has been resolved.</p>
+              <div className="violation-view-modal-section">
+                <div className="violation-view-modal-section-title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                  </svg>
+                  Violation Information
                 </div>
-              )}
+                <div className="violation-view-modal-grid">
+                  <div className="violation-view-modal-item">
+                    <span className="violation-view-modal-label">Violation Type</span>
+                    <span className="violation-view-modal-value">{selectedViolation.violationType || '-'}</span>
+                  </div>
+                  <div className="violation-view-modal-item">
+                    <span className="violation-view-modal-label">Fine Amount</span>
+                    <span className="violation-view-modal-value fine-amount">{selectedViolation.fine ? `PHP ${parseFloat(selectedViolation.fine).toFixed(2)}` : '-'}</span>
+                  </div>
+                </div>
+                <div className="violation-view-modal-item full-width">
+                  <span className="violation-view-modal-label">Description</span>
+                  <span className="violation-view-modal-value">{selectedViolation.description || '-'}</span>
+                </div>
+              </div>
+              <div className="violation-view-modal-section">
+                <div className="violation-view-modal-section-title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                  </svg>
+                  Date Information
+                </div>
+                <div className="violation-view-modal-grid">
+                  <div className="violation-view-modal-item">
+                    <span className="violation-view-modal-label">Date Reported</span>
+                    <span className="violation-view-modal-value">{selectedViolation.dateReported ? new Date(selectedViolation.dateReported).toLocaleDateString() : '-'}</span>
+                  </div>
+                  <div className="violation-view-modal-item">
+                    <span className="violation-view-modal-label">Status</span>
+                    <span className="violation-view-modal-value">{selectedViolation.status || '-'}</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1098,8 +1138,8 @@ function Violations() {
                 <div className="search-input-wrapper">
                   <input
                     type="text"
-                    name="lotNumber"
-                    value={noticeData.lotNumber}
+                    name="block"
+                    value={noticeData.block}
                     onChange={handleNoticeChange}
                     required
                     placeholder="Enter block..."
@@ -1138,28 +1178,20 @@ function Violations() {
               </div>
 
               {/* Selected Resident Info */}
-              <div className="selected-resident-info">
-                <div className="info-row">
-                  <span className="label">Resident Name:</span>
-                  <span className="value">{noticeData.residentName || 'None'}</span>
+              {(noticeData.lotNumber || noticeData.residentName) && (
+                <div className="selected-resident-info">
+                  <div className="info-row">
+                    <span className="label">Selected:</span>
+                    <span className="value">Lot {noticeData.lotNumber} - {noticeData.residentName}</span>
+                  </div>
+                  {noticeData.block && (
+                    <div className="info-row">
+                      <span className="label">Block:</span>
+                      <span className="value">{noticeData.block}</span>
+                    </div>
+                  )}
                 </div>
-                {(noticeData.lotNumber || noticeData.block) && (
-                  <>
-                    {noticeData.lotNumber && (
-                      <div className="info-row">
-                        <span className="label">Lot:</span>
-                        <span className="value">{noticeData.lotNumber}</span>
-                      </div>
-                    )}
-                    {noticeData.block && (
-                      <div className="info-row">
-                        <span className="label">Block:</span>
-                        <span className="value">{noticeData.block}</span>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
+              )}
 
               <div className="form-group">
                 <label>Notice Title *</label>
@@ -1206,4 +1238,3 @@ function Violations() {
 }
 
 export default Violations;
-
