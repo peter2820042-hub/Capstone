@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './Payment.css';
 
-function Payment() {
+function Payment({ user }) {
   // Payment form states
   const [selectedBills, setSelectedBills] = useState([]);
   const [paymentMethod, setPaymentMethod] = useState('');
@@ -15,61 +15,63 @@ function Payment() {
 
   // Bills data - will be fetched from database
   const [bills, setBills] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   // Transaction history
   const [transactions, setTransactions] = useState([]);
 
+  // Get user's lot number from user prop
+  const lotNumber = user?.lotNumber || user?.lotNumber;
+
   // Payment methods
   const paymentMethods = [
-    { id: 'cash', name: 'Cash', icon: '💵' },
-    { id: 'gcash', name: 'GCash', icon: '📱' },
-    { id: 'maya', name: 'Maya', icon: '💳' },
-    { id: 'bank', name: 'Bank Transfer', icon: '🏦' }
+    { id: 'cash', name: 'Cash'},
+    { id: 'gcash', name: 'GCash'},
+    { id: 'maya', name: 'Maya'},
+    { id: 'bank', name: 'Bank Transfer'}
   ];
 
-  // TODO: Fetch bills from database
+  // Fetch unpaid bills from database
   useEffect(() => {
+    if (!lotNumber) return;
+
     const fetchBills = async () => {
       try {
-        // TODO: Replace with actual API call
-        // const response = await fetch('/api/user/bills/unpaid');
-        // const data = await response.json();
-        // setBills(data);
-        
-        // For now, set empty array until database is connected
-        setBills([]);
+        const response = await fetch(`/api/bills/user/${encodeURIComponent(lotNumber)}/unpaid`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch bills');
+        }
+        const data = await response.json();
+        setBills(data);
         setError(null);
       } catch (err) {
         setError('Failed to fetch bills');
         console.error('Error fetching bills:', err);
-      } finally {
-        setLoading(false);
       }
     };
 
     fetchBills();
-  }, []);
+  }, [lotNumber]);
 
-  // TODO: Fetch transaction history from database
+  // Fetch transaction history from database
   useEffect(() => {
+    if (!lotNumber) return;
+
     const fetchTransactions = async () => {
       try {
-        // TODO: Replace with actual API call
-        // const response = await fetch('/api/user/transactions');
-        // const data = await response.json();
-        // setTransactions(data);
-        
-        // For now, set empty array until database is connected
-        setTransactions([]);
+        const response = await fetch(`/api/payments/user/${encodeURIComponent(lotNumber)}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch transactions');
+        }
+        const data = await response.json();
+        setTransactions(data);
       } catch (err) {
         console.error('Error fetching transactions:', err);
       }
     };
 
     fetchTransactions();
-  }, []);
+  }, [lotNumber]);
 
   // Calculate total amount
   const totalAmount = selectedBills.reduce((sum, billId) => {
@@ -132,26 +134,52 @@ function Payment() {
     setSubmitError(null);
 
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch('/api/user/payments', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({
-      //     billIds: selectedBills,
-      //     paymentMethod,
-      //     amount: totalAmount,
-      //     referenceNumber,
-      //     notes
-      //   })
-      // });
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Get selected bills details
+      const selectedBillsDetails = bills.filter(b => selectedBills.includes(b.id));
+      const billReferences = selectedBillsDetails.map(b => b.billNumber).join(', ');
+      const paymentDate = new Date().toISOString().split('T')[0];
+
+      // Create payment record
+      const paymentResponse = await fetch('/api/payments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lot_number: lotNumber,
+          resident_name: user?.fullName || 'Resident',
+          bill_reference: billReferences,
+          amount: totalAmount,
+          payment_date: paymentDate,
+          payment_method: paymentMethod,
+          status: 'pending'
+        })
+      });
+
+      if (!paymentResponse.ok) {
+        throw new Error('Failed to submit payment');
+      }
+
+      // Update bills status to 'paid' for selected bills
+      for (const billId of selectedBills) {
+        const bill = bills.find(b => b.id === billId);
+        if (bill) {
+          await fetch(`/api/bills/${billId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              lot_number: lotNumber,
+              resident_name: user?.fullName || 'Resident',
+              bill_type: bill.billType || bill.description,
+              amount: bill.amount,
+              due_date: bill.dueDate,
+              status: 'paid'
+            })
+          });
+        }
+      }
       
       setSubmitSuccess(true);
       setSelectedBills([]);
       setPaymentMethod('');
-
       setReferenceNumber('');
       setNotes('');
       
@@ -190,17 +218,6 @@ function Payment() {
     );
   }
 
-  if (loading) {
-    return (
-      <div className="payment-container">
-        <div className="loading-state">
-          <div className="loading-spinner"></div>
-          <p>Loading payment information...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="payment-container">
 
@@ -234,6 +251,15 @@ function Payment() {
             <div className="form-group">
               <label>Select Bills to Pay</label>
               <div className="bills-selection">
+                {/* Always show table header */}
+                <div className="bills-table-header">
+                  <span className="bills-count">
+                    {bills.length > 0 
+                      ? `Showing ${selectedBills.length > 0 ? `0-${selectedBills.length} of ` : ''}${bills.length} bill${bills.length !== 1 ? 's' : ''}`
+                      : 'Showing 0-0 of 0 bills'}
+                  </span>
+                </div>
+                
                 {bills.length > 0 ? (
                   <>
                     <div className="select-all-row">

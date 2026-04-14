@@ -34,7 +34,7 @@ function User({ user, onLogout }) {
           </>} />
           <Route path="/payment" element={<>
             <Header pageName="Payment" user={user} />
-            <Payment />
+            <Payment user={user} />
           </>} />
           <Route path="/violation" element={<>
             <Header pageName="Violation" user={user} />

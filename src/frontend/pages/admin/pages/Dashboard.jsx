@@ -2,42 +2,18 @@ import React, { useState, useEffect } from 'react';
 import './Dashboard.css';
 
 const Dashboard = () => {
-  // KPI data
   const [kpis, setKpis] = useState({
     totalResidents: 0,
-    totalViolations: 0,
-    totalBills: 0,
-    totalPayments: 0,
-    pendingPayments: 0,
-    overdueBills: 0
+    pendingPayment: 0,
+    pendingBill: 0,
+    pendingViolation: 0
   });
 
-  // Revenue data (empty initially)
-  const [revenueData, setRevenueData] = useState([]);
+  // eslint-disable-next-line no-unused-vars
+  const [violations, setViolations] = useState([]);
+  // eslint-disable-next-line no-unused-vars
+  const [period] = useState('yearly');
 
-  // Collection status (empty initially)
-  const [collectionStatus, setCollectionStatus] = useState({
-    paid: 0,
-    pending: 0,
-    overdue: 0
-  });
-
-  // Activity feed (empty initially)
-  const [activityFeed, setActivityFeed] = useState([]);
-
-  // Recent transactions (empty initially)
-  const [recentTransactions, setRecentTransactions] = useState([]);
-
-  // Upcoming due dates (empty initially)
-  const [upcomingDueDates, setUpcomingDueDates] = useState([]);
-
-  // Notifications (empty initially)
-  const [notifications, setNotifications] = useState([]);
-
-  // Chart filter state
-  const [chartFilter, setChartFilter] = useState('year');
-
-  // Current date for display
   const currentDate = new Date().toLocaleDateString('en-PH', { 
     weekday: 'long', 
     year: 'numeric', 
@@ -45,98 +21,41 @@ const Dashboard = () => {
     day: 'numeric' 
   });
 
-  // Fetch dashboard stats from API
   useEffect(() => {
-    const fetchStats = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch('/api/dashboard-stats');
-        if (!response.ok) throw new Error('Failed to fetch dashboard stats');
-        const data = await response.json();
-        setKpis({
-          totalResidents: data.totalResidents,
-          totalViolations: data.totalViolations,
-          totalBills: data.totalBills,
-          pendingPayments: data.pendingPayments,
-          approvedPayments: data.totalPayments,
-          overdueBills: data.overdueBills
-        });
+        const statsRes = await fetch('/api/dashboard-stats');
+        if (statsRes.ok) {
+          const stats = await statsRes.json();
+          setKpis({
+            totalResidents: stats.totalResidents || 0,
+            pendingPayment: stats.pendingPayments || 0,
+            pendingBill: stats.pendingBills || 0,
+            pendingViolation: stats.pendingViolations || 0
+          });
+        }
+
+        const vioRes = await fetch('/api/violations');
+        if (vioRes.ok) {
+          const vioData = await vioRes.json();
+          const vioArray = Array.isArray(vioData) ? vioData : (vioData.violations || []);
+          setViolations(vioArray);
+        }
       } catch (err) {
-        console.error('Error fetching dashboard stats:', err);
+        console.error('Error:', err);
       }
     };
-    fetchStats();
+    fetchData();
   }, []);
-
-  // Get max revenue for chart scaling
-  const maxRevenue = revenueData.length > 0 ? Math.max(...revenueData.map(d => d.revenue)) : 0;
-
-  // Get activity icon based on type
-  const getActivityIcon = (type) => {
-    switch (type) {
-      case 'payment':
-        return (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-          </svg>
-        );
-      case 'violation':
-        return (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-            <line x1="12" y1="9" x2="12" y2="13" />
-            <line x1="12" y1="17" x2="12.01" y2="17" />
-          </svg>
-        );
-      case 'resident':
-        return (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-            <circle cx="12" cy="7" r="4" />
-          </svg>
-        );
-      case 'status':
-        return (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-            <polyline points="22 4 12 14.01 9 11.01" />
-          </svg>
-        );
-      default:
-        return (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="8" x2="12" y2="12" />
-            <line x1="12" y1="16" x2="12.01" y2="16" />
-          </svg>
-        );
-    }
-  };
-
-  // Get activity color based on type
-  const getActivityColor = (type) => {
-    switch (type) {
-      case 'payment':
-        return 'activity-payment';
-      case 'violation':
-        return 'activity-violation';
-      case 'resident':
-        return 'activity-resident';
-      case 'status':
-        return 'activity-status';
-      default:
-        return '';
-    }
-  };
 
   return (
     <div className="dashboard-container">
-      {/* Date Display */}
       <div className="current-date">
         <span>{currentDate}</span>
       </div>
 
-      {/* KPI Cards Section */}
-      <div className="kpi-section">
+      {/* KPI Cards */}
+      <div className="kpi-grid">
         <div className="kpi-card">
           <div className="kpi-icon residents">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -153,15 +72,15 @@ const Dashboard = () => {
         </div>
 
         <div className="kpi-card">
-          <div className="kpi-icon lots">
+          <div className="kpi-icon pending">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-              <polyline points="9 22 9 12 15 12 15 22" />
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
             </svg>
           </div>
           <div className="kpi-content">
-            <span className="kpi-value">{kpis.totalViolations}</span>
-            <span className="kpi-label">Total Violations</span>
+            <span className="kpi-value">{kpis.pendingPayment}</span>
+            <span className="kpi-label">Pending Payment</span>
           </div>
         </div>
 
@@ -173,22 +92,8 @@ const Dashboard = () => {
             </svg>
           </div>
           <div className="kpi-content">
-            <span className="kpi-value">{kpis.totalBills}</span>
-            <span className="kpi-label">Total Bills</span>
-          </div>
-        </div>
-
-        <div className="kpi-card">
-          <div className="kpi-icon delinquencies">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="12" />
-              <line x1="12" y1="16" x2="12.01" y2="16" />
-            </svg>
-          </div>
-          <div className="kpi-content">
-            <span className="kpi-value">{kpis.pendingPayments}</span>
-            <span className="kpi-label">Pending Payments</span>
+            <span className="kpi-value">{kpis.pendingBill}</span>
+            <span className="kpi-label">Pending Bill</span>
           </div>
         </div>
 
@@ -201,291 +106,91 @@ const Dashboard = () => {
             </svg>
           </div>
           <div className="kpi-content">
-            <span className="kpi-value">{kpis.overdueBills}</span>
-            <span className="kpi-label">Overdue Bills</span>
+            <span className="kpi-value">{kpis.pendingViolation}</span>
+            <span className="kpi-label">Pending Violation</span>
           </div>
         </div>
+      </div>
 
-        <div className="kpi-card">
-          <div className="kpi-icon occupancy">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-              <polyline points="22 4 12 14.01 9 11.01" />
+      {/* Charts Section - Line Graph and Pie Chart */}
+      <div className="charts-section" style={{ display: 'flex', gap: '20px' }}>
+        {/* Line Graph */}
+        <div className="chart-card" style={{ flex: 1, minHeight: '350px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h3>Payment Trends</h3>
+            <a href="/payments" style={{ padding: '0.5rem 1rem', background: '#3b82f6', color: '#fff', borderRadius: '6px', fontSize: '0.875rem', textDecoration: 'none' }}>View</a>
+          </div>
+          <div className="line-chart-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '240px' }}>
+            <svg viewBox="0 0 400 200" style={{ width: '100%', height: '100%' }}>
+              {/* Grid lines */}
+              <line x1="40" y1="180" x2="380" y2="180" stroke="#e5e7eb" strokeWidth="1" />
+              <line x1="40" y1="140" x2="380" y2="140" stroke="#e5e7eb" strokeWidth="1" />
+              <line x1="40" y1="100" x2="380" y2="100" stroke="#e5e7eb" strokeWidth="1" />
+              <line x1="40" y1="60" x2="380" y2="60" stroke="#e5e7eb" strokeWidth="1" />
+              <line x1="40" y1="20" x2="380" y2="20" stroke="#e5e7eb" strokeWidth="1" />
+              
+              {/* Y-axis labels */}
+              <text x="35" y="185" fontSize="10" fill="#6b7280" textAnchor="end">0</text>
+              <text x="35" y="145" fontSize="10" fill="#6b7280" textAnchor="end">5K</text>
+              <text x="35" y="105" fontSize="10" fill="#6b7280" textAnchor="end">10K</text>
+              <text x="35" y="65" fontSize="10" fill="#6b7280" textAnchor="end">15K</text>
+              <text x="35" y="25" fontSize="10" fill="#6b7280" textAnchor="end">20K</text>
+              
+              {/* X-axis labels */}
+              <text x="80" y="195" fontSize="10" fill="#6b7280" textAnchor="middle">Jan</text>
+              <text x="150" y="195" fontSize="10" fill="#6b7280" textAnchor="middle">Feb</text>
+              <text x="220" y="195" fontSize="10" fill="#6b7280" textAnchor="middle">Mar</text>
+              <text x="290" y="195" fontSize="10" fill="#6b7280" textAnchor="middle">Apr</text>
+              <text x="360" y="195" fontSize="10" fill="#6b7280" textAnchor="middle">May</text>
+              
+              {/* Line chart path */}
+              <polyline 
+                fill="none" 
+                stroke="#3b82f6" 
+                strokeWidth="3"
+                points="80,160 150,140 220,100 290,80 360,40"
+              />
+              
+              {/* Data points */}
+              <circle cx="80" cy="160" r="5" fill="#3b82f6" />
+              <circle cx="150" cy="140" r="5" fill="#3b82f6" />
+              <circle cx="220" cy="100" r="5" fill="#3b82f6" />
+              <circle cx="290" cy="80" r="5" fill="#3b82f6" />
+              <circle cx="360" cy="40" r="5" fill="#3b82f6" />
             </svg>
           </div>
-          <div className="kpi-content">
-            <span className="kpi-value">{kpis.totalPayments}</span>
-            <span className="kpi-label">Approved Payments</span>
+        </div>
+        
+        {/* Pie Chart */}
+        <div className="chart-card" style={{ flex: 1, minHeight: '350px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h3>Residents Distribution</h3>
+            <a href="/residents" style={{ padding: '0.5rem 1rem', background: '#3b82f6', color: '#fff', borderRadius: '6px', fontSize: '0.875rem', textDecoration: 'none' }}>View</a>
+          </div>
+          <div className="pie-chart-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '240px' }}>
+            <svg viewBox="0 0 200 200" style={{ width: '200px', height: '200px' }}>
+              {/* Background circle */}
+              <circle cx="100" cy="100" r="80" fill="none" stroke="#e5e7eb" strokeWidth="24" />
+              {/* Progress circle - extended line */}
+              <circle 
+                cx="100" cy="100" r="80" 
+                fill="none" 
+                stroke="#3b82f6" 
+                strokeWidth="24"
+                strokeDasharray={`${(kpis.totalResidents / 308) * 502.65} ${502.65 - (kpis.totalResidents / 308) * 502.65}`}
+                transform="rotate(-90 100 100)"
+                style={{ transition: 'stroke-dasharray 0.5s ease' }}
+              />
+              <text x="100" y="95" textAnchor="middle" fontSize="28" fontWeight="bold" fill="#1a1a2e">
+                {kpis.totalResidents}
+              </text>
+              <text x="100" y="120" fontSize="14" fill="#6b7280">
+                / 308
+              </text>
+            </svg>
           </div>
         </div>
       </div>
-
-      {/* Charts Section */}
-      <div className="charts-section">
-        {/* Revenue Area Chart */}
-        <div className="chart-card revenue-chart">
-          <div className="chart-header">
-            <h3>Revenue Trends</h3>
-            <div className="chart-filter">
-              <select value={chartFilter} onChange={(e) => setChartFilter(e.target.value)}>
-                <option value="year">This Year</option>
-                <option value="month">This Month</option>
-                <option value="week">This Week</option>
-              </select>
-            </div>
-          </div>
-          <div className="chart-content">
-            {revenueData.length > 0 ? (
-              <div className="area-chart">
-                <svg viewBox="0 0 400 200" preserveAspectRatio="none">
-                  <defs>
-                    <linearGradient id="revenueGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
-                      <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
-                    </linearGradient>
-                  </defs>
-                  <path
-                    d={`M 0 ${200 - (revenueData[0].revenue / maxRevenue) * 180} ${revenueData.map((d, i) => 
-                      `L ${(i / (revenueData.length - 1)) * 400} ${200 - (d.revenue / maxRevenue) * 180}`
-                    ).join(' ')} L 400 200 L 0 200 Z`}
-                    fill="url(#revenueGradient)"
-                  />
-                  <path
-                    d={`M 0 ${200 - (revenueData[0].revenue / maxRevenue) * 180} ${revenueData.map((d, i) => 
-                      `L ${(i / (revenueData.length - 1)) * 400} ${200 - (d.revenue / maxRevenue) * 180}`
-                    ).join(' ')}`}
-                    fill="none"
-                    stroke="#3b82f6"
-                    strokeWidth="2"
-                  />
-                  {revenueData.map((d, i) => (
-                    <circle
-                      key={i}
-                      cx={(i / (revenueData.length - 1)) * 400}
-                      cy={200 - (d.revenue / maxRevenue) * 180}
-                      r="4"
-                      fill="#3b82f6"
-                    />
-                  ))}
-                </svg>
-                <div className="chart-labels">
-                  {revenueData.map((d, i) => (
-                    <span key={i}>{d.month}</span>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="chart-empty">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M3 3v18h18" />
-                  <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3" />
-                </svg>
-                <p>No revenue data available</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Collection Status Bars */}
-        <div className="chart-card collection-status">
-          <div className="chart-header">
-            <h3>Collection Status</h3>
-          </div>
-          <div className="chart-content">
-            <div className="status-bars">
-              <div className="status-bar-item">
-                <div className="status-bar-label">
-                  <span>Paid</span>
-                  <span className="status-percentage">{collectionStatus.paid}%</span>
-                </div>
-                <div className="status-bar-track">
-                  <div 
-                    className="status-bar-fill paid" 
-                    style={{ width: `${collectionStatus.paid}%` }}
-                  ></div>
-                </div>
-              </div>
-              <div className="status-bar-item">
-                <div className="status-bar-label">
-                  <span>Pending</span>
-                  <span className="status-percentage">{collectionStatus.pending}%</span>
-                </div>
-                <div className="status-bar-track">
-                  <div 
-                    className="status-bar-fill pending" 
-                    style={{ width: `${collectionStatus.pending}%` }}
-                  ></div>
-                </div>
-              </div>
-              <div className="status-bar-item">
-                <div className="status-bar-label">
-                  <span>Overdue</span>
-                  <span className="status-percentage">{collectionStatus.overdue}%</span>
-                </div>
-                <div className="status-bar-track">
-                  <div 
-                    className="status-bar-fill overdue" 
-                    style={{ width: `${collectionStatus.overdue}%` }}
-                  ></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom Section */}
-      <div className="dashboard-bottom">
-        {/* Live Activity Feed */}
-        <div className="activity-feed-card">
-          <div className="card-header">
-            <h3>Live Activity Feed</h3>
-          </div>
-          <div className="activity-list">
-            {activityFeed.length > 0 ? (
-              activityFeed.map((activity) => (
-                <div key={activity.id} className={`activity-item ${getActivityColor(activity.type)}`}>
-                  <div className="activity-icon">
-                    {getActivityIcon(activity.type)}
-                  </div>
-                  <div className="activity-content">
-                    <p className="activity-message">{activity.message}</p>
-                    {activity.amount && <span className="activity-amount">{activity.amount}</span>}
-                    <span className="activity-time">{activity.time}</span>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="empty-state">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="8" x2="12" y2="12" />
-                  <line x1="12" y1="16" x2="12.01" y2="16" />
-                </svg>
-                <p>No recent activity</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Recent Transactions */}
-        <div className="recent-transactions-card">
-          <div className="card-header">
-            <h3>Recent Transactions</h3>
-          </div>
-          <div className="transactions-list">
-            {recentTransactions.length > 0 ? (
-              recentTransactions.map((transaction) => (
-                <div key={transaction.id} className="transaction-item">
-                  <div className="transaction-info">
-                    <span className="transaction-lot">{transaction.lot}</span>
-                    <span className="transaction-resident">{transaction.resident}</span>
-                  </div>
-                  <div className="transaction-details">
-                    <span className="transaction-amount">₱{transaction.amount.toLocaleString()}</span>
-                    <span className={`transaction-status ${transaction.status}`}>
-                      {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
-                    </span>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="empty-state">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
-                  <line x1="1" y1="10" x2="23" y2="10" />
-                </svg>
-                <p>No recent transactions</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Upcoming Due Dates */}
-        <div className="upcoming-dates-card">
-          <div className="card-header">
-            <h3>Upcoming Due Dates</h3>
-          </div>
-          <div className="due-dates-list">
-            {upcomingDueDates.length > 0 ? (
-              upcomingDueDates.map((due) => (
-                <div key={due.id} className="due-date-item">
-                  <div className="due-date-info">
-                    <span className="due-lot">{due.lot}</span>
-                    <span className="due-resident">{due.resident}</span>
-                  </div>
-                  <div className="due-date-details">
-                    <span className="due-amount">₱{due.amount.toLocaleString()}</span>
-                    <span className={`due-days ${due.daysLeft <= 7 ? 'urgent' : ''}`}>
-                      {due.daysLeft} days left
-                    </span>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="empty-state">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                  <line x1="16" y1="2" x2="16" y2="6" />
-                  <line x1="8" y1="2" x2="8" y2="6" />
-                  <line x1="3" y1="10" x2="21" y2="10" />
-                </svg>
-                <p>No upcoming due dates</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Notifications */}
-        <div className="notifications-card">
-          <div className="card-header">
-            <h3>Notifications</h3>
-          </div>
-          <div className="notifications-list">
-            {notifications.length > 0 ? (
-              notifications.map((notification) => (
-                <div key={notification.id} className={`notification-item ${notification.type}`}>
-                  <div className="notification-icon">
-                    {notification.type === 'warning' && (
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                        <line x1="12" y1="9" x2="12" y2="13" />
-                        <line x1="12" y1="17" x2="12.01" y2="17" />
-                      </svg>
-                    )}
-                    {notification.type === 'info' && (
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="12" cy="12" r="10" />
-                        <line x1="12" y1="16" x2="12" y2="12" />
-                        <line x1="12" y1="8" x2="12.01" y2="8" />
-                      </svg>
-                    )}
-                    {notification.type === 'alert' && (
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                      </svg>
-                    )}
-                  </div>
-                  <div className="notification-content">
-                    <p className="notification-message">{notification.message}</p>
-                    <span className="notification-time">{notification.time}</span>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="empty-state">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                  <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                </svg>
-                <p>No notifications</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
     </div>
   );
 };

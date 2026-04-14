@@ -8,7 +8,9 @@ import Violations from './pages/Violations';
 import Reports from './pages/Reports';
 import Notification from './pages/Notification';
 import Profile from './pages/Profile';
-import '../Violations.css';
+import Gis from './pages/Gis';
+import Payment from './pages/Payment';
+import Billing from './pages/Billing';
 import './components/Dashboard.css';
 
 function Staff({ user, onLogout }) {
@@ -24,6 +26,10 @@ function Staff({ user, onLogout }) {
           <Route path="/dashboard" element={<>
             <Header pageName="Dashboard" user={user} />
             <Dashboard user={user} />
+          </>} />
+          <Route path="/gis" element={<>
+            <Header pageName="GIS" user={user} />
+            <Gis />
           </>} />
           <Route path="/residents" element={<>
             <Header pageName="Residents" user={user} />
@@ -44,6 +50,14 @@ function Staff({ user, onLogout }) {
           <Route path="/profile" element={
             <Profile user={user} />
           } />
+          <Route path="/payment" element={<>
+            <Header pageName="Payment" user={user} />
+            <Payment />
+          </>} />
+          <Route path="/billing" element={<>
+            <Header pageName="Billing" user={user} />
+            <Billing />
+          </>} />
         </Routes>
       </div>
     </div>

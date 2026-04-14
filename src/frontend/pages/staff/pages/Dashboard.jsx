@@ -166,69 +166,84 @@ function Dashboard({ user }) {
         </div>
       </div>
 
-      {/* Registered Residents */}
-      <div className="dashboard-section">
-        <div className="section-header">
-          <h3>Registered Residents</h3>
-          <span className="total-count">Total: {kpis.totalResidents} residents</span>
+      {/* Charts Section - Line Graph and Pie Chart */}
+      <div className="charts-section">
+        {/* Line Graph */}
+        <div className="chart-card">
+          <div className="chart-header">
+            <h3>Payment Trends</h3>
+            <a href="/staff/payment" className="chart-link">View</a>
+          </div>
+          <div className="line-chart-container">
+            <svg viewBox="0 0 400 200">
+              {/* Grid lines */}
+              <line x1="40" y1="180" x2="380" y2="180" stroke="#e5e7eb" strokeWidth="1" />
+              <line x1="40" y1="140" x2="380" y2="140" stroke="#e5e7eb" strokeWidth="1" />
+              <line x1="40" y1="100" x2="380" y2="100" stroke="#e5e7eb" strokeWidth="1" />
+              <line x1="40" y1="60" x2="380" y2="60" stroke="#e5e7eb" strokeWidth="1" />
+              <line x1="40" y1="20" x2="380" y2="20" stroke="#e5e7eb" strokeWidth="1" />
+              
+              {/* Y-axis labels */}
+              <text x="35" y="185" fontSize="10" fill="#6b7280" textAnchor="end">0</text>
+              <text x="35" y="145" fontSize="10" fill="#6b7280" textAnchor="end">5K</text>
+              <text x="35" y="105" fontSize="10" fill="#6b7280" textAnchor="end">10K</text>
+              <text x="35" y="65" fontSize="10" fill="#6b7280" textAnchor="end">15K</text>
+              <text x="35" y="25" fontSize="10" fill="#6b7280" textAnchor="end">20K</text>
+              
+              {/* X-axis labels */}
+              <text x="80" y="195" fontSize="10" fill="#6b7280" textAnchor="middle">Jan</text>
+              <text x="150" y="195" fontSize="10" fill="#6b7280" textAnchor="middle">Feb</text>
+              <text x="220" y="195" fontSize="10" fill="#6b7280" textAnchor="middle">Mar</text>
+              <text x="290" y="195" fontSize="10" fill="#6b7280" textAnchor="middle">Apr</text>
+              <text x="360" y="195" fontSize="10" fill="#6b7280" textAnchor="middle">May</text>
+              
+              {/* Line chart path */}
+              <polyline 
+                fill="none" 
+                stroke="#3b82f6" 
+                strokeWidth="3"
+                points="80,160 150,140 220,100 290,80 360,40"
+              />
+              
+              {/* Data points */}
+              <circle cx="80" cy="160" r="5" fill="#3b82f6" />
+              <circle cx="150" cy="140" r="5" fill="#3b82f6" />
+              <circle cx="220" cy="100" r="5" fill="#3b82f6" />
+              <circle cx="290" cy="80" r="5" fill="#3b82f6" />
+              <circle cx="360" cy="40" r="5" fill="#3b82f6" />
+            </svg>
+          </div>
         </div>
-        {residents.length === 0 ? (
-          <div className="empty-state">
-            <p>No registered residents yet.</p>
+        
+        {/* Pie Chart */}
+        <div className="chart-card">
+          <div className="chart-header">
+            <h3>Residents Distribution</h3>
+            <a href="/staff/residents" className="chart-link">View</a>
           </div>
-        ) : (
-          <div className="residents-table">
-            <table>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Block</th>
-                  <th>Lot</th>
-                </tr>
-              </thead>
-              <tbody>
-                {residents.map((resident) => (
-                  <tr key={resident.id}>
-                    <td>{resident.fullName}</td>
-                    <td>{resident.email}</td>
-                    <td>{resident.block || '-'}</td>
-                    <td>{resident.lotNumber || '-'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="pie-chart-container">
+            <svg viewBox="0 0 200 200">
+              {/* Background circle */}
+              <circle cx="100" cy="100" r="80" fill="none" stroke="#e5e7eb" strokeWidth="24" />
+              {/* Progress circle */}
+              <circle 
+                cx="100" cy="100" r="80"
+                fill="none"
+                stroke="#3b82f6"
+                strokeWidth="24"
+                strokeDasharray={`${(kpis.totalResidents / 308) * 502.65} ${502.65 - (kpis.totalResidents / 308) * 502.65}`}
+                transform="rotate(-90 100 100)"
+                style={{ transition: 'stroke-dasharray 0.5s ease' }}
+              />
+              <text x="100" y="95" textAnchor="middle" fontSize="28" fontWeight="bold" fill="#1a1a2e">
+                {kpis.totalResidents}
+              </text>
+              <text x="100" y="120" fontSize="14" fill="#6b7280">
+                / 308
+              </text>
+            </svg>
           </div>
-        )}
-      </div>
-
-      {/* Recent Activity */}
-      <div className="dashboard-section">
-        <h3>Recent Activity</h3>
-        {recentActivity.length === 0 ? (
-          <div className="empty-state">
-            <p>No recent activity to display.</p>
-          </div>
-        ) : (
-          <div className="activity-list">
-            {recentActivity.map((activity) => (
-              <div key={activity.id} className="activity-item">
-                <div className="activity-icon">
-                  {getActivityIcon(activity.type)}
-                </div>
-                <div className="activity-details">
-                  <span className="activity-description">{activity.description}</span>
-                  <span className="activity-meta">
-                    {activity.details} • {formatDate(activity.date)}
-                  </span>
-                </div>
-                <div className={`activity-status ${activity.status}`}>
-                  {activity.status}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        </div>
       </div>
 
     </div>

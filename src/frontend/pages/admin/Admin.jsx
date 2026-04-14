@@ -12,7 +12,6 @@ import Reports from './pages/Reports';
 import AuditLogs from './pages/AuditLogs';
 import Notification from './pages/Notification';
 import Profile from './pages/Profile';
-import '../Violations.css';
 import './components/Dashboard.css';
 
 function Admin({ user, onLogout }) {

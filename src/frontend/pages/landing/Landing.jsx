@@ -8,7 +8,7 @@ import {
   ResidentPortalIcon,
   GisMappingIcon,
   SafetySecurityIcon,
-} from './components/FeatureIcons';
+} from '../../../components/Icons';
 
 const features = [
   {

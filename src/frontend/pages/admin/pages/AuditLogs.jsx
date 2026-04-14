@@ -4,7 +4,7 @@ import {
   Search, Calendar, Download, FileText, Trash2, X, 
   ChevronLeft, ChevronRight, ChevronFirst, ChevronLast,
   Eye, User, Shield, Monitor, CheckCircle, XCircle,
-  AlertTriangle, Loader2, Filter, RotateCcw, Clock
+  AlertTriangle, Loader2, RotateCcw, Clock
 } from 'lucide-react';
 import './AuditLogs.css';
 
@@ -93,109 +93,61 @@ const FiltersSection = ({
   actionFilter, setActionFilter,
   moduleFilter, setModuleFilter,
   searchQuery, setSearchQuery,
-  uniqueUsers, uniqueActions, uniqueModules,
-  onClearFilters
+  uniqueUsers, uniqueActions, uniqueModules
 }) => {
   return (
-    <div className="filters-section">
-      <div className="filters-header">
-        <div className="header-title">
-          <Filter size={18} />
-          <h2>Filters</h2>
-        </div>
-        <div className="header-buttons">
-          <button className="clear-filters-btn" onClick={onClearFilters}>
-            <RotateCcw size={16} />
-            Clear Filters
-          </button>
-        </div>
+    <div className="search-filter-bar">
+      <div className="filter-group">
+        <label>Search</label>
+        <input
+          type="text"
+          placeholder="Search logs..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
       </div>
-      
-      <div className="filters-grid">
-        {/* Search */}
-        <div className="filter-group search-group">
-          <label>
-            <Search size={14} />
-            Search
-          </label>
-          <div className="search-input-wrapper">
-            <Search size={16} className="search-icon" />
-            <input
-              type="text"
-              placeholder="     Search logs, users, descriptions..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </div>
-
-        {/* Date From */}
-        <div className="filter-group">
-          <label>
-            <Calendar size={14} />
-            Date From
-          </label>
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-          />
-        </div>
-
-        {/* Date To */}
-        <div className="filter-group">
-          <label>
-            <Calendar size={14} />
-            Date To
-          </label>
-          <input
-            type="date"
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-          />
-        </div>
-
-        {/* User Filter */}
-        <div className="filter-group">
-          <label>
-            <User size={14} />
-            User
-          </label>
-          <select value={userFilter} onChange={(e) => setUserFilter(e.target.value)}>
-            <option value="">All Users</option>
-            {uniqueUsers.map(user => (
-              <option key={user} value={user}>{user}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Action Filter */}
-        <div className="filter-group">
-          <label>
-            <Shield size={14} />
-            Action
-          </label>
-          <select value={actionFilter} onChange={(e) => setActionFilter(e.target.value)}>
-            <option value="">All Actions</option>
-            {uniqueActions.map(action => (
-              <option key={action} value={action}>{action}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Module Filter */}
-        <div className="filter-group">
-          <label>
-            <Monitor size={14} />
-            Module
-          </label>
-          <select value={moduleFilter} onChange={(e) => setModuleFilter(e.target.value)}>
-            <option value="">All Modules</option>
-            {uniqueModules.map(module => (
-              <option key={module} value={module}>{module}</option>
-            ))}
-          </select>
-        </div>
+      <div className="filter-group">
+        <label>Date From</label>
+        <input
+          type="date"
+          value={dateFrom}
+          onChange={(e) => setDateFrom(e.target.value)}
+        />
+      </div>
+      <div className="filter-group">
+        <label>Date To</label>
+        <input
+          type="date"
+          value={dateTo}
+          onChange={(e) => setDateTo(e.target.value)}
+        />
+      </div>
+      <div className="filter-group">
+        <label>User</label>
+        <select value={userFilter} onChange={(e) => setUserFilter(e.target.value)}>
+          <option value="">All Users</option>
+          {uniqueUsers.map(user => (
+            <option key={user} value={user}>{user}</option>
+          ))}
+        </select>
+      </div>
+      <div className="filter-group">
+        <label>Action</label>
+        <select value={actionFilter} onChange={(e) => setActionFilter(e.target.value)}>
+          <option value="">All Actions</option>
+          {uniqueActions.map(action => (
+            <option key={action} value={action}>{action}</option>
+          ))}
+        </select>
+      </div>
+      <div className="filter-group">
+        <label>Module</label>
+        <select value={moduleFilter} onChange={(e) => setModuleFilter(e.target.value)}>
+          <option value="">All Modules</option>
+          {uniqueModules.map(module => (
+            <option key={module} value={module}>{module}</option>
+          ))}
+        </select>
       </div>
     </div>
   );
@@ -394,7 +346,6 @@ function AuditLogs() {
         uniqueUsers={uniqueUsers}
         uniqueActions={uniqueActions}
         uniqueModules={uniqueModules}
-        onClearFilters={clearFilters}
       />
 
       {/* Logs Table */}

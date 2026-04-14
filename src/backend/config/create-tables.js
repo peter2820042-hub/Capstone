@@ -90,9 +90,14 @@ async function createTables() {
         lot_number VARCHAR(50),
         resident_name VARCHAR(255),
         bill_type VARCHAR(100),
+        bill_reference VARCHAR(100),
+        billing_period VARCHAR(100),
         amount DECIMAL(10,2) NOT NULL,
         due_date DATE,
         status VARCHAR(50) DEFAULT 'unpaid',
+        date_paid DATE,
+        payment_method VARCHAR(50),
+        amount_paid DECIMAL(10,2),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
@@ -270,16 +275,8 @@ async function createTables() {
     `);
     console.log('✅ Sample violations inserted');
 
-    // Sample bills
-    await client.query(`
-      INSERT INTO bills (lot_number, resident_name, bill_type, amount, due_date, status) VALUES
-      ('101', 'Juan dela Cruz', 'Association Dues', 1500.00, '2026-04-15', 'unpaid'),
-      ('102', 'Maria Santos', 'Association Dues', 1500.00, '2026-04-15', 'paid'),
-      ('201', 'Pedro Garcia', 'Water Bill', 350.00, '2026-04-10', 'unpaid'),
-      ('202', 'Ana Reyes', 'Association Dues', 1500.00, '2026-04-15', 'overdue')
-      ON CONFLICT DO NOTHING
-    `);
-    console.log('✅ Sample bills inserted');
+    // No sample bills - empty by default
+    console.log('📋 Bills table created (empty)');
 
     // Sample payments
     await client.query(`

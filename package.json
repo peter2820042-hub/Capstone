@@ -12,7 +12,8 @@
     "db:init": "node src/backend/config/init-db.js",
     "db:tables": "node src/backend/config/create-tables.js",
     "db:seed": "node src/backend/config/seed-users.js",
-    "server": "node server/server.js"
+    "server": "node server/server.js",
+    "screenshot": "node scripts/screenshots.js"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.2",
@@ -39,6 +40,7 @@
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
     "prettier": "^3.4.2",
+    "puppeteer": "^24.40.0",
     "vite": "^8.0.0-beta.13"
   },
   "overrides": {

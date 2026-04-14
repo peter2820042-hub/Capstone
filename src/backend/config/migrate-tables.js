@@ -105,6 +105,32 @@ async function migrateTables() {
       console.log('✅ Added last_login column to residents');
     } catch (e) { /* might exist */ }
 
+    // Add columns to bills table
+    try {
+      await client.query(`ALTER TABLE bills ADD COLUMN IF NOT EXISTS bill_reference VARCHAR(100)`);
+      console.log('✅ Added bill_reference column to bills');
+    } catch (e) { /* might exist */ }
+
+    try {
+      await client.query(`ALTER TABLE bills ADD COLUMN IF NOT EXISTS billing_period VARCHAR(100)`);
+      console.log('✅ Added billing_period column to bills');
+    } catch (e) { /* might exist */ }
+
+    try {
+      await client.query(`ALTER TABLE bills ADD COLUMN IF NOT EXISTS date_paid DATE`);
+      console.log('✅ Added date_paid column to bills');
+    } catch (e) { /* might exist */ }
+
+    try {
+      await client.query(`ALTER TABLE bills ADD COLUMN IF NOT EXISTS payment_method VARCHAR(50)`);
+      console.log('✅ Added payment_method column to bills');
+    } catch (e) { /* might exist */ }
+
+    try {
+      await client.query(`ALTER TABLE bills ADD COLUMN IF NOT EXISTS amount_paid DECIMAL(10,2)`);
+      console.log('✅ Added amount_paid column to bills');
+    } catch (e) { /* might exist */ }
+
     console.log('\n🎉 Migration completed successfully!');
     
   } catch (error) {

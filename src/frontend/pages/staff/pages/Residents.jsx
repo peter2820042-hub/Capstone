@@ -4,26 +4,19 @@ import './Residents.css';
 function Residents() {
   const [residents, setResidents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-
-  // Modal states
-  const [showAddModal, setShowAddModal] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedResident, setSelectedResident] = useState(null);
-
-  // Form state
   const [formData, setFormData] = useState({
     username: '',
+    password: '',
     fullName: '',
     email: '',
-    phoneNumber: '',
+    phone: '',
     block: '',
-    lot: '',
-    password: ''
+    lot: ''
   });
-
-  const [submitting, setSubmitting] = useState(false);
-  const [message, setMessage] = useState({ type: '', text: '' });
+  const [formMessage, setFormMessage] = useState(null);
 
   useEffect(() => {
     fetchResidents();
@@ -33,119 +26,144 @@ function Residents() {
     try {
       const response = await fetch('/api/residents');
       const data = await response.json();
-      // Handle API response - could be array or object with residents property
       setResidents(Array.isArray(data) ? data : (data.residents || []));
     } catch (error) {
       console.error('Error fetching residents:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleChange = (e) => {
+  const [filters, setFilters] = useState({
+    fullName: '',
+    block: '',
+    lot: ''
+  });
+
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters(prev => ({ ...prev, [name]: value }));
+  };
+
+  useEffect(() => {
+    const hasContent = filters.fullName.trim() || filters.block.trim() || filters.lot.trim();
+    
+    if (hasContent) {
+      const timeoutId = setTimeout(() => {
+        handleSearch();
+      }, 300);
+      return () => clearTimeout(timeoutId);
+    } else {
+      fetchResidents();
+    }
+  }, [filters.fullName, filters.block, filters.lot]);
+
+  const handleSearch = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (filters.fullName.trim()) params.append('full_name', filters.fullName);
+      if (filters.block.trim()) params.append('block', filters.block);
+      if (filters.lot.trim()) params.append('lot', filters.lot);
+
+      const url = `/api/residents/search?${params.toString()}`;
+      console.log('Searching:', url);
+      
+      const response = await fetch(url);
+      const data = await response.json();
+      console.log('Search results:', data);
+      setResidents(Array.isArray(data) ? data : (data.residents || []));
+    } catch (error) {
+      console.error('Error searching residents:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleAddSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitting(true);
-    setMessage({ type: '', text: '' });
+    setFormMessage(null);
 
     try {
-      const response = await fetch('/api/register', {
+      const response = await fetch('/api/residents', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: formData.username,
-          password: formData.password,
-          full_name: formData.fullName,
-          lot_number: formData.lot,
-          block: formData.block,
-          email: formData.email,
-          phone: formData.phoneNumber,
-          role: 'user'
-        })
+        body: JSON.stringify(formData)
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        setMessage({ type: 'success', text: 'Resident added successfully!' });
-        setFormData({
-          username: '',
-          fullName: '',
-          email: '',
-          phoneNumber: '',
-          block: '',
-          lot: '',
-          password: ''
-        });
+        setFormMessage({ type: 'success', text: 'Resident added successfully!' });
+        setFormData({ username: '', password: '', fullName: '', email: '', phone: '', block: '', lot: '' });
         fetchResidents();
-        setTimeout(() => setShowAddModal(false), 1500);
+        setTimeout(() => setShowModal(false), 1500);
       } else {
-        setMessage({ type: 'error', text: data.error || 'Failed to add resident' });
+        setFormMessage({ type: 'error', text: data.message || 'Failed to add resident' });
       }
     } catch (error) {
-      setMessage({ type: 'error', text: 'Cannot connect to server' });
-    } finally {
-      setSubmitting(false);
+      console.error('Error adding resident:', error);
+      setFormMessage({ type: 'error', text: 'An error occurred. Please try again.' });
     }
   };
 
-  const handleViewResident = (resident) => {
-    setSelectedResident(resident);
-    setShowViewModal(true);
-  };
-
-  const filteredResidents = residents.filter(resident => {
-    const search = searchTerm.toLowerCase();
-    return (
-      resident.username?.toLowerCase().includes(search) ||
-      resident.fullName?.toLowerCase().includes(search) ||
-      resident.email?.toLowerCase().includes(search) ||
-      resident.block?.toLowerCase().includes(search) ||
-      resident.lot?.toLowerCase().includes(search)
-    );
-  });
-
   return (
     <div className="residents-container">
-      {/* Header */}
       <div className="residents-header">
         <div className="header-title">
+          <h2>Residents</h2>
           <p className="header-subtitle">Manage and view all registered residents and their account information</p>
         </div>
-        <button 
-          className="add-btn"
-          onClick={() => setShowAddModal(true)}
-        >
+        <button className="add-btn" onClick={() => setShowModal(true)}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
+            <path d="M12 5v14M5 12h14" />
           </svg>
           Add Resident
         </button>
       </div>
 
-      {/* Search */}
-      <div className="search-bar">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <circle cx="11" cy="11" r="8" />
-          <line x1="21" y1="21" x2="16.65" y2="16.65" />
-        </svg>
-        <input
-          type="text"
-          placeholder="Search by name, email, block, or lot..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+      <div className="search-filter-bar">
+        <div className="filter-group">
+          <label>Full Name</label>
+          <input
+            type="text"
+            name="fullName"
+            placeholder="Enter full name..."
+            value={filters.fullName}
+            onChange={handleFilterChange}
+          />
+        </div>
+        <div className="filter-group">
+          <label>Block</label>
+          <input
+            type="text"
+            name="block"
+            placeholder="Enter block..."
+            value={filters.block}
+            onChange={handleFilterChange}
+          />
+        </div>
+        <div className="filter-group">
+          <label>Lot</label>
+          <input
+            type="text"
+            name="lot"
+            placeholder="Enter lot..."
+            value={filters.lot}
+            onChange={handleFilterChange}
+          />
+        </div>
       </div>
 
-      {/* Table */}
       <div className="table-container">
         <table className="residents-table">
           <thead>
             <tr>
-              <th>Username</th>
               <th>Full Name</th>
               <th>Email</th>
               <th>Block</th>
@@ -154,25 +172,30 @@ function Residents() {
             </tr>
           </thead>
           <tbody>
-            {filteredResidents.length === 0 ? (
+            {loading ? (
               <tr>
-                <td colSpan="6" className="empty-row">
-                  {searchTerm ? 'No residents found matching your search' : 'No residents registered yet'}
+                <td colSpan="5" className="loading-cell">
+                  <div className="loading-state">
+                    <div className="spinner"></div>
+                    <span>Loading residents...</span>
+                  </div>
+                </td>
+              </tr>
+            ) : residents.length === 0 ? (
+              <tr>
+                <td colSpan="5" className="empty-row">
+                  {(filters.fullName || filters.block || filters.lot) ? 'No residents found matching your search' : 'No residents registered yet'}
                 </td>
               </tr>
             ) : (
-              filteredResidents.map((resident) => (
+              residents.map((resident) => (
                 <tr key={resident.id}>
-                  <td>{resident.username}</td>
                   <td>{resident.fullName || '-'}</td>
                   <td>{resident.email || '-'}</td>
                   <td>{resident.block || '-'}</td>
                   <td>{resident.lotNumber || '-'}</td>
-                  <td>
-                    <button
-                      className="view-btn"
-                      onClick={() => handleViewResident(resident)}
-                    >
+                  <td className="actions">
+                    <button className="view-btn" onClick={() => { setSelectedResident(resident); setShowViewModal(true); }}>
                       View
                     </button>
                   </td>
@@ -183,88 +206,81 @@ function Residents() {
         </table>
       </div>
 
-      {/* Add Resident Modal */}
-      {showAddModal && (
-        <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
+      {showModal && (
+        <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <button className="close-btn" onClick={() => setShowAddModal(false)}>
+              <h3>Add New Resident</h3>
+              <button className="close-btn" onClick={() => setShowModal(false)}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
+                  <path d="M18 6L6 18M6 6l12 12" />
                 </svg>
               </button>
-              <h3>Add New Resident</h3>
             </div>
-            <form onSubmit={handleAddSubmit} className="modal-form">
-              {message.text && (
-                <div className={`message ${message.type}`}>
-                  {message.text}
+            <form className="modal-form" onSubmit={handleSubmit}>
+              {formMessage && (
+                <div className={`message ${formMessage.type}`}>
+                  {formMessage.text}
                 </div>
               )}
-
               <div className="form-row">
                 <div className="form-group">
-                  <label>Username *</label>
+                  <label>Username <span className="required">*</span></label>
                   <input
                     type="text"
                     name="username"
                     value={formData.username}
-                    onChange={handleChange}
+                    onChange={handleInputChange}
                     required
                   />
                 </div>
                 <div className="form-group">
-                  <label>Password *</label>
+                  <label>Password <span className="required">*</span></label>
                   <input
                     type="password"
                     name="password"
                     value={formData.password}
-                    onChange={handleChange}
+                    onChange={handleInputChange}
                     required
                   />
                 </div>
-              </div>
-
-              <div className="form-group">
-                <label>Full Name</label>
-                <input
-                  type="text"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleChange}
-                />
-              </div>
-
-              <div className="form-row">
+                <div className="form-group span-2">
+                  <label>Full Name</label>
+                  <input
+                    type="text"
+                    name="fullName"
+                    value={formData.fullName}
+                    onChange={handleInputChange}
+                    placeholder="Enter full name"
+                  />
+                </div>
                 <div className="form-group">
                   <label>Email</label>
                   <input
                     type="email"
                     name="email"
                     value={formData.email}
-                    onChange={handleChange}
+                    onChange={handleInputChange}
+                    placeholder="Enter email"
                   />
                 </div>
                 <div className="form-group">
                   <label>Phone</label>
                   <input
-                    type="tel"
-                    name="phoneNumber"
-                    value={formData.phoneNumber}
-                    onChange={handleChange}
+                    type="text"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    placeholder="Enter phone number"
                   />
                 </div>
-              </div>
-
-              <div className="form-row">
                 <div className="form-group">
                   <label>Block</label>
                   <input
                     type="text"
                     name="block"
                     value={formData.block}
-                    onChange={handleChange}
+                    onChange={handleInputChange}
                     placeholder="e.g., A"
                   />
                 </div>
@@ -274,22 +290,17 @@ function Residents() {
                     type="text"
                     name="lot"
                     value={formData.lot}
-                    onChange={handleChange}
+                    onChange={handleInputChange}
                     placeholder="e.g., 101"
                   />
                 </div>
               </div>
-
               <div className="modal-actions">
-                <button type="submit" className="submit-btn" disabled={submitting}>
-                  {submitting ? 'Adding...' : 'Add Resident'}
-                </button>
-                <button
-                  type="button"
-                  className="cancel-btn"
-                  onClick={() => setShowAddModal(false)}
-                >
+                <button type="button" className="cancel-btn" onClick={() => setShowModal(false)}>
                   Cancel
+                </button>
+                <button type="submit" className="submit-btn">
+                  Add Resident
                 </button>
               </div>
             </form>
@@ -297,50 +308,81 @@ function Residents() {
         </div>
       )}
 
-      {/* View Resident Modal */}
       {showViewModal && selectedResident && (
-        <div className="modal-overlay" onClick={() => setShowViewModal(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <button className="close-btn" onClick={() => setShowViewModal(false)}>
+        <div className="view-modal-overlay" onClick={() => setShowViewModal(false)}>
+          <div className="view-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="view-modal-header">
+              <div className="view-modal-avatar">
+                {selectedResident.fullName ? selectedResident.fullName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : '??'}
+              </div>
+              <div className="view-modal-header-info">
+                <h3>{selectedResident.fullName || 'Unknown'}</h3>
+                <span className="view-modal-location">Block {selectedResident.block || '-'}, Lot {selectedResident.lotNumber || '-'}</span>
+              </div>
+              <button className="view-modal-close" onClick={() => setShowViewModal(false)}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
+                  <path d="M18 6L6 18M6 6l12 12" />
                 </svg>
               </button>
-              <h3>Resident Details</h3>
             </div>
-            <div className="modal-content">
-              <div className="detail-grid">
-                <div className="detail-item">
-                  <span className="detail-label">Username</span>
-                  <span className="detail-value">{selectedResident.username}</span>
+
+            <div className="view-modal-content">
+              <div className="view-modal-section">
+                <div className="view-modal-section-title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  Contact Information
                 </div>
-                <div className="detail-item">
-                  <span className="detail-label">Full Name</span>
-                  <span className="detail-value">{selectedResident.fullName || 'N/A'}</span>
-                </div>
-                <div className="detail-item">
-                  <span className="detail-label">Email</span>
-                  <span className="detail-value">{selectedResident.email || 'N/A'}</span>
-                </div>
-                <div className="detail-item">
-                  <span className="detail-label">Phone</span>
-                  <span className="detail-value">{selectedResident.phoneNumber || 'N/A'}</span>
-                </div>
-                <div className="detail-item">
-                  <span className="detail-label">Block/Lot</span>
-                  <span className="detail-value">
-                    {selectedResident.block && selectedResident.lot 
-                      ? `${selectedResident.block}-${selectedResident.lot}` 
-                      : 'Not assigned'}
-                  </span>
-                </div>
-                <div className="detail-item">
-                  <span className="detail-label">User ID</span>
-                  <span className="detail-value">{selectedResident.id}</span>
+                <div className="view-modal-grid">
+                  <div className="view-modal-item">
+                    <span className="view-modal-label">Email Address</span>
+                    <span className="view-modal-value">{selectedResident.email || '-'}</span>
+                  </div>
+                  <div className="view-modal-item">
+                    <span className="view-modal-label">Phone Number</span>
+                    <span className="view-modal-value">{selectedResident.phone || '-'}</span>
+                  </div>
                 </div>
               </div>
+
+              <div className="view-modal-section">
+                <div className="view-modal-section-title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                    <polyline points="9 22 9 12 15 12 15 22" />
+                  </svg>
+                  Property Details
+                </div>
+                <div className="view-modal-grid">
+                  <div className="view-modal-item">
+                    <span className="view-modal-label">Block</span>
+                    <span className="view-modal-value">{selectedResident.block || '-'}</span>
+                  </div>
+                  <div className="view-modal-item">
+                    <span className="view-modal-label">Lot Number</span>
+                    <span className="view-modal-value">{selectedResident.lotNumber || '-'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="view-modal-footer">
+              <a href="/payments" className="view-modal-action-btn view-modal-btn-primary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                  <line x1="1" y1="10" x2="23" y2="10" />
+                </svg>
+                View Payments
+              </a>
+              <a href="/violations" className="view-modal-action-btn view-modal-btn-secondary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                  <line x1="12" y1="9" x2="12" y2="13" />
+                  <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+                View Violations
+              </a>
             </div>
           </div>
         </div>

@@ -57,23 +57,23 @@
 }
 
 .kpi-icon.residents {
-  background: #dbeafe;
-  color: #1e40af;
+  background: #e0f2fe;
+  color: #0284c7;
 }
 
 .kpi-icon.lots {
-  background: #d1fae5;
-  color: #065f46;
+  background: #fef2f2;
+  color: #dc2626;
 }
 
 .kpi-icon.dues {
-  background: #fef3c7;
-  color: #92400e;
+  background: #fefce8;
+  color: #ca8a04;
 }
 
 .kpi-icon.delinquencies {
-  background: #fee2e2;
-  color: #991b1b;
+  background: #fef2f2;
+  color: #dc2626;
 }
 
 .kpi-icon.violations {
@@ -101,12 +101,13 @@
 .kpi-label {
   font-size: 0.875rem;
   color: #64748b;
+  margin-top: 0.5rem;
 }
 
 /* Charts Section */
 .charts-section {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: repeat(2, 1fr);
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
@@ -117,6 +118,87 @@
   padding: 1.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
   border: 1px solid #e2e8f0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.chart-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.chart-card h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+/* Pie Chart Container */
+.pie-chart-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 0;
+}
+
+.pie-chart-container svg {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.08));
+}
+
+.pie-chart-container svg circle,
+.pie-chart-container svg text {
+  transition: all 0.3s ease;
+}
+
+/* Line Chart */
+.line-chart {
+  padding: 0.5rem;
+  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+  border-radius: 8px;
+  min-height: 180px;
+}
+
+.line-chart svg {
+  width: 100%;
+  height: auto;
+}
+
+.line-chart rect {
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.line-chart rect:hover {
+  filter: brightness(0.9);
+}
+
+/* Chart Filter */
+.chart-filter {
+  margin-bottom: 1rem;
+}
+
+.chart-filter select {
+  padding: 0.5rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #475569;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.chart-filter select:hover {
+  border-color: #cbd5e1;
+}
+
+.chart-filter select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .chart-header {
@@ -672,4 +754,86 @@
   .kpi-content {
     align-items: center;
   }
+}
+
+/* PA Center Section */
+.pa-center-section {
+  margin-bottom: 2rem;
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 1rem;
+}
+
+.pa-center-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.pa-center-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pa-center-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.pa-center-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pa-center-icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.pa-center-card.total-billed .pa-center-icon {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.pa-center-card.total-paid .pa-center-icon {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.pa-center-card.outstanding .pa-center-icon {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.pa-center-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.pa-center-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.pa-center-label {
+  font-size: 0.875rem;
+  color: #64748b;
 }

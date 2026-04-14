@@ -30,8 +30,6 @@ function Payments() {
   const [searchTerm, setSearchTerm] = useState('');
   const [residentFilter, setResidentFilter] = useState('');
   const [billReferenceFilter, setBillReferenceFilter] = useState('');
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
   const [paymentMethodFilter, setPaymentMethodFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
@@ -58,7 +56,7 @@ function Payments() {
     const today = new Date().toISOString().split('T')[0];
     return p.status === 'approved' && p.approvedDate === today;
   }).reduce((sum, p) => sum + p.amount, 0);
-  const rejectedCount = payments.filter(p => p.status === 'rejected').length;
+
 
   // Filter payments based on all criteria
   const filteredPayments = payments.filter(payment => {
@@ -71,20 +69,8 @@ function Payments() {
     const matchesBillReference = billReferenceFilter === '' || payment.billReference.toLowerCase().includes(billReferenceFilter.toLowerCase());
     const matchesPaymentMethod = paymentMethodFilter === '' || payment.paymentMethod === paymentMethodFilter;
     const matchesStatus = statusFilter === '' || payment.status === statusFilter;
-    
-    let matchesDateRange = true;
-    if (dateFrom && dateTo) {
-      const paymentDate = new Date(payment.paymentDate);
-      const fromDate = new Date(dateFrom);
-      const toDate = new Date(dateTo);
-      matchesDateRange = paymentDate >= fromDate && paymentDate <= toDate;
-    } else if (dateFrom) {
-      matchesDateRange = new Date(payment.paymentDate) >= new Date(dateFrom);
-    } else if (dateTo) {
-      matchesDateRange = new Date(payment.paymentDate) <= new Date(dateTo);
-    }
 
-    return matchesSearch && matchesResident && matchesBillReference && matchesPaymentMethod && matchesStatus && matchesDateRange;
+    return matchesSearch && matchesResident && matchesBillReference && matchesPaymentMethod && matchesStatus;
   });
 
   // Pagination logic
@@ -141,8 +127,6 @@ function Payments() {
     setSearchTerm('');
     setResidentFilter('');
     setBillReferenceFilter('');
-    setDateFrom('');
-    setDateTo('');
     setPaymentMethodFilter('');
     setStatusFilter('');
   };
@@ -183,13 +167,92 @@ function Payments() {
     setSelectedPayments([]);
   };
 
-  // Export functions
+  // Export to PDF
   const exportToPDF = () => {
-    alert('Exporting to PDF...');
+    // Create printable content
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Payments Report - ${new Date().toLocaleDateString()}</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 20px; }
+          h1 { text-align: center; color: #333; }
+          .date { text-align: center; color: #666; margin-bottom: 20px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+          th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+          th { background-color: #3498db; color: white; }
+          .approved { color: green; }
+          .pending { color: orange; }
+          .rejected { color: red; }
+          .summary { margin-top: 30px; padding: 15px; background: #f5f5f5; }
+        </style>
+      </head>
+      <body>
+        <h1>Sentrina Payments Report</h1>
+        <p class="date">Generated: ${new Date().toLocaleString()}</p>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Resident</th>
+              <th>Bill Reference</th>
+              <th>Amount</th>
+              <th>Payment Date</th>
+              <th>Method</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${filteredPayments.map(p => `
+              <tr>
+                <td>#${p.id}</td>
+                <td>${p.residentName}</td>
+                <td>${p.billReference || 'N/A'}</td>
+                <td>PHP ${parseFloat(p.amount).toLocaleString('en-PH', {minimumFractionDigits: 2})}</td>
+                <td>${p.paymentDate ? new Date(p.paymentDate).toLocaleDateString() : 'N/A'}</td>
+                <td>${p.paymentMethod || 'N/A'}</td>
+                <td class="${p.status}">${p.status}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        <div class="summary">
+          <p><strong>Total Records:</strong> ${filteredPayments.length}</p>
+          <p><strong>Approved:</strong> ${payments.filter(p => p.status === 'approved').length} (PHP ${payments.filter(p => p.status === 'approved').reduce((sum, p) => sum + parseFloat(p.amount), 0).toLocaleString('en-PH', {minimumFractionDigits: 2})})</p>
+          <p><strong>Pending:</strong> ${payments.filter(p => p.status === 'pending').length}</p>
+          <p><strong>Rejected:</strong> ${payments.filter(p => p.status === 'rejected').length}</p>
+        </div>
+      </body>
+      </html>
+    `;
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.print();
   };
 
+  // Export to Excel (CSV format)
   const exportToExcel = () => {
-    alert('Exporting to Excel...');
+    // CSV header
+    let csvContent = 'ID,Resident Name,Bill Reference,Amount,Payment Date,Payment Method,Status,Approved Date\n';
+    
+    // Add data rows
+    filteredPayments.forEach(p => {
+      csvContent += `${p.id},"${p.residentName}","${p.billReference || ''}",${p.amount},"${p.paymentDate || ''}","${p.paymentMethod || ''}","${p.status}","${p.approvedDate || ''}"\n`;
+    });
+    
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `payments_export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   // Get status badge class
@@ -220,7 +283,8 @@ function Payments() {
   };
 
   return (
-    <div className="payments-container">
+    <>
+      <div className="payments-container">
       
       {/* Stats Cards Section */}
       <div className="stats-section">
@@ -264,19 +328,7 @@ function Payments() {
             </div>
           </div>
 
-          <div className="stat-card">
-            <div className="stat-icon rejected">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="15" y1="9" x2="9" y2="15" />
-                <line x1="9" y1="9" x2="15" y2="15" />
-              </svg>
-            </div>
-            <div className="stat-content">
-              <span className="stat-label">Rejected</span>
-              <span className="stat-value rejected">{rejectedCount}</span>
-            </div>
-          </div>
+
         </div>
       </div>
 
@@ -320,110 +372,67 @@ function Payments() {
         </div>
       )}
 
-      {/* Search & Filter Section */}
-      <div className="filter-section">
-        <div className="filter-header">
-          <h2>Search & Filter</h2>
-          <button className="clear-filters-btn" onClick={clearFilters}>
-            Clear All Filters
-          </button>
+      {/* Search/Filter - Horizontal Layout */}
+      <div className="search-filter-bar">
+        <div className="filter-group">
+          <label>Search</label>
+          <input
+            type="text"
+            name="search"
+            placeholder="Search by resident or bill reference..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
-
-        <div className="filter-grid">
-          {/* General Search */}
-          <div className="filter-group search-group">
-            <label htmlFor="search">Search</label>
-            <div className="search-input-wrapper">
-              <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="11" cy="11" r="8"></circle>
-                <path d="m21 21-4.35-4.35"></path>
-              </svg>
-              <input
-                type="text"
-                id="search"
-                placeholder="Search by resident, bill reference, or transaction ID..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* Resident Name Filter */}
-          <div className="filter-group">
-            <label htmlFor="residentFilter">Resident Name</label>
-            <input
-              type="text"
-              id="residentFilter"
-              placeholder="Filter by resident name"
-              value={residentFilter}
-              onChange={(e) => setResidentFilter(e.target.value)}
-            />
-          </div>
-
-          {/* Bill Reference Filter */}
-          <div className="filter-group">
-            <label htmlFor="billReferenceFilter">Bill Reference</label>
-            <input
-              type="text"
-              id="billReferenceFilter"
-              placeholder="Filter by bill reference"
-              value={billReferenceFilter}
-              onChange={(e) => setBillReferenceFilter(e.target.value)}
-            />
-          </div>
-
-          {/* Date Range Filter */}
-          <div className="filter-group date-range-group">
-            <label>Date Range</label>
-            <div className="date-range-inputs">
-              <input
-                type="date"
-                id="dateFrom"
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-                placeholder="From"
-              />
-              <span className="date-separator">to</span>
-              <input
-                type="date"
-                id="dateTo"
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-                placeholder="To"
-              />
-            </div>
-          </div>
-
-          {/* Payment Method Filter */}
-          <div className="filter-group">
-            <label htmlFor="paymentMethodFilter">Payment Method</label>
-            <select
-              id="paymentMethodFilter"
-              value={paymentMethodFilter}
-              onChange={(e) => setPaymentMethodFilter(e.target.value)}
-            >
-              <option value="">All Methods</option>
-              {paymentMethods.map((method, index) => (
-                <option key={index} value={method}>{method}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Status Filter */}
-          <div className="filter-group">
-            <label htmlFor="statusFilter">Status</label>
-            <select
-              id="statusFilter"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="">All Statuses</option>
-              <option value="pending">Pending</option>
-              <option value="approved">Approved</option>
-              <option value="rejected">Rejected</option>
-            </select>
-          </div>
+        <div className="filter-group">
+          <label>Resident Name</label>
+          <input
+            type="text"
+            name="residentFilter"
+            placeholder="Filter by resident name..."
+            value={residentFilter}
+            onChange={(e) => setResidentFilter(e.target.value)}
+          />
         </div>
+        <div className="filter-group">
+          <label>Bill Reference</label>
+          <input
+            type="text"
+            name="billReferenceFilter"
+            placeholder="Filter by bill reference..."
+            value={billReferenceFilter}
+            onChange={(e) => setBillReferenceFilter(e.target.value)}
+          />
+        </div>
+        <div className="filter-group">
+          <label>Payment Method</label>
+          <select
+            name="paymentMethodFilter"
+            value={paymentMethodFilter}
+            onChange={(e) => setPaymentMethodFilter(e.target.value)}
+          >
+            <option value="">All Methods</option>
+            {paymentMethods.map((method, index) => (
+              <option key={index} value={method}>{method}</option>
+            ))}
+          </select>
+        </div>
+        <div className="filter-group">
+          <label>Status</label>
+          <select
+            name="statusFilter"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="">All Statuses</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+        <button className="clear-btn" onClick={clearFilters}>
+          Clear
+        </button>
       </div>
 
       {/* Payments Table Section */}
@@ -432,6 +441,7 @@ function Payments() {
           <div className="table-title">
             <h2>Payment Transactions</h2>
             <span className="table-info">Showing {filteredPayments.length} of {payments.length} entries</span>
+          </div>
           </div>
           <div className="table-actions">
             <div className="export-buttons">
@@ -782,7 +792,7 @@ function Payments() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
 
