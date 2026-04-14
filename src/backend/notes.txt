@@ -1,173 +1,90 @@
-# DATABASE TABLES AND RECORDS - Sentrina Application
+# SENTRINA DATABASE - MGA TABLE AT RECORDS
 
 ---
 
-## MGA parehong COLUMN SA LAHAT NG TABLE
+## COMMON COLUMNS (Pareho sa Lahat ng Table)
 
-### Laging Meron sa Lahat ng Table:
-
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | SERIAL PRIMARY KEY | Auto-increment ID (1, 2, 3...) |
-| `created_at` | TIMESTAMP | Oras ng paggawa ng record |
-
-### Mayroon din sa Ilang Table:
-
-| Column | Tables |
-|--------|--------|
-| `updated_at` | admins, staffs, residents, violations, bills, payments |
-| `status` | admins, staffs, residents, violations, bills, payments, notifications |
-| `profile_image` | admins, staffs, residents, audit_logs |
-
-### Mga Unique Columns (hindi pare-pareho):
-
-| Table | Unique Columns |
-|-------|----------------|
-| admins | username, password_hash, full_name, email, phone, position, last_login |
-| staffs | username, password_hash, full_name, email, phone, position, last_login |
-| residents | username, password_hash, full_name, lot_number, block, phase, email, phone, role, date_registered, last_login |
-| violations | lot_number, resident_name, block, violation_type, description, date_issued, penalty |
-| bills | lot_number, resident_name, bill_type, bill_reference, billing_period, amount, due_date, date_paid, payment_method, amount_paid, related_id, related_type |
-| payments | lot_number, resident_name, bill_reference, amount, payment_date, payment_method, approved_date |
-| audit_logs | user_name, user_role, action, module, description, ip_address, timestamp |
-| notifications | user_id, type, title, message, related_id, related_type |
-
-**Summary:** Lahat ng table may `id` at `created_at`. Karamihan may `status` at `updated_at` din.
+| Column | Type | Description | Tables |
+|--------|------|-------------|--------|
+| id | SERIAL PRIMARY KEY | Auto-increment ID | LAHAT |
+| created_at | TIMESTAMP | Oras ng paggawa | LAHAT |
+| updated_at | TIMESTAMP | Huling update | Karamihan |
+| status | VARCHAR(50) | Record status | Karamihan |
 
 ---
 
-## TABLE: admins (Admin User Accounts)
-- id: SERIAL PRIMARY KEY (auto-increment)
-- username: VARCHAR(100) UNIQUE NOT NULL
-- password_hash: VARCHAR(255) NOT NULL
-- full_name: VARCHAR(255) NOT NULL
-- email: VARCHAR(255)
-- phone: VARCHAR(50)
-- position: VARCHAR(100)
-- profile_image: TEXT
-- status: VARCHAR(50) DEFAULT 'active'
-- last_login: TIMESTAMP
-- created_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-- updated_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+## 1. admins - Admin Accounts
 
-Records:
-| id | username | password_hash | full_name | email | phone | position | status |
-|----|-----------|---------------|-----------|-------|-------|----------|--------|
-| 1 | admin | $2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy | System Administrator | admin@sentrina.com | | | active |
+**Columns:**
+- id, username, password_hash, full_name, email, phone, position, profile_image, status, last_login, created_at, updated_at
 
-Default Login: admin / admin123
+**Records:**
+| id | username | full_name | email | position | status |
+|----|---------|-----------|-------|----------|--------|
+| 1 | admin | System Administrator | admin@sentrina.com | | active |
+
+**Login:** admin / admin123
 
 ---
 
-## Table: staffs (Staff User Accounts)
-- id: SERIAL PRIMARY KEY
-- username: VARCHAR(100) UNIQUE NOT NULL
-- password_hash: VARCHAR(255) NOT NULL
-- full_name: VARCHAR(255) NOT NULL
-- email: VARCHAR(255)
-- phone: VARCHAR(50)
-- position: VARCHAR(100)
-- profile_image: TEXT
-- status: VARCHAR(50) DEFAULT 'active'
-- last_login: TIMESTAMP
-- created_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-- updated_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+## 2. staffs - Staff Accounts
 
-Records:
-| id | username | password_hash | full_name | email | position | status |
-|----|-----------|---------------|-----------|-------|----------|--------|
-| 1 | staff | $2a$10$KvTqM9uLOickgx2ZMRZoMyeLJZAacfl7p92ldGxad68LJZdL17lhWy | Staff Member | staff@sentrina.com | General Staff | active |
+**Columns:**
+- id, username, password_hash, full_name, email, phone, position, profile_image, status, last_login, created_at, updated_at
 
-Default Login: staff / staff123
+**Records:**
+| id | username | full_name | email | position | status |
+|----|---------|-----------|-------|----------|--------|
+| 1 | staff | Staff Member | staff@sentrina.com | General Staff | active |
+
+**Login:** staff / staff123
 
 ---
 
-## Table: residents (Homeowners)
-- id: SERIAL PRIMARY KEY
-- username: VARCHAR(100) UNIQUE
-- password_hash: VARCHAR(255)
-- full_name: VARCHAR(255) NOT NULL
-- lot_number: VARCHAR(50)
-- block: VARCHAR(50)
-- phase: VARCHAR(50)
-- email: VARCHAR(255)
-- phone: VARCHAR(50)
-- profile_image: TEXT
-- role: VARCHAR(50) DEFAULT 'homeowner'
-- status: VARCHAR(50) DEFAULT 'active'
-- date_registered: DATE DEFAULT CURRENT_DATE
-- last_login: TIMESTAMP
-- created_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-- updated_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+## 3. residents - Homeowners
 
-Records:
-| id | full_name | lot_number | block | phase | email | phone | role | status |
-|----|-----------|------------|-------|-------|-------|-------|------|--------|
-| 1 | Juan dela Cruz | 101 | A | | juan@example.com | 091234567890 | homeowner | active |
-| 2 | Maria Santos | 102 | A | | maria@example.com | 091234567891 | homeowner | active |
-| 3 | Pedro Garcia | 201 | B | | pedro@example.com | 091234567892 | homeowner | active |
-| 4 | Ana Reyes | 202 | B | | ana@example.com | 091234567893 | homeowner | active |
+**Columns:**
+- id, username, password_hash, full_name, lot_number, block, phase, email, phone, profile_image, role, status, date_registered, last_login, created_at, updated_at
+
+**Records:**
+| id | full_name | lot_number | block | email | phone | role | status |
+|----|-----------|------------|-------|-------|-------|------|--------|
+| 1 | Juan dela Cruz | 101 | A | juan@example.com | 091234567890 | homeowner | active |
+| 2 | Maria Santos | 102 | A | maria@example.com | 091234567891 | homeowner | active |
+| 3 | Pedro Garcia | 201 | B | pedro@example.com | 091234567892 | homeowner | active |
+| 4 | Ana Reyes | 202 | B | ana@example.com | 091234567893 | homeowner | active |
 
 ---
 
-## Table: violations
-- id: SERIAL PRIMARY KEY
-- lot_number: VARCHAR(50)
-- resident_name: VARCHAR(255)
-- block: VARCHAR(50)
-- violation_type: VARCHAR(100)
-- description: TEXT
-- date_issued: DATE DEFAULT CURRENT_DATE
-- status: VARCHAR(50) DEFAULT 'pending'
-- penalty: DECIMAL(10,2)
-- created_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-- updated_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+## 4. violations - Mga Violation
 
-Records:
-| id | lot_number | resident_name | block | violation_type | description | date_issued | status | penalty |
-|----|------------|---------------|-------|----------------|-------------|-------------|--------|--------|
-| 1 | 101 | Juan dela Cruz | A | Noise Violation | Loud music after 10 PM | 2026-03-15 | pending | 500.00 |
-| 2 | 102 | Maria Santos | A | Illegal Parking | Parked in front of fire exit | 2026-03-20 | settled | 300.00 |
-| 3 | 201 | Pedro Garcia | B | Garbage Violation | Improper waste disposal | 2026-03-25 | pending | 200.00 |
+**Columns:**
+- id, lot_number, resident_name, block, violation_type, description, date_issued, status, penalty, created_at, updated_at
+
+**Records:**
+| id | lot_number | resident_name | violation_type | description | status | penalty |
+|----|------------|---------------|----------------|-------------|--------|---------|
+| 1 | 101 | Juan dela Cruz | Noise Violation | Loud music after 10 PM | pending | 500.00 |
+| 2 | 102 | Maria Santos | Illegal Parking | Parked in front of fire exit | settled | 300.00 |
+| 3 | 201 | Pedro Garcia | Garbage Violation | Improper waste disposal | pending | 200.00 |
 
 ---
 
-## Table: bills (Billing)
-- id: SERIAL PRIMARY KEY
-- lot_number: VARCHAR(50)
-- resident_name: VARCHAR(255)
-- bill_type: VARCHAR(100)
-- bill_reference: VARCHAR(100)
-- billing_period: VARCHAR(100)
-- amount: DECIMAL(10,2) NOT NULL
-- due_date: DATE
-- status: VARCHAR(50) DEFAULT 'unpaid'
-- date_paid: DATE
-- payment_method: VARCHAR(50)
-- amount_paid: DECIMAL(10,2)
-- related_id: INTEGER
-- related_type: VARCHAR(50)
-- created_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-- updated_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+## 5. bills - Billing Records
 
-Records: (Empty - no default data)
+**Columns:**
+- id, lot_number, resident_name, bill_type, bill_reference, billing_period, amount, due_date, status, date_paid, payment_method, amount_paid, related_id, related_type, created_at, updated_at
+
+**Records:** (Walang default data - empty)
 
 ---
 
-## Table: payments
-- id: SERIAL PRIMARY KEY
-- lot_number: VARCHAR(50)
-- resident_name: VARCHAR(255)
-- bill_reference: VARCHAR(100)
-- amount: DECIMAL(10,2) NOT NULL
-- payment_date: DATE DEFAULT CURRENT_DATE
-- payment_method: VARCHAR(50)
-- status: VARCHAR(50) DEFAULT 'pending'
-- approved_date: DATE
-- created_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-- updated_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+## 6. payments - Mga Bayarin
 
-Records:
+**Columns:**
+- id, lot_number, resident_name, bill_reference, amount, payment_date, payment_method, status, approved_date, created_at, updated_at
+
+**Records:**
 | id | lot_number | resident_name | bill_reference | amount | payment_date | payment_method | status |
 |----|------------|---------------|----------------|--------|--------------|----------------|--------|
 | 1 | 102 | Maria Santos | BILL-102-001 | 1500.00 | 2026-04-01 | GCash | approved |
@@ -175,69 +92,44 @@ Records:
 
 ---
 
-## Table: audit_logs (Activity Logs)
-- id: SERIAL PRIMARY KEY
-- user_name: VARCHAR(255)
-- user_role: VARCHAR(50)
-- action: VARCHAR(100)
-- module: VARCHAR(100)
-- description: TEXT
-- ip_address: VARCHAR(50)
-- profile_image: TEXT
-- status: VARCHAR(50) DEFAULT 'success'
-- timestamp: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+## 7. audit_logs - Activity Logs
 
-Records:
-| id | user_name | user_role | action | module | description | ip_address | status |
-|----|-----------|-----------|--------|--------|-------------|------------|--------|
-| 1 | Peter Admin | admin | Login | Authentication | Admin logged in successfully | 127.0.0.1 | success |
-| 2 | John Staff | staff | View | Residents | Staff viewed residents list | 127.0.0.1 | success |
-| 3 | Peter Admin | admin | Create | Billing | Admin created new bill | 127.0.0.1 | success |
+**Columns:**
+- id, user_name, user_role, action, module, description, ip_address, profile_image, status, timestamp
+
+**Records:**
+| id | user_name | user_role | action | module | description | status |
+|----|-----------|-----------|--------|--------|-------------|--------|
+| 1 | Peter Admin | admin | Login | Authentication | Admin logged in | success |
+| 2 | John Staff | staff | View | Residents | Staff viewed list | success |
+| 3 | Peter Admin | admin | Create | Billing | Admin created bill | success |
 
 ---
 
-## Table: notifications
-- id: SERIAL PRIMARY KEY
-- user_id: INTEGER
-- type: VARCHAR(50)
-- title: VARCHAR(255)
-- message: TEXT
-- status: VARCHAR(20) DEFAULT 'unread'
-- related_id: INTEGER
-- related_type: VARCHAR(50)
-- created_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+## 8. notifications - Mga Notification
 
-Records: (Empty - populated when users receive notifications)
+**Columns:**
+- id, user_id, type, title, message, status, related_id, related_type, created_at
+
+**Records:** (Empty - populate when users get notifications)
 
 ---
 
-# DATABASE INDEXES (for performance)
-- idx_residents_lot_number ON residents(lot_number)
-- idx_residents_block ON residents(block)
-- idx_residents_status ON residents(status)
-- idx_residents_username ON residents(username)
-- idx_violations_lot_number ON violations(lot_number)
-- idx_violations_status ON violations(status)
-- idx_violations_date_issued ON violations(date_issued)
-- idx_bills_lot_number ON bills(lot_number)
-- idx_bills_status ON bills(status)
-- idx_bills_due_date ON bills(due_date)
-- idx_payments_lot_number ON payments(lot_number)
-- idx_payments_status ON payments(status)
-- idx_payments_payment_date ON payments(payment_date)
-- idx_audit_logs_user_name ON audit_logs(user_name)
-- idx_audit_logs_user_role ON audit_logs(user_role)
-- idx_audit_logs_timestamp ON audit_logs(timestamp)
-- idx_notifications_user_id ON notifications(user_id)
-- idx_notifications_status ON notifications(status)
+## LOGIN CREDENTIALS
 
----
-
-# LOGIN CREDENTIALS (DEFAULT)
 | Role | Username | Password |
 |------|----------|----------|
 | Admin | admin | admin123 |
 | Staff | staff | staff123 |
 | Resident | (Register through app) | - |
 
-Note: Passwords are hashed using bcrypt with salt rounds 10.
+---
+
+## MGA INDEX (Performance)
+
+- idx_residents_lot_number, idx_residents_block, idx_residents_status
+- idx_violations_lot_number, idx_violations_status, idx_violations_date_issued
+- idx_bills_lot_number, idx_bills_status, idx_bills_due_date
+- idx_payments_lot_number, idx_payments_status, idx_payments_payment_date
+- idx_audit_logs_user_name, idx_audit_logs_user_role, idx_audit_logs_timestamp
+- idx_notifications_user_id, idx_notifications_status
