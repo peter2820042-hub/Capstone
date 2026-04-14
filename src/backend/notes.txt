@@ -1,6 +1,42 @@
 # DATABASE TABLES AND RECORDS - Sentrina Application
 
-## Table: admins (Admin User Accounts)
+---
+
+## MGA parehong COLUMN SA LAHAT NG TABLE
+
+### Laging Meron sa Lahat ng Table:
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | SERIAL PRIMARY KEY | Auto-increment ID (1, 2, 3...) |
+| `created_at` | TIMESTAMP | Oras ng paggawa ng record |
+
+### Mayroon din sa Ilang Table:
+
+| Column | Tables |
+|--------|--------|
+| `updated_at` | admins, staffs, residents, violations, bills, payments |
+| `status` | admins, staffs, residents, violations, bills, payments, notifications |
+| `profile_image` | admins, staffs, residents, audit_logs |
+
+### Mga Unique Columns (hindi pare-pareho):
+
+| Table | Unique Columns |
+|-------|----------------|
+| admins | username, password_hash, full_name, email, phone, position, last_login |
+| staffs | username, password_hash, full_name, email, phone, position, last_login |
+| residents | username, password_hash, full_name, lot_number, block, phase, email, phone, role, date_registered, last_login |
+| violations | lot_number, resident_name, block, violation_type, description, date_issued, penalty |
+| bills | lot_number, resident_name, bill_type, bill_reference, billing_period, amount, due_date, date_paid, payment_method, amount_paid, related_id, related_type |
+| payments | lot_number, resident_name, bill_reference, amount, payment_date, payment_method, approved_date |
+| audit_logs | user_name, user_role, action, module, description, ip_address, timestamp |
+| notifications | user_id, type, title, message, related_id, related_type |
+
+**Summary:** Lahat ng table may `id` at `created_at`. Karamihan may `status` at `updated_at` din.
+
+---
+
+## TABLE: admins (Admin User Accounts)
 - id: SERIAL PRIMARY KEY (auto-increment)
 - username: VARCHAR(100) UNIQUE NOT NULL
 - password_hash: VARCHAR(255) NOT NULL
