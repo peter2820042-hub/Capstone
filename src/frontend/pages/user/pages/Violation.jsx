@@ -101,10 +101,7 @@ function Violation(props) {
 
   // Format currency
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-PH', {
-      style: 'currency',
-      currency: 'PHP'
-    }).format(amount);
+    return `₱${parseFloat(amount).toFixed(2)}`;
   };
 
   // Format date
@@ -249,7 +246,7 @@ function Violation(props) {
         </div>
         <div className="filters-grid">
           {/* Search */}
-          <div className="filter-group search-group">
+          <div className="user-filter-group search-group">
             <label>Search</label>
             <div className="search-input-wrapper">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -266,7 +263,7 @@ function Violation(props) {
           </div>
 
           {/* Date From */}
-          <div className="filter-group">
+          <div className="user-filter-group">
             <label>Date From</label>
             <input
               type="date"
@@ -276,7 +273,7 @@ function Violation(props) {
           </div>
 
           {/* Date To */}
-          <div className="filter-group">
+          <div className="user-filter-group">
             <label>Date To</label>
             <input
               type="date"
@@ -286,7 +283,7 @@ function Violation(props) {
           </div>
 
           {/* Status Filter */}
-          <div className="filter-group">
+          <div className="user-filter-group">
             <label>Status</label>
             <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
               <option value="">All Statuses</option>
@@ -300,8 +297,8 @@ function Violation(props) {
 
       {/* Violations Table */}
       <div className="violations-table-section">
-        <div className="table-header">
-          <div className="table-info">
+        <div className="user-table-header">
+          <div className="user-table-info">
             <span className="results-count">
               Showing {filteredViolations.length > 0 ? startIndex + 1 : 0}-{Math.min(startIndex + itemsPerPage, filteredViolations.length)} of {filteredViolations.length} violations
             </span>
@@ -317,7 +314,7 @@ function Violation(props) {
           </div>
         </div>
 
-        <div className="table-container">
+        <div className="user-table-container">
           <table className="violations-table">
             <thead>
               <tr>
@@ -386,9 +383,9 @@ function Violation(props) {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="pagination">
+          <div className="user-pagination">
             <button
-              className="pagination-btn"
+              className="user-user-pagination-btn"
               onClick={() => setCurrentPage(1)}
               disabled={currentPage === 1}
             >
@@ -398,7 +395,7 @@ function Violation(props) {
               </svg>
             </button>
             <button
-              className="pagination-btn"
+              className="user-user-pagination-btn"
               onClick={() => setCurrentPage(currentPage - 1)}
               disabled={currentPage === 1}
             >
@@ -407,7 +404,7 @@ function Violation(props) {
               </svg>
             </button>
             
-            <div className="pagination-pages">
+            <div className="user-pagination-pages">
               {Array.from({ length: totalPages }, (_, i) => i + 1)
                 .filter(page => {
                   if (totalPages <= 7) return true;
@@ -418,10 +415,10 @@ function Violation(props) {
                 .map((page, index, array) => (
                   <React.Fragment key={page}>
                     {index > 0 && array[index - 1] !== page - 1 && (
-                      <span className="pagination-ellipsis">...</span>
+                      <span className="user-pagination-ellipsis">...</span>
                     )}
                     <button
-                      className={`pagination-page ${currentPage === page ? 'active' : ''}`}
+                      className={`user-pagination-page ${currentPage === page ? 'active' : ''}`}
                       onClick={() => setCurrentPage(page)}
                     >
                       {page}
@@ -431,7 +428,7 @@ function Violation(props) {
             </div>
 
             <button
-              className="pagination-btn"
+              className="user-user-pagination-btn"
               onClick={() => setCurrentPage(currentPage + 1)}
               disabled={currentPage === totalPages}
             >
@@ -440,7 +437,7 @@ function Violation(props) {
               </svg>
             </button>
             <button
-              className="pagination-btn"
+              className="user-user-pagination-btn"
               onClick={() => setCurrentPage(totalPages)}
               disabled={currentPage === totalPages}
             >
@@ -455,58 +452,58 @@ function Violation(props) {
 
       {/* Violation Details Modal */}
       {selectedViolation && (
-        <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
+        <div className="user-modal-overlay" onClick={closeModal}>
+          <div className="user-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="user-modal-header">
               <h2>Violation Details</h2>
-              <button className="modal-close" onClick={closeModal}>
+              <button className="user-modal-close" onClick={closeModal}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <line x1="18" y1="6" x2="6" y2="18" />
                   <line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
               </button>
             </div>
-            <div className="modal-body">
-              <div className="detail-row">
+            <div className="user-modal-body">
+              <div className="user-detail-row">
                 <label>Violation ID:</label>
                 <span>{selectedViolation.violationId}</span>
               </div>
-              <div className="detail-row">
+              <div className="user-detail-row">
                 <label>Type:</label>
                 <span className={`type-badge ${selectedViolation.type.toLowerCase().replace(' ', '-')}`}>
                   {selectedViolation.type}
                 </span>
               </div>
-              <div className="detail-row">
+              <div className="user-detail-row">
                 <label>Description:</label>
                 <span>{selectedViolation.description}</span>
               </div>
-              <div className="detail-row">
+              <div className="user-detail-row">
                 <label>Location:</label>
                 <span>{selectedViolation.location}</span>
               </div>
-              <div className="detail-row">
+              <div className="user-detail-row">
                 <label>Date:</label>
                 <span>{formatDate(selectedViolation.date)}</span>
               </div>
-              <div className="detail-row">
+              <div className="user-detail-row">
                 <label>Fine:</label>
                 <span className="fine">{formatCurrency(selectedViolation.fine)}</span>
               </div>
-              <div className="detail-row">
+              <div className="user-detail-row">
                 <label>Status:</label>
                 <span className={`status-badge ${selectedViolation.status.toLowerCase()}`}>
                   {selectedViolation.status}
                 </span>
               </div>
               {selectedViolation.notes && (
-                <div className="detail-row">
+                <div className="user-detail-row">
                   <label>Notes:</label>
                   <span>{selectedViolation.notes}</span>
                 </div>
               )}
             </div>
-            <div className="modal-footer">
+            <div className="user-modal-footer">
               {selectedViolation.status !== 'Paid' && (
                 <a href="/user/payment" className="modal-btn pay">
                   Pay Fine

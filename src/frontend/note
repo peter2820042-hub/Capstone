@@ -1,0 +1,54 @@
+# Role Access System - Sentrina
+
+Ang Sentrina Property Management System ay may built-in na Role-Based Access Control (RBAC).
+
+## Mga User Roles
+
+### 1. Admin (System Administrator)
+- Full access sa lahat ng features
+- Database table: admins
+- Makakita ng Audit Logs
+
+### 2. Staff
+- Limited administrative access
+- Database table: staffs
+- Hindi makakita ng Audit Logs
+
+### 3. Resident/User (Homeowner)
+- Basic user access
+- Database table: residents
+- Sariling data lang makikita
+
+## Menu Access per Role
+
+| Feature      | Admin | Staff | Resident |
+|--------------|-------|-------|----------|
+| Dashboard    |   ✅  |   ✅  |    ✅    |
+| GIS Map      |   ✅  |   ✅  |    ✅    |
+| Residents    |   ✅  |   ✅  |    ❌    |
+| Payments     |   ✅  |   ❌  |    ❌    |
+| Billing      |   ✅  |   ✅  |    ✅    |
+| Violations   |   ✅  |   ✅  |    ✅    |
+| Reports      |   ✅  |   ✅  |    ❌    |
+| Audit Logs   |   ✅  |   ❌  |    ❌    |
+| Notification |   ❌  |   ❌  |    ✅    |
+| Payment      |   ❌  |   ✅  |    ✅    |
+| Profile      |   ✅  |   ✅  |    ✅    |
+
+## Test Credentials
+
+| Role      | Username     | Password  |
+|-----------|--------------|-----------|
+| Admin     | peter        | admin123  |
+| Staff     | john         | staff123  |
+| Resident  | resident_1   | user123   |
+| Resident  | resident_2   | user123   |
+
+## Key Files
+
+- server/routes/auth.js - Login/Register/Logout logic
+- src/App.jsx - Route handling based on role
+- src/backend/config/create-tables.js - Database schema
+- src/frontend/pages/admin/components/Sidebar.jsx - Admin menu
+- src/frontend/pages/staff/components/Sidebar.jsx - Staff menu
+- src/frontend/pages/user/components/Sidebar.jsx - User menu

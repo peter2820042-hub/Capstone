@@ -187,7 +187,7 @@ function Billing() {
 
   return (
     <div className="billing-container">
-      {/* Stats Cards Section */}
+      {/* DELETED: Stats Cards Section */}
       <div className="stats-section">
         <div className="stats-grid">
           <div className="stat-card">

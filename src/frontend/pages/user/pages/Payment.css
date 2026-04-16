@@ -7,6 +7,93 @@
   margin: 0 auto;
 }
 
+/* Stats Cards Section - Matching Admin/Staff Design */
+.payment-stats-section {
+  margin-bottom: 24px;
+}
+
+.payment-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.payment-stat-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.payment-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.payment-stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.payment-stat-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.payment-stat-icon.unpaid-bills {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+}
+
+.payment-stat-icon.pending-payments {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+}
+
+.payment-stat-icon.total-due {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+}
+
+.payment-stat-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.payment-stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1a1a2e;
+  line-height: 1;
+}
+
+.payment-stat-label {
+  font-size: 13px;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+/* Responsive for Stats */
+@media (max-width: 1024px) {
+  .payment-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .payment-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Success Message */
 .success-message {
   display: flex;
@@ -101,7 +188,7 @@
   margin: 0;
 }
 
-.clear-btn {
+.user-clear-btn {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -116,12 +203,12 @@
   transition: all 0.2s;
 }
 
-.clear-btn:hover {
+.user-clear-btn:hover {
   background: #e5e7eb;
   color: #374151;
 }
 
-.clear-btn svg {
+.user-clear-btn svg {
   width: 16px;
   height: 16px;
 }
@@ -134,13 +221,13 @@
 }
 
 /* Form Group */
-.form-group {
+.user-form-group {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.form-group label {
+.user-form-group label {
   font-size: 14px;
   font-weight: 600;
   color: #374151;
@@ -152,7 +239,7 @@
   flex-direction: column;
 }
 
-.bills-table-header {
+.bills-user-table-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -367,8 +454,8 @@
 }
 
 /* Input Fields */
-.form-group input[type="text"],
-.form-group textarea {
+.user-form-group input[type="text"],
+.user-form-group textarea {
   width: 100%;
   padding: 12px 16px;
   border: 1px solid #e5e7eb;
@@ -377,13 +464,13 @@
   transition: border-color 0.2s;
 }
 
-.form-group input[type="text"]:focus,
-.form-group textarea:focus {
+.user-form-group input[type="text"]:focus,
+.user-form-group textarea:focus {
   outline: none;
   border-color: #3b82f6;
 }
 
-.form-group textarea {
+.user-form-group textarea {
   resize: vertical;
   min-height: 100px;
 }

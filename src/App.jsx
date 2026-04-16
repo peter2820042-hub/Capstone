@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import Landing from './frontend/pages/landing/Landing'
 import Login from './frontend/pages/auth/Login'
-import Admin from './frontend/pages/Admin/Admin'
+import Admin from './frontend/pages/admin/Admin'
 import User from './frontend/pages/user/User'
 import Staff from './frontend/pages/staff/Staff'
 import './App.css'
@@ -47,7 +47,7 @@ function App() {
         navigate(lastPath, { replace: true });
       }
     }
-  }, []); // Empty dependency array - only run once on mount
+  },); // Empty dependency array - only run once on mount
 
   const handleLogin = (user) => {
     setCurrentUser(user)

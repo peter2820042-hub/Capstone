@@ -4,10 +4,8 @@ import Sidebar from './components/Sidebar';
 import Header from '../../../components/Header';
 import Dashboard from './pages/Dashboard';
 import Gis from './pages/Gis';
-import Billing from './pages/Billing';
+import History from './pages/History';
 import Payment from './pages/Payment';
-import Violation from './pages/Violation';
-import Notification from './pages/Notification';
 import Profile from './pages/Profile';
 
 function User({ user, onLogout }) {
@@ -18,31 +16,23 @@ function User({ user, onLogout }) {
         <Routes>
           <Route path="/" element={<>
             <Header pageName="Dashboard" user={user} />
-            <Dashboard user={user} />
+            <Dashboard />
           </>} />
           <Route path="/dashboard" element={<>
             <Header pageName="Dashboard" user={user} />
-            <Dashboard user={user} />
+            <Dashboard />
           </>} />
           <Route path="/gis" element={<>
             <Header pageName="My Lot Map" user={user} />
             <Gis />
           </>} />
-          <Route path="/billing" element={<>
-            <Header pageName="Billing" user={user} />
-            <Billing />
+          <Route path="/history" element={<>
+            <Header pageName="History" user={user} />
+            <History user={user} />
           </>} />
           <Route path="/payment" element={<>
-            <Header pageName="Payment" user={user} />
+            <Header pageName="Payment History" user={user} />
             <Payment user={user} />
-          </>} />
-          <Route path="/violation" element={<>
-            <Header pageName="Violation" user={user} />
-            <Violation user={user} />
-          </>} />
-          <Route path="/notification" element={<>
-            <Header pageName="Notification" user={user} />
-            <Notification user={user} />
           </>} />
           <Route path="/profile" element={<Profile user={user} />} />
         </Routes>

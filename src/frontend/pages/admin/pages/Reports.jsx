@@ -3,13 +3,6 @@ import './Reports.css';
 
 function Reports() {
   const [activeTab, setActiveTab] = useState('billing');
-  const [stats, setStats] = useState({
-    totalResidents: 0,
-    totalBills: 0,
-    totalPayments: 0,
-    pendingPayments: 0,
-    overdueBills: 0
-  });
 
   // Data states
   const [bills, setBills] = useState([]);
@@ -22,20 +15,17 @@ function Reports() {
 
   // Fetch all data on mount
   useEffect(() => {
-    const fetchDashboardStats = async () => {
-      try {
-        const response = await fetch('/api/dashboard/stats');
-        const data = await response.json();
-        setStats(data);
-      } catch (error) {
-        console.error('Error fetching stats:', error);
-      }
-    };
-
     const fetchBills = async () => {
       try {
+        console.log('[Reports] Fetching bills...');
         const response = await fetch('/api/bills');
+        console.log('[Reports] Bills response status:', response.status);
+        if (!response.ok) {
+          console.error('[Reports] Bills API error:', response.statusText);
+          return;
+        }
         const data = await response.json();
+        console.log('[Reports] Bills data received, count:', data.length);
         setBills(data);
       } catch (error) {
         console.error('Error fetching bills:', error);
@@ -44,8 +34,15 @@ function Reports() {
 
     const fetchPayments = async () => {
       try {
+        console.log('[Reports] Fetching payments...');
         const response = await fetch('/api/payments');
+        console.log('[Reports] Payments response status:', response.status);
+        if (!response.ok) {
+          console.error('[Reports] Payments API error:', response.statusText);
+          return;
+        }
         const data = await response.json();
+        console.log('[Reports] Payments data received, count:', data.length);
         setPayments(data);
       } catch (error) {
         console.error('Error fetching payments:', error);
@@ -54,15 +51,21 @@ function Reports() {
 
     const fetchResidents = async () => {
       try {
+        console.log('[Reports] Fetching residents...');
         const response = await fetch('/api/residents');
+        console.log('[Reports] Residents response status:', response.status);
+        if (!response.ok) {
+          console.error('[Reports] Residents API error:', response.statusText);
+          return;
+        }
         const data = await response.json();
+        console.log('[Reports] Residents data received, count:', data.length);
         setResidents(data);
       } catch (error) {
         console.error('Error fetching residents:', error);
       }
     };
 
-    fetchDashboardStats();
     fetchBills();
     fetchPayments();
     fetchResidents();
@@ -142,77 +145,6 @@ function Reports() {
         </div>
       </div>
 
-      {/* KPI Section */}
-      <div className="kpi-section">
-        <div className="kpi-card">
-          <div className="kpi-icon blue">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-            </svg>
-          </div>
-          <div className="kpi-content">
-            <span className="kpi-value">{stats.totalResidents}</span>
-            <span className="kpi-label">Total Residents</span>
-          </div>
-        </div>
-
-        <div className="kpi-card">
-          <div className="kpi-icon green">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
-              <line x1="1" y1="10" x2="23" y2="10" />
-            </svg>
-          </div>
-          <div className="kpi-content">
-            <span className="kpi-value">{stats.totalBills}</span>
-            <span className="kpi-label">Total Bills</span>
-          </div>
-        </div>
-
-        <div className="kpi-card">
-          <div className="kpi-icon yellow">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="12" y1="1" x2="12" y2="23" />
-              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-            </svg>
-          </div>
-          <div className="kpi-content">
-            <span className="kpi-value">{stats.totalPayments}</span>
-            <span className="kpi-label">Total Payments</span>
-          </div>
-        </div>
-
-        <div className="kpi-card">
-          <div className="kpi-icon red">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12 6 12 12 16 14" />
-            </svg>
-          </div>
-          <div className="kpi-content">
-            <span className="kpi-value">{stats.pendingPayments}</span>
-            <span className="kpi-label">Pending Payments</span>
-          </div>
-        </div>
-
-        <div className="kpi-card">
-          <div className="kpi-icon purple">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-              <line x1="12" y1="9" x2="12" y2="13" />
-              <line x1="12" y1="17" x2="12.01" y2="17" />
-            </svg>
-          </div>
-          <div className="kpi-content">
-            <span className="kpi-value">{stats.overdueBills}</span>
-            <span className="kpi-label">Overdue Bills</span>
-          </div>
-        </div>
-      </div>
-
       {/* Report Tabs */}
       <div className="report-tabs">
         <button 
@@ -236,15 +168,15 @@ function Reports() {
       </div>
 
       {/* Search/Filter - Horizontal Layout */}
-      <div className="search-filter-bar">
-        <div className="filter-group">
+      <div className="admin-admin-search-filter-bar">
+        <div className="admin-admin-filter-group">
           <label>Search</label>
           <input
             type="text"
             placeholder="Search..."
           />
         </div>
-        <div className="filter-group">
+        <div className="admin-admin-filter-group">
           <label>From Date</label>
           <input 
             type="date" 
@@ -252,7 +184,7 @@ function Reports() {
             onChange={(e) => setDateFrom(e.target.value)}
           />
         </div>
-        <div className="filter-group">
+        <div className="admin-admin-filter-group">
           <label>To Date</label>
           <input 
             type="date" 
@@ -262,19 +194,25 @@ function Reports() {
         </div>
       </div>
 
+      {/* Report Info Header */}
+      <div className="report-info-header">
+        <p>
+          Showing {filteredData.length} records | Generated: {new Date().toLocaleString()}
+        </p>
+      </div>
+
       {/* Data Table */}
-      <div className="table-container">
+      <div className="admin-admin-table-container">
         <table className="violations-table">
           <thead>
             <tr>
               {activeTab === 'billing' && (
                 <>
-                  <th>Bill #</th>
-                  <th>Resident</th>
-                  <th>Type</th>
+                  <th>Resident Name</th>
+                  <th>Bill Type</th>
                   <th>Amount</th>
-                  <th>Due Date</th>
                   <th>Status</th>
+                  <th>Actions</th>
                 </>
               )}
               {activeTab === 'payments' && (
@@ -302,7 +240,7 @@ function Reports() {
           <tbody>
             {filteredData.length === 0 ? (
               <tr>
-                <td colSpan="6" className="empty-row">
+                <td colSpan="6" className="admin-admin-empty-row">
                   No records found
                 </td>
               </tr>
@@ -311,15 +249,16 @@ function Reports() {
                 <tr key={item.id}>
                   {activeTab === 'billing' && (
                     <>
-                      <td>{item.billNumber || `BILL-${item.id}`}</td>
                       <td>{item.residentName || '-'}</td>
                       <td>{item.billType || '-'}</td>
                       <td style={{ fontWeight: 'bold' }}>{formatCurrency(item.amount)}</td>
-                      <td>{formatDate(item.dueDate)}</td>
                       <td>
                         <span className={`status-badge ${item.status}`}>
                           {item.status}
                         </span>
+                      </td>
+                      <td>
+                        <button className="view-btn">View</button>
                       </td>
                     </>
                   )}

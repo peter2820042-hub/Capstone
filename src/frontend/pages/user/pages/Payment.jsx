@@ -20,6 +20,13 @@ function Payment({ user }) {
   // Transaction history
   const [transactions, setTransactions] = useState([]);
 
+  // KPI Stats
+  const [kpis, setKpis] = useState({
+    unpaidBills: 0,
+    pendingPayments: 0,
+    totalDue: 0
+  });
+
   // Get user's lot number from user prop
   const lotNumber = user?.lotNumber || user?.lotNumber;
 
@@ -43,6 +50,14 @@ function Payment({ user }) {
         }
         const data = await response.json();
         setBills(data);
+        
+        // Calculate KPIs
+        const totalDue = data.reduce((sum, bill) => sum + (parseFloat(bill.amount) || 0), 0);
+        setKpis(prev => ({
+          ...prev,
+          unpaidBills: data.length,
+          totalDue: totalDue
+        }));
         setError(null);
       } catch (err) {
         setError('Failed to fetch bills');
@@ -65,6 +80,13 @@ function Payment({ user }) {
         }
         const data = await response.json();
         setTransactions(data);
+        
+        // Count pending payments
+        const pendingPayments = data.filter(p => p.status === 'pending').length;
+        setKpis(prev => ({
+          ...prev,
+          pendingPayments: pendingPayments
+        }));
       } catch (err) {
         console.error('Error fetching transactions:', err);
       }
@@ -232,12 +254,59 @@ function Payment({ user }) {
         </div>
       )}
 
+      {/* KPI Stats Section - Matching Admin Design */}
+      <div className="payment-stats-section">
+        <div className="payment-stats-grid">
+          {/* Unpaid Bills */}
+          <div className="payment-stat-card">
+            <div className="payment-stat-icon unpaid-bills">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+              </svg>
+            </div>
+            <div className="payment-stat-content">
+              <span className="payment-stat-value">{kpis.unpaidBills}</span>
+              <span className="payment-stat-label">Unpaid Bills</span>
+            </div>
+          </div>
+
+          {/* Pending Payments */}
+          <div className="payment-stat-card">
+            <div className="payment-stat-icon pending-payments">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+            </div>
+            <div className="payment-stat-content">
+              <span className="payment-stat-value">{kpis.pendingPayments}</span>
+              <span className="payment-stat-label">Pending Payments</span>
+            </div>
+          </div>
+
+          {/* Total Due */}
+          <div className="payment-stat-card">
+            <div className="payment-stat-icon total-due">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="12" y1="1" x2="12" y2="23" />
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+              </svg>
+            </div>
+            <div className="payment-stat-content">
+              <span className="payment-stat-value">{formatCurrency(kpis.totalDue)}</span>
+              <span className="payment-stat-label">Total Amount Due</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="payment-content">
         {/* Payment Form */}
         <div className="payment-form-section">
           <div className="section-header">
             <h2>Payment Details</h2>
-            <button className="clear-btn" onClick={clearForm}>
+            <button className="user-clear-btn" onClick={clearForm}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <line x1="18" y1="6" x2="6" y2="18" />
                 <line x1="6" y1="6" x2="18" y2="18" />
@@ -248,11 +317,11 @@ function Payment({ user }) {
 
           <form onSubmit={handleSubmitPayment} className="payment-form">
             {/* Select Bills */}
-            <div className="form-group">
+            <div className="user-form-group">
               <label>Select Bills to Pay</label>
               <div className="bills-selection">
                 {/* Always show table header */}
-                <div className="bills-table-header">
+                <div className="bills-user-table-header">
                   <span className="bills-count">
                     {bills.length > 0 
                       ? `Showing ${selectedBills.length > 0 ? `0-${selectedBills.length} of ` : ''}${bills.length} bill${bills.length !== 1 ? 's' : ''}`
@@ -316,7 +385,7 @@ function Payment({ user }) {
             </div>
 
             {/* Payment Method */}
-            <div className="form-group">
+            <div className="user-form-group">
               <label>Payment Method</label>
               <div className="payment-methods">
                 {paymentMethods.map(method => (
@@ -333,7 +402,7 @@ function Payment({ user }) {
             </div>
 
             {/* Amount */}
-            <div className="form-group">
+            <div className="user-form-group">
               <label>Amount</label>
               <div className="amount-display">
                 <span className="currency">₱</span>
@@ -352,7 +421,7 @@ function Payment({ user }) {
             </div>
 
             {/* Reference Number */}
-            <div className="form-group">
+            <div className="user-form-group">
               <label>Reference Number (Optional)</label>
               <input
                 type="text"
@@ -363,7 +432,7 @@ function Payment({ user }) {
             </div>
 
             {/* Notes */}
-            <div className="form-group">
+            <div className="user-form-group">
               <label>Notes (Optional)</label>
               <textarea
                 value={notes}

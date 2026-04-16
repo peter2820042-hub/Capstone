@@ -1,117 +1,97 @@
 import React, { useState, useEffect } from 'react';
 import './Dashboard.css';
 
-function Dashboard({ user }) {
-  // KPIs
+const Dashboard = () => {
+  const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const [kpis, setKpis] = useState({
     totalResidents: 0,
-    activeViolations: 0,
-    pendingViolations: 0,
-    resolvedViolations: 0
+    pendingPayment: 0,
+    pendingBill: 0,
+    pendingViolation: 0
   });
 
-  // Residents list
-  const [residents, setResidents] = useState([]);
+  // eslint-disable-next-line no-unused-vars
+  const [violations, setViolations] = useState([]);
+  const [pendingViolations, setPendingViolations] = useState([]);
+  const [pendingBills, setPendingBills] = useState([]);
 
-  // Recent activity
-  const [recentActivity, setRecentActivity] = useState([]);
 
-  // Fetch data from API
-  const fetchDashboardData = async () => {
-    try {
-      // Fetch residents count
-      const residentsRes = await fetch('/api/residents');
-      const residentsData = await residentsRes.json();
+  // eslint-disable-next-line no-unused-vars
+  const [period] = useState('yearly');
 
-      // Fetch violations
-      const violationsRes = await fetch('/api/violations');
-      const violationsData = await violationsRes.json();
-
-      // Handle API response - could be array or object with residents property
-      const residentsArray = Array.isArray(residentsData) ? residentsData : (residentsData.residents || []);
-      const violationsArray = Array.isArray(violationsData) ? violationsData : (violationsData.violations || []);
-
-      const pending = violationsArray.filter(v => v.status === 'pending').length || 0;
-      const resolved = violationsArray.filter(v => v.status === 'resolved').length || 0;
-
-      setKpis({
-        totalResidents: residentsArray.length,
-        activeViolations: violationsArray.length,
-        pendingViolations: pending,
-        resolvedViolations: resolved
-      });
-
-      // Set residents list (show max 10)
-      setResidents(residentsArray.slice(0, 10));
-
-      // Create activity feed from violations
-      const activities = violationsArray.slice(0, 5).map(v => ({
-        id: v.id,
-        type: 'violation',
-        description: `Violation logged for Lot ${v.lotNumber}`,
-        details: v.violationType,
-        date: v.dateIssued,
-        status: v.status
-      }));
-
-      setRecentActivity(activities);
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-    }
-  };
-
+  // Update the current date/time every minute
   useEffect(() => {
-    fetchDashboardData();
+    const timer = setInterval(() => {
+      setCurrentDateTime(new Date());
+    }, 60000); // Update every minute
+    return () => clearInterval(timer);
   }, []);
 
-  const getActivityIcon = (type) => {
-    if (type === 'violation') {
-      return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-          <line x1="12" y1="9" x2="12" y2="13" />
-          <line x1="12" y1="17" x2="12.01" y2="17" />
-        </svg>
-      );
-    }
-    return (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-        <circle cx="12" cy="7" r="4" />
-      </svg>
-    );
-  };
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const statsRes = await fetch('/api/dashboard-stats');
+        if (statsRes.ok) {
+          const stats = await statsRes.json();
+          setKpis({
+            totalResidents: stats.totalResidents || 0,
+            pendingPayment: stats.pendingPayments || 0,
+            pendingBill: stats.pendingBills || 0,
+            pendingViolation: stats.pendingViolations || 0
+          });
+        }
 
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
+        const vioRes = await fetch('/api/violations');
+        if (vioRes.ok) {
+          const vioData = await vioRes.json();
+          const vioArray = Array.isArray(vioData) ? vioData : [];
+          setViolations(vioArray);
+          // Filter only pending violations (status = 'pending' or 'Pending')
+          const pending = vioArray.filter(v => v.status && v.status.toLowerCase() === 'pending');
+          setPendingViolations(pending);
+          // Update the pending violation count in KPIs
+          setKpis(prev => ({ ...prev, pendingViolation: pending.length }));
+        }
 
-  const currentDate = new Date().toLocaleDateString('en-PH', { 
-    weekday: 'long', 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-  });
+        const billsRes = await fetch('/api/bills');
+        if (billsRes.ok) {
+          const billsData = await billsRes.json();
+          const billsArray = Array.isArray(billsData) ? billsData : [];
+          // Filter bills with pending, unpaid, or overdue status
+          const pending = billsArray.filter(b => b.status && 
+            ['pending', 'unpaid', 'overdue'].includes(b.status.toLowerCase()));
+          setPendingBills(pending);
+          // Update the pending bill count in KPIs
+          setKpis(prev => ({ ...prev, pendingBill: pending.length }));
+        }
+      } catch (err) {
+        console.error('Error:', err);
+      }
+    };
+    fetchData();
+  }, []);
 
   return (
-    <div className="dashboard-container">
-      {/* Date Display */}
-      <div className="current-date">
-        <span>{currentDate}</span>
+    <div className="sta-dashboard-container">
+      {/* Dashboard Header */}
+      <div className="sta-dashboard-header">
+        <div className="sta-header-text">
+          <h1 className="sta-dashboard-title">Manage and Monitor Community Policy Infractions</h1>
+        </div>
+        <div className="sta-datetime-section">
+          <div className="sta-date-section">
+            <span className="sta-current-date">
+              {currentDateTime.toLocaleDateString('en-PH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            </span>
+          </div>
+        </div>
       </div>
 
-      {/* KPI Section */}
-
       {/* KPI Cards */}
-      <div className="kpi-grid">
-        <div className="kpi-card">
-          <div className="kpi-icon residents">
+      <div className="sta-kpi-grid">
+        {/* Card 1: Total Residents */}
+        <div className="sta-kpi-card">
+          <div className="sta-kpi-icon residents">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
               <circle cx="9" cy="7" r="4" />
@@ -119,63 +99,141 @@ function Dashboard({ user }) {
               <path d="M16 3.13a4 4 0 0 1 0 7.75" />
             </svg>
           </div>
-          <div className="kpi-content">
-            <span className="kpi-value">{kpis.totalResidents}</span>
-            <span className="kpi-label">Total Residents</span>
+          <div className="sta-kpi-content">
+            <span className="sta-kpi-value">{kpis.totalResidents}</span>
+            <span className="sta-kpi-label">Total Residents</span>
           </div>
         </div>
 
-        <div className="kpi-card">
-          <div className="kpi-icon violations">
+        {/* Card 2: Pending Payment */}
+        <div className="sta-kpi-card">
+          <div className="sta-kpi-icon pending">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+          </div>
+          <div className="sta-kpi-content">
+            <span className="sta-kpi-value">{kpis.pendingPayment}</span>
+            <span className="sta-kpi-label">Pending Payments</span>
+          </div>
+        </div>
+
+        {/* Card 3: Pending Bill */}
+        <div className="sta-kpi-card">
+          <div className="sta-kpi-icon dues">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="12" y1="1" x2="12" y2="23" />
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+            </svg>
+          </div>
+          <div className="sta-kpi-content">
+            <span className="sta-kpi-value">{kpis.pendingBill}</span>
+            <span className="sta-kpi-label">Pending Bills</span>
+          </div>
+        </div>
+
+        {/* Card 4: Pending Violation */}
+        <div className="sta-kpi-card">
+          <div className="sta-kpi-icon violations">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
               <line x1="12" y1="9" x2="12" y2="13" />
               <line x1="12" y1="17" x2="12.01" y2="17" />
             </svg>
           </div>
-          <div className="kpi-content">
-            <span className="kpi-value">{kpis.activeViolations}</span>
-            <span className="kpi-label">Active Violations</span>
-          </div>
-        </div>
-
-        <div className="kpi-card">
-          <div className="kpi-icon pending">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12 6 12 12 16 14" />
-            </svg>
-          </div>
-          <div className="kpi-content">
-            <span className="kpi-value">{kpis.pendingViolations}</span>
-            <span className="kpi-label">Pending</span>
-          </div>
-        </div>
-
-        <div className="kpi-card">
-          <div className="kpi-icon resolved">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-              <polyline points="22 4 12 14.01 9 11.01" />
-            </svg>
-          </div>
-          <div className="kpi-content">
-            <span className="kpi-value">{kpis.resolvedViolations}</span>
-            <span className="kpi-label">Resolved</span>
+          <div className="sta-kpi-content">
+            <span className="sta-kpi-value">{kpis.pendingViolation}</span>
+            <span className="sta-kpi-label">Pending Violations</span>
           </div>
         </div>
       </div>
 
-      {/* Charts Section - Line Graph and Pie Chart */}
-      <div className="charts-section">
-        {/* Line Graph */}
-        <div className="chart-card">
-          <div className="chart-header">
-            <h3>Payment Trends</h3>
-            <a href="/staff/payment" className="chart-link">View</a>
+      {/* Two Column Layout for Pending Sections */}
+      <div className="sta-pending-sections-row">
+        {/* Pending Violations Section */}
+        <div className="sta-pending-violations-section">
+        <div className="sta-section-header">
+          <h3>Pending Violations</h3>
+          <a href="/staff/violations" className="sta-view-all-link">View All</a>
+        </div>
+        {pendingViolations.length > 0 ? (
+          <div className="sta-violations-table-container">
+            <table className="sta-violations-table">
+              <thead>
+                <tr>
+                  <th>Resident</th>
+                  <th>Type</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pendingViolations.slice(0, 5).map((violation) => (
+                  <tr key={violation.id || violation.violation_id}>
+                    <td>{violation.residentName || 'N/A'}</td>
+                    <td>{violation.violationType || 'N/A'}</td>
+                    <td>₱{violation.fine || violation.penalty ? Number(violation.fine || violation.penalty).toLocaleString('en-PH', { minimumFractionDigits: 2 }) : '0.00'}</td>
+                    <td>
+                      <span className={`sta-status-badge ${violation.status?.toLowerCase() || 'pending'}`}>{violation.status || 'Pending'}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-          <div className="line-chart-container">
-            <svg viewBox="0 0 400 200">
+        ) : (
+          <div className="sta-empty-message">No pending violations</div>
+        )}
+        </div>
+
+        {/* Pending Bills Section */}
+        <div className="sta-pending-bills-section">
+        <div className="sta-section-header">
+          <h3>Pending Bills</h3>
+          <a href="/staff/billing" className="sta-view-all-link">View All</a>
+        </div>
+        {pendingBills.length > 0 ? (
+          <div className="sta-bills-table-container">
+            <table className="sta-bills-table">
+              <thead>
+                <tr>
+                  <th>Resident</th>
+                  <th>Type</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pendingBills.slice(0, 5).map((bill) => (
+                  <tr key={bill.id || bill.bill_id}>
+                    <td>{bill.residentName || 'N/A'}</td>
+                    <td>{bill.billType || bill.bill_type || 'N/A'}</td>
+                    <td>₱{bill.amount ? Number(bill.amount).toLocaleString('en-PH', { minimumFractionDigits: 2 }) : '0.00'}</td>
+                    <td>
+                      <span className={`sta-status-badge bill-${bill.status?.toLowerCase() || 'pending'}`}>{bill.status || 'Pending'}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="sta-empty-message">No pending bills</div>
+        )}
+        </div>
+      </div>
+
+      {/* Charts Section - Line Graph and Pie Chart */}
+      <div className="sta-charts-section">
+        {/* Line Graph */}
+        <div className="sta-chart-card">
+          <div className="sta-chart-header">
+            <h3>Payment Trends</h3>
+            <a href="/staff/payment" className="sta-chart-link">View</a>
+          </div>
+          <div className="sta-line-chart-container">
+            <svg viewBox="0 0 400 200" style={{ width: '100%', height: '100%' }}>
               {/* Grid lines */}
               <line x1="40" y1="180" x2="380" y2="180" stroke="#e5e7eb" strokeWidth="1" />
               <line x1="40" y1="140" x2="380" y2="140" stroke="#e5e7eb" strokeWidth="1" />
@@ -216,20 +274,20 @@ function Dashboard({ user }) {
         </div>
         
         {/* Pie Chart */}
-        <div className="chart-card">
-          <div className="chart-header">
+        <div className="sta-chart-card">
+          <div className="sta-chart-header">
             <h3>Residents Distribution</h3>
-            <a href="/staff/residents" className="chart-link">View</a>
+            <a href="/staff/residents" className="sta-chart-link">View</a>
           </div>
-          <div className="pie-chart-container">
-            <svg viewBox="0 0 200 200">
+          <div className="sta-pie-chart-container">
+            <svg viewBox="0 0 200 200" style={{ width: '200px', height: '200px' }}>
               {/* Background circle */}
               <circle cx="100" cy="100" r="80" fill="none" stroke="#e5e7eb" strokeWidth="24" />
               {/* Progress circle */}
               <circle 
-                cx="100" cy="100" r="80"
-                fill="none"
-                stroke="#3b82f6"
+                cx="100" cy="100" r="80" 
+                fill="none" 
+                stroke="#3b82f6" 
                 strokeWidth="24"
                 strokeDasharray={`${(kpis.totalResidents / 308) * 502.65} ${502.65 - (kpis.totalResidents / 308) * 502.65}`}
                 transform="rotate(-90 100 100)"
@@ -245,9 +303,8 @@ function Dashboard({ user }) {
           </div>
         </div>
       </div>
-
     </div>
   );
-}
+};
 
 export default Dashboard;

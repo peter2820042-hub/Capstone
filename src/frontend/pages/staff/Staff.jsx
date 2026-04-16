@@ -11,7 +11,6 @@ import Profile from './pages/Profile';
 import Gis from './pages/Gis';
 import Payment from './pages/Payment';
 import Billing from './pages/Billing';
-import './components/Dashboard.css';
 
 function Staff({ user, onLogout }) {
   return (

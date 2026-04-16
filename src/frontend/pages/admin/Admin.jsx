@@ -12,7 +12,6 @@ import Reports from './pages/Reports';
 import AuditLogs from './pages/AuditLogs';
 import Notification from './pages/Notification';
 import Profile from './pages/Profile';
-import './components/Dashboard.css';
 
 function Admin({ user, onLogout }) {
   // Default to dashboard

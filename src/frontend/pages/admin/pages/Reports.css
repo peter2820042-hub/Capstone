@@ -98,7 +98,7 @@
   margin-bottom: 2rem;
 }
 
-.kpi-card {
+.admin-kpi-card {
   background: #ffffff;
   border-radius: 12px;
   padding: 1.5rem;
@@ -110,12 +110,12 @@
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.kpi-card:hover {
+.admin-kpi-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.kpi-icon {
+.admin-kpi-icon {
   width: 56px;
   height: 56px;
   border-radius: 12px;
@@ -125,49 +125,49 @@
   flex-shrink: 0;
 }
 
-.kpi-icon svg {
+.admin-kpi-icon svg {
   width: 28px;
   height: 28px;
 }
 
-.kpi-icon.blue {
+.admin-kpi-icon.blue {
   background: #dbeafe;
   color: #1e40af;
 }
 
-.kpi-icon.green {
+.admin-kpi-icon.green {
   background: #d1fae5;
   color: #065f46;
 }
 
-.kpi-icon.yellow {
+.admin-kpi-icon.yellow {
   background: #fef3c7;
   color: #92400e;
 }
 
-.kpi-icon.red {
+.admin-kpi-icon.red {
   background: #fee2e2;
   color: #991b1b;
 }
 
-.kpi-icon.purple {
+.admin-kpi-icon.purple {
   background: #e0e7ff;
   color: #3730a3;
 }
 
-.kpi-content {
+.admin-kpi-content {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
 }
 
-.kpi-value {
+.admin-kpi-value {
   font-size: 1.5rem;
   font-weight: 700;
   color: #0f172a;
 }
 
-.kpi-label {
+.admin-kpi-label {
   font-size: 0.875rem;
   color: #64748b;
 }
@@ -250,8 +250,27 @@
   font-weight: 600;
 }
 
-.table-container {
+.admin-admin-table-container {
   overflow-x: auto;
+}
+
+/* Report Info Header - Above Table */
+.report-info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.report-info-header p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #64748b;
+  font-weight: 500;
 }
 
 /* Data Table */
@@ -495,11 +514,11 @@
     grid-template-columns: 1fr;
   }
   
-  .kpi-card {
+  .admin-kpi-card {
     padding: 1rem;
   }
   
-  .kpi-value {
+  .admin-kpi-value {
     font-size: 1.25rem;
   }
 }

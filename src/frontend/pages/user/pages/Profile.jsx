@@ -233,8 +233,8 @@ const Profile = ({ user }) => {
           
           {isEditing ? (
             <div className="edit-form">
-              <div className="form-grid">
-                <div className="form-item">
+              <div className="user-form-grid">
+                <div className="user-form-item">
                   <label htmlFor="fullName">Full Name</label>
                   <input
                     type="text"
@@ -245,7 +245,7 @@ const Profile = ({ user }) => {
                     placeholder="Enter full name"
                   />
                 </div>
-                <div className="form-item">
+                <div className="user-form-item">
                   <label htmlFor="lotNumber">Lot Number</label>
                   <input
                     type="text"
@@ -256,7 +256,7 @@ const Profile = ({ user }) => {
                     className="disabled-input"
                   />
                 </div>
-                <div className="form-item">
+                <div className="user-form-item">
                   <label htmlFor="block">Block</label>
                   <input
                     type="text"
@@ -267,7 +267,7 @@ const Profile = ({ user }) => {
                     className="disabled-input"
                   />
                 </div>
-                <div className="form-item">
+                <div className="user-form-item">
                   <label htmlFor="email">Email</label>
                   <input
                     type="email"
@@ -278,7 +278,7 @@ const Profile = ({ user }) => {
                     placeholder="Enter email"
                   />
                 </div>
-                <div className="form-item">
+                <div className="user-form-item">
                   <label htmlFor="phone">Phone Number</label>
                   <input
                     type="tel"
@@ -291,7 +291,7 @@ const Profile = ({ user }) => {
                 </div>
               </div>
               
-              <div className="form-actions">
+              <div className="user-form-actions">
                 <button 
                   type="button" 
                   className="save-btn" 

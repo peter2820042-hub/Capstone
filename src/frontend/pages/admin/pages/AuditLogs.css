@@ -88,7 +88,7 @@
    ============================================================================ */
 
 /* Search/Filter Bar - Horizontal Layout (same as Residents) */
-.search-filter-bar {
+.admin-admin-search-filter-bar {
   display: flex;
   align-items: flex-end;
   gap: 16px;
@@ -100,7 +100,7 @@
   flex-wrap: wrap;
 }
 
-.search-filter-bar .filter-group {
+.admin-admin-search-filter-bar .admin-admin-filter-group {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -108,7 +108,7 @@
   min-width: 140px;
 }
 
-.search-filter-bar .filter-group label {
+.admin-admin-search-filter-bar .admin-admin-filter-group label {
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--text-secondary);
@@ -116,8 +116,8 @@
   letter-spacing: 0.05em;
 }
 
-.search-filter-bar .filter-group input,
-.search-filter-bar .filter-group select {
+.admin-admin-search-filter-bar .admin-admin-filter-group input,
+.admin-admin-search-filter-bar .admin-admin-filter-group select {
   padding: 10px 12px;
   border: 1px solid var(--border-light);
   border-radius: var(--radius-md);
@@ -128,12 +128,12 @@
   transition: border-color var(--transition-fast);
 }
 
-.search-filter-bar .filter-group input:focus,
-.search-filter-bar .filter-group select:focus {
+.admin-admin-search-filter-bar .admin-admin-filter-group input:focus,
+.admin-admin-search-filter-bar .admin-admin-filter-group select:focus {
   border-color: var(--color-primary);
 }
 
-.search-filter-bar .filter-group input::placeholder {
+.admin-admin-search-filter-bar .admin-admin-filter-group input::placeholder {
   color: var(--text-muted);
 }
 
@@ -278,13 +278,13 @@
   gap: 1rem;
 }
 
-.filter-group {
+.admin-admin-filter-group {
   display: flex;
   flex-direction: column;
   gap: 0.375rem;
 }
 
-.filter-group label {
+.admin-admin-filter-group label {
   display: flex;
   align-items: center;
   gap: 0.375rem;
@@ -295,8 +295,8 @@
   letter-spacing: 0.05em;
 }
 
-.filter-group input,
-.filter-group select {
+.admin-admin-filter-group input,
+.admin-admin-filter-group select {
   padding: 0.5rem 0.75rem;
   border: 1px solid var(--border-light);
   border-radius: var(--radius-md);
@@ -306,8 +306,8 @@
   transition: all var(--transition-fast);
 }
 
-.filter-group input:focus,
-.filter-group select:focus {
+.admin-admin-filter-group input:focus,
+.admin-admin-filter-group select:focus {
   outline: none;
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
@@ -348,7 +348,7 @@
   overflow: hidden;
 }
 
-.table-header {
+.admin-admin-table-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -359,7 +359,7 @@
   gap: 0.75rem;
 }
 
-.table-actions {
+.admin-admin-table-actions {
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -390,7 +390,7 @@
 }
 
 /* Table */
-.table-container {
+.admin-admin-table-container {
   overflow-x: auto;
 }
 
@@ -720,7 +720,7 @@
    PAGINATION
    ============================================================================ */
 
-.pagination {
+.admin-admin-pagination {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -730,7 +730,7 @@
   background: var(--bg-hover);
 }
 
-.pagination-btn {
+.admin-admin-admin-admin-pagination-btn {
   padding: 0.5rem;
   background: var(--bg-card);
   border: 1px solid var(--border-light);
@@ -743,24 +743,24 @@
   justify-content: center;
 }
 
-.pagination-btn:hover:not(:disabled) {
+.admin-admin-admin-admin-pagination-btn:hover:not(:disabled) {
   background: var(--bg-active);
   border-color: var(--border-medium);
 }
 
-.pagination-btn:disabled {
+.admin-admin-admin-admin-pagination-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
-.pagination-pages {
+.admin-admin-pagination-pages {
   display: flex;
   align-items: center;
   gap: 0.25rem;
   margin: 0 0.5rem;
 }
 
-.pagination-page {
+.admin-admin-pagination-page {
   min-width: 36px;
   padding: 0.5rem 0.75rem;
   background: var(--bg-card);
@@ -773,18 +773,18 @@
   transition: all var(--transition-fast);
 }
 
-.pagination-page:hover {
+.admin-admin-pagination-page:hover {
   background: var(--bg-active);
   border-color: var(--border-medium);
 }
 
-.pagination-page.active {
+.admin-admin-pagination-page.active {
   background: var(--color-primary);
   border-color: var(--color-primary);
   color: white;
 }
 
-.pagination-ellipsis {
+.admin-admin-pagination-ellipsis {
   padding: 0.5rem;
   color: var(--text-muted);
 }
@@ -793,7 +793,7 @@
    MODALS
    ============================================================================ */
 
-.modal-overlay {
+.admin-admin-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -814,7 +814,7 @@
   to { opacity: 1; }
 }
 
-.modal-content {
+.admin-admin-modal-content {
   background: var(--bg-card);
   border-radius: var(--radius-xl);
   width: 100%;
@@ -836,7 +836,7 @@
   }
 }
 
-.modal-header {
+.admin-admin-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -844,7 +844,7 @@
   border-bottom: 1px solid var(--border-light);
 }
 
-.modal-header h2 {
+.admin-admin-modal-header h2 {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -854,7 +854,7 @@
   margin: 0;
 }
 
-.modal-close {
+.admin-admin-modal-close {
   padding: 0.5rem;
   background: transparent;
   border: none;
@@ -864,16 +864,16 @@
   border-radius: var(--radius-md);
 }
 
-.modal-close:hover {
+.admin-admin-modal-close:hover {
   background: var(--bg-hover);
   color: var(--text-primary);
 }
 
-.modal-body {
+.admin-admin-modal-body {
   padding: 1.5rem;
 }
 
-.modal-footer {
+.admin-admin-modal-footer {
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
@@ -932,25 +932,25 @@
   color: var(--color-warning);
 }
 
-.confirmation-modal .modal-body p {
+.confirmation-modal .admin-admin-modal-body p {
   text-align: center;
   color: var(--text-secondary);
   margin: 0;
 }
 
 /* Detail Rows */
-.detail-row {
+.admin-admin-detail-row {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
   margin-bottom: 1rem;
 }
 
-.detail-row:last-child {
+.admin-admin-detail-row:last-child {
   margin-bottom: 0;
 }
 
-.detail-row label {
+.admin-admin-detail-row label {
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--text-muted);
@@ -958,7 +958,7 @@
   letter-spacing: 0.05em;
 }
 
-.detail-row > span {
+.admin-admin-detail-row > span {
   font-size: 0.9375rem;
   color: var(--text-primary);
 }
@@ -1201,7 +1201,7 @@
     grid-column: span 1;
   }
   
-  .table-header {
+  .admin-admin-table-header {
     flex-direction: column;
     align-items: stretch;
     gap: 0.75rem;
@@ -1225,12 +1225,12 @@
     display: none;
   }
   
-  .pagination {
+  .admin-admin-pagination {
     gap: 0.25rem;
   }
   
-  .pagination-btn,
-  .pagination-page {
+  .admin-admin-admin-admin-pagination-btn,
+  .admin-admin-pagination-page {
     padding: 0.375rem 0.5rem;
     font-size: 0.8125rem;
   }
@@ -1286,7 +1286,7 @@
     font-size: 0.75rem;
   }
   
-  .modal-content {
+  .admin-admin-modal-content {
     margin: 0.5rem;
     max-height: 95vh;
   }
@@ -1304,9 +1304,9 @@
   
   .filters-section,
   .header-actions,
-  .pagination,
+  .admin-admin-pagination,
   .actions-cell,
-  .modal-overlay {
+  .admin-admin-modal-overlay {
     display: none !important;
   }
   

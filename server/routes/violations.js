@@ -32,6 +32,99 @@ router.get('/user/:lotNumber', async (req, res) => {
   }
 });
 
+// ============ GET VIOLATION STATISTICS (Daily, Weekly, Monthly, Yearly) ============
+router.get('/statistics', async (req, res) => {
+  try {
+    const { period } = req.query; // 'daily', 'weekly', 'monthly', 'yearly'
+    const now = new Date();
+    let startDate;
+    
+    switch (period) {
+      case 'daily':
+        startDate = new Date(now);
+        startDate.setDate(startDate.getDate() - 7);
+        break;
+      case 'weekly':
+        startDate = new Date(now);
+        startDate.setDate(startDate.getDate() - 28);
+        break;
+      case 'monthly':
+        startDate = new Date(now);
+        startDate.setMonth(startDate.getMonth() - 12);
+        break;
+      case 'yearly':
+        startDate = new Date(now);
+        startDate.setFullYear(startDate.getFullYear() - 5);
+        break;
+      default:
+        startDate = new Date(now);
+        startDate.setMonth(startDate.getMonth() - 12);
+    }
+
+    let query;
+    const periodVal = period || 'monthly';
+    
+    if (periodVal === 'daily') {
+      query = `
+        SELECT 
+          TO_CHAR(date_issued, 'YYYY-MM-DD') as period,
+          COUNT(*) as count
+        FROM violations
+        WHERE date_issued >= $1
+        GROUP BY TO_CHAR(date_issued, 'YYYY-MM-DD')
+        ORDER BY period
+      `;
+    } else if (periodVal === 'weekly') {
+      query = `
+        SELECT 
+          TO_CHAR(date_issued, 'IYYY-IW') as period,
+          COUNT(*) as count
+        FROM violations
+        WHERE date_issued >= $1
+        GROUP BY TO_CHAR(date_issued, 'IYYY-IW')
+        ORDER BY period
+      `;
+    } else if (periodVal === 'monthly') {
+      query = `
+        SELECT 
+          TO_CHAR(date_issued, 'YYYY-MM') as period,
+          COUNT(*) as count
+        FROM violations
+        WHERE date_issued >= $1
+        GROUP BY TO_CHAR(date_issued, 'YYYY-MM')
+        ORDER BY period
+      `;
+    } else if (periodVal === 'yearly') {
+      query = `
+        SELECT 
+          TO_CHAR(date_issued, 'YYYY') as period,
+          COUNT(*) as count
+        FROM violations
+        WHERE date_issued >= $1
+        GROUP BY TO_CHAR(date_issued, 'YYYY')
+        ORDER BY period
+      `;
+    }
+
+    const result = await pool.query(query, [startDate.toISOString().split('T')[0]]);
+    
+    // Get total count
+    const totalResult = await pool.query(
+      'SELECT COUNT(*) as total FROM violations WHERE date_issued >= $1',
+      [startDate.toISOString().split('T')[0]]
+    );
+
+    res.json({
+      data: result.rows,
+      total: parseInt(totalResult.rows[0].total) || 0,
+      period: period || 'monthly'
+    });
+  } catch (error) {
+    console.error('Error fetching violation statistics:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ============ GET ALL VIOLATIONS ============
 router.get('/', async (req, res) => {
   try {
@@ -162,10 +255,10 @@ router.put('/:id', async (req, res) => {
 // ============ DELETE VIOLATION ============
 // Authorization: Admin only
 router.delete('/:id', async (req, res) => {
-  // Authorization check: only admin can delete violations
+  // Authorization check: admin and staff can delete violations
   const authUser = req.headers['x-user'] ? JSON.parse(req.headers['x-user']) : null;
-  if (!authUser || authUser.role !== 'admin') {
-    return res.status(403).json({ error: 'Unauthorized: Only admin can delete violations' });
+  if (!authUser || (authUser.role !== 'admin' && authUser.role !== 'staff')) {
+    return res.status(403).json({ error: 'Unauthorized: Only admin and staff can delete violations' });
   }
   try {
     const result = await pool.query('DELETE FROM violations WHERE id = $1 RETURNING *', [req.params.id]);

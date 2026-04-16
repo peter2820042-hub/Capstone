@@ -1,4 +1,4 @@
-/* Sidebar Styles */
+/* Staff Sidebar Styles */
 .sidebar {
   width: 256px;
   height: 100vh;
@@ -205,7 +205,6 @@
   visibility: visible;
   transform: translateY(0);
 }
-
 
 .dropdown-item {
   display: block;

@@ -76,7 +76,7 @@ const corsOptions = {
   origin: function(origin, callback) {
     // Allow requests with no origin (mobile apps, curl, Postman, etc.) in development
     // Also allow exact matches
-    const isAllowed = !origin || origin === 'null' || allowedOrigins.includes(origin);
+    const isAllowed = !origin || origin === 'null' || origin === 'file:///' || (origin && origin.startsWith('file://')) || allowedOrigins.includes(origin);
     if (isAllowed) {
       callback(null, true);
     } else {
@@ -137,7 +137,7 @@ app.use('/api/notifications', notificationRoutes);
 // Legacy route for send-notice (for backward compatibility)
 app.post('/api/send-notice', async (req, res) => {
   // Forward to notifications router
-  const { lot_number, block, resident_name, resident_email, title, message, send_to_all } = req.body;
+  const { lot_number, block, title, message, send_to_all } = req.body;
   
   try {
     await pool.query(`

@@ -5,6 +5,23 @@ async function migrateTables() {
   const client = await pool.connect();
   
   try {
+    // Add columns to bills table
+    try {
+      await client.query(`ALTER TABLE bills ADD COLUMN IF NOT EXISTS block VARCHAR(50)`);
+      console.log('✅ Added block column to bills');
+    } catch (e) { /* might exist */ }
+    
+    // Add columns to violations table
+    try {
+      await client.query(`ALTER TABLE violations ADD COLUMN IF NOT EXISTS block VARCHAR(50)`);
+      console.log('✅ Added block column to violations');
+    } catch (e) { /* might exist */ }
+    
+    try {
+      await client.query(`ALTER TABLE violations ADD COLUMN IF NOT EXISTS lot_number VARCHAR(50)`);
+      console.log('✅ Added lot_number column to violations');
+    } catch (e) { /* might exist */ }
+
     // Add profile_image column to audit_logs table
     try {
       await client.query(`ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS profile_image TEXT`);

@@ -1,255 +1,382 @@
-# 📊 SENTRINA DATABASE - COMPLETE REFERENCE
+================================================================================
+                     SENTRINA DATABASE TABLES DOCUMENTATION
+================================================================================
 
-===============================================================
-                    COMMON COLUMNS
-           (Parehong columns sa lahat ng table)
-===============================================================
+Project: Sentrina - Residence Management System
+Database: PostgreSQL
+Environment: c:/Capstone/Sentrina
 
-┌─────────────┬──────────────────────┬───────────────────────┐
-│   COLUMN    │         TYPE         │      DESCRIPTION      │
-├─────────────┼──────────────────────┼───────────────────────┤
-│ id          │ SERIAL PRIMARY KEY   │ Auto-increment ID     │
-│ created_at  │ TIMESTAMP             │ Oras ng paggawa      │
-│ updated_at  │ TIMESTAMP             │ Huling update        │
-│ status      │ VARCHAR(50)           │ Record status        │
-└─────────────┴──────────────────────┴───────────────────────┘
+================================================================================
+                              TABLE STRUCTURES
+================================================================================
 
-===============================================================
-                    8 TABLES
-===============================================================
+--------------------------------------------------------------------------------
+1. ADMINS TABLE
+--------------------------------------------------------------------------------
+Purpose: Stores administrator accounts for system management
 
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃  1. ADMINS - Admin User Accounts                              ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+Columns:
+  - id              SERIAL PRIMARY KEY      (Auto-increment ID)
+  - username        VARCHAR(100) UNIQUE     (Login username)
+  - email           VARCHAR(255) UNIQUE     (Administrator email)
+  - password_hash   VARCHAR(255)            (BCrypt hashed password)
+  - full_name       VARCHAR(255)            (Full name of admin)
+  - status          VARCHAR(50) DEFAULT 'active'  (Account status)
+  - created_at     TIMESTAMP DEFAULT NOW   (Creation date)
+  - updated_at     TIMESTAMP DEFAULT NOW   (Last update)
+  - last_login     TIMESTAMP               (Last login time)
 
-COLUMNS:
-  • id              (SERIAL PRIMARY KEY)
-  • username        (VARCHAR 100, UNIQUE)
-  • password_hash   (VARCHAR 255)
-  • full_name       (VARCHAR 255)
-  • email           (VARCHAR 255)
-  • phone           (VARCHAR 50)
-  • position        (VARCHAR 100)
-  • profile_image   (TEXT)
-  • status          (VARCHAR 50, DEFAULT 'active')
-  • last_login      (TIMESTAMP)
-  • created_at      (TIMESTAMP)
-  • updated_at      (TIMESTAMP)
+Indexes:
+  - Primary key on id
+  - Unique on username
+  - Unique on email
 
-RECORDS:
-┌────┬──────────┬────────────────────┬────────────────────┬──────────┐
-│ id │ username │     full_name       │       email        │ status  │
-├────┼──────────┼────────────────────┼────────────────────┼──────────┤
-│ 1  │  admin   │ System Administrator │ admin@sentrina.com │ active  │
-└────┴──────────┴────────────────────┴────────────────────┴──────────┘
+Default Accounts:
+  - Username: admin | Email: admin@sentrina.com | Password: password (hashed)
 
-LOGIN: admin / admin123
+--------------------------------------------------------------------------------
+2. STAFFS TABLE
+--------------------------------------------------------------------------------
+Purpose: Stores staff accounts for operations
 
+Columns:
+  - id              SERIAL PRIMARY KEY      (Auto-increment ID)
+  - username        VARCHAR(100) UNIQUE   (Login username)
+  - email            VARCHAR(255) UNIQUE   (Staff email)
+  - password_hash   VARCHAR(255)            (BCrypt hashed password)
+  - full_name       VARCHAR(255)            (Full name of staff)
+  - position        VARCHAR(100) DEFAULT 'staff'  (Job position)
+  - status          VARCHAR(50) DEFAULT 'active'  (Account status)
+  - created_at     TIMESTAMP DEFAULT NOW   (Creation date)
+  - updated_at     TIMESTAMP DEFAULT NOW   (Last update)
+  - last_login     TIMESTAMP               (Last login time)
 
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃  2. STAFFS - Staff User Accounts                              ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+Indexes:
+  - Primary key on id
+  - Unique on username
+  - Unique on email
 
-COLUMNS:
-  • id              (SERIAL PRIMARY KEY)
-  • username        (VARCHAR 100, UNIQUE)
-  • password_hash   (VARCHAR 255)
-  • full_name       (VARCHAR 255)
-  • email           (VARCHAR 255)
-  • phone           (VARCHAR 50)
-  • position        (VARCHAR 100)
-  • profile_image   (TEXT)
-  • status          (VARCHAR 50, DEFAULT 'active')
-  • last_login      (TIMESTAMP)
-  • created_at      (TIMESTAMP)
-  • updated_at      (TIMESTAMP)
+Default Accounts:
+  - Username: staff | Email: staff@sentrina.com | Position: General Staff
 
-RECORDS:
-┌────┬──────────┬─────────────┬─────────────────┬─────────────┬──────────┐
-│ id │ username │  full_name  │      email       │  position   │ status  │
-├────┼──────────┼─────────────┼─────────────────┼─────────────┼──────────┤
-│ 1  │  staff   │ Staff Member │ staff@sentrina.com │ General Staff │ active │
-└────┴──────────┴─────────────┴─────────────────┴─────────────┴──────────┘
+--------------------------------------------------------------------------------
+3. RESIDENTS TABLE (Homeowners/Users)
+--------------------------------------------------------------------------------
+Purpose: Stores homeowner/resident information
 
-LOGIN: staff / staff123
+Columns:
+  - id              SERIAL PRIMARY KEY      (Auto-increment ID)
+  - username        VARCHAR(100) UNIQUE     (Login username)
+  - password_hash   VARCHAR(255)            (BCrypt hashed password)
+  - full_name       VARCHAR(255)            (Full name of resident)
+  - lot_number      VARCHAR(50)             (Unit/Lot number)
+  - block           VARCHAR(50)             (Block/Tower)
+  - phase           VARCHAR(50)             (Phase/Section)
+  - email           VARCHAR(255)            (Email address)
+  - phone           VARCHAR(50)             (Contact number)
+  - profile_image  TEXT                     (Profile image URL)
+  - role            VARCHAR(50) DEFAULT 'homeowner'  (User role)
+  - status          VARCHAR(50) DEFAULT 'active'  (Account status)
+  - date_registered DATE DEFAULT CURRENT_DATE  (Registration date)
+  - last_login     TIMESTAMP               (Last login time)
+  - created_at     TIMESTAMP DEFAULT NOW   (Creation date)
+  - updated_at     TIMESTAMP DEFAULT NOW   (Last update)
 
+Indexes:
+  - Primary key on id
+  - Unique on username
+  - idx_residents_lot_number
+  - idx_residents_block
+  - idx_residents_status
+  - idx_residents_username
 
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃  3. RESIDENTS - Homeowners                                    ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+Sample Data (4 residents):
+  - Juan dela Cruz | Lot: 101 | Block: A | Email: juan@example.com
+  - Maria Santos | Lot: 102 | Block: A | Email: maria@example.com
+  - Pedro Garcia | Lot: 201 | Block: B | Email: pedro@example.com
+  - Ana Reyes | Lot: 202 | Block: B | Email: ana@example.com
 
-COLUMNS:
-  • id              (SERIAL PRIMARY KEY)
-  • username        (VARCHAR 100, UNIQUE)
-  • password_hash   (VARCHAR 255)
-  • full_name       (VARCHAR 255)
-  • lot_number      (VARCHAR 50)
-  • block           (VARCHAR 50)
-  • phase           (VARCHAR 50)
-  • email           (VARCHAR 255)
-  • phone           (VARCHAR 50)
-  • profile_image   (TEXT)
-  • role            (VARCHAR 50, DEFAULT 'homeowner')
-  • status          (VARCHAR 50, DEFAULT 'active')
-  • date_registered (DATE)
-  • last_login      (TIMESTAMP)
-  • created_at      (TIMESTAMP)
-  • updated_at      (TIMESTAMP)
+--------------------------------------------------------------------------------
+4. VIOLATIONS TABLE
+--------------------------------------------------------------------------------
+Purpose: Track resident violations and penalties
 
-RECORDS:
-┌────┬──────────────────┬────────────┬───────┬────────────────────┬──────────────┐
-│ id │    full_name     │ lot_number │ block │       email        │    phone    │
-├────┼──────────────────┼────────────┼───────┼────────────────────┼──────────────┤
-│ 1  │  Juan dela Cruz  │    101     │   A   │ juan@example.com   │ 091234567890 │
-│ 2  │   Maria Santos   │    102     │   A   │ maria@example.com  │ 091234567891 │
-│ 3  │   Pedro Garcia   │    201     │   B   │ pedro@example.com  │ 091234567892 │
-│ 4  │     Ana Reyes     │    202     │   B   │ ana@example.com    │ 091234567893 │
-└────┴──────────────────┴────────────┴───────┴────────────────────┴──────────────┘
+Columns:
+  - id              SERIAL PRIMARY KEY      (Auto-increment ID)
+  - lot_number      VARCHAR(50)             (Unit/Lot number)
+  - resident_name  VARCHAR(255)            (Name of resident)
+  - violation_type VARCHAR(100)             (Type of violation)
+  - description    TEXT                     (Violation details)
+  - date_issued    DATE DEFAULT CURRENT_DATE  (Date issued)
+  - status         VARCHAR(50) DEFAULT 'pending'  (Status: pending/settled)
+  - penalty        DECIMAL(10,2)             (Penalty amount in PHP)
+  - created_at     TIMESTAMP DEFAULT NOW   (Creation date)
+  - updated_at     TIMESTAMP DEFAULT NOW   (Last update)
 
+Indexes:
+  - Primary key on id
+  - idx_violations_lot_number
+  - idx_violations_status
+  - idx_violations_date_issued
 
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃  4. VIOLATIONS - Mga Violation                                ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+Status Values:
+  - pending = Not yet settled
+  - settled = Violation resolved
 
-COLUMNS:
-  • id              (SERIAL PRIMARY KEY)
-  • lot_number      (VARCHAR 50)
-  • resident_name   (VARCHAR 255)
-  • block           (VARCHAR 50)
-  • violation_type  (VARCHAR 100)
-  • description     (TEXT)
-  • date_issued     (DATE)
-  • status          (VARCHAR 50, DEFAULT 'pending')
-  • penalty         (DECIMAL 10,2)
-  • created_at      (TIMESTAMP)
-  • updated_at      (TIMESTAMP)
+Violation Types:
+  - Noise Violation
+  - Illegal Parking
+  - Garbage Violation
+  - (Others as defined by management)
 
-RECORDS:
-┌────┬────────────┬──────────────────┬────────────────────┬────────────────┬─────────┬──────────┐
-│ id │ lot_number │  resident_name   │  violation_type    │  description   │ status  │ penalty  │
-├────┼────────────┼──────────────────┼────────────────────┼────────────────┼─────────┼──────────┤
-│ 1  │    101     │  Juan dela Cruz  │  Noise Violation   │ Loud music...  │ pending │  500.00  │
-│ 2  │    102     │   Maria Santos  │  Illegal Parking   │ Parked in...   │ settled │  300.00  │
-│ 3  │    201     │   Pedro Garcia  │  Garbage Violation │ Improper...    │ pending │  200.00  │
-└────┴────────────┴──────────────────┴────────────────────┴────────────────┴─────────┴──────────┘
+Sample Data:
+  - Lot 101 - Juan dela Cruz - Noise Violation - Loud music after 10 PM - 500 PHP - pending
+  - Lot 102 - Maria Santos - Illegal Parking - Parked in fire exit - 300 PHP - settled
+  - Lot 201 - Pedro Garcia - Garbage Violation - Improper waste disposal - 200 PHP - pending
 
+--------------------------------------------------------------------------------
+5. BILLS TABLE
+--------------------------------------------------------------------------------
+Purpose: Store billing statements for residents
 
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃  5. BILLS - Billing Records                                   ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+Columns:
+  - id              SERIAL PRIMARY KEY      (Auto-increment ID)
+  - lot_number     VARCHAR(50)             (Unit/Lot number)
+  - resident_name  VARCHAR(255)            (Name of resident)
+  - bill_type      VARCHAR(100)            (Type of bill)
+  - bill_reference VARCHAR(100)            (Bill reference number)
+  - billing_period VARCHAR(100)            (Billing period)
+  - amount         DECIMAL(10,2) NOT NULL  (Bill amount in PHP)
+  - due_date       DATE                   (Payment due date)
+  - status         VARCHAR(50) DEFAULT 'unpaid'  (Status: unpaid/paid)
+  - date_paid      DATE                    (Date paid)
+  - payment_method VARCHAR(50)             (Method: GCash/Cash/etc)
+  - amount_paid   DECIMAL(10,2)            (Amount paid)
+  - created_at     TIMESTAMP DEFAULT NOW   (Creation date)
+  - updated_at     TIMESTAMP DEFAULT NOW   (Last update)
 
-COLUMNS:
-  • id              (SERIAL PRIMARY KEY)
-  • lot_number      (VARCHAR 50)
-  • resident_name   (VARCHAR 255)
-  • bill_type       (VARCHAR 100)
-  • bill_reference  (VARCHAR 100)
-  • billing_period  (VARCHAR 100)
-  • amount          (DECIMAL 10,2)
-  • due_date        (DATE)
-  • status          (VARCHAR 50, DEFAULT 'unpaid')
-  • date_paid       (DATE)
-  • payment_method  (VARCHAR 50)
-  • amount_paid     (DECIMAL 10,2)
-  • related_id      (INTEGER)
-  • related_type   (VARCHAR 50)
-  • created_at      (TIMESTAMP)
-  • updated_at      (TIMESTAMP)
+Indexes:
+  - Primary key on id
+  - idx_bills_lot_number
+  - idx_bills_status
+  - idx_bills_due_date
 
-RECORDS: (Walang default data - empty)
+Status Values:
+  - unpaid = Not yet paid
+  - paid = Fully paid
 
+Bill Types (examples):
+  - Monthly Dues
+  - Association Fee
+  - Parking Fee
+  - Utilities
 
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃  6. PAYMENTS - Mga Bayarin                                   ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+Reference Format: BILL-{lot_number}-{sequence}
 
-COLUMNS:
-  • id              (SERIAL PRIMARY KEY)
-  • lot_number      (VARCHAR 50)
-  • resident_name   (VARCHAR 255)
-  • bill_reference  (VARCHAR 100)
-  • amount          (DECIMAL 10,2)
-  • payment_date    (DATE)
-  • payment_method  (VARCHAR 50)
-  • status          (VARCHAR 50, DEFAULT 'pending')
-  • approved_date   (DATE)
-  • created_at      (TIMESTAMP)
-  • updated_at      (TIMESTAMP)
+--------------------------------------------------------------------------------
+6. PAYMENTS TABLE
+--------------------------------------------------------------------------------
+Purpose: Track resident payments
 
-RECORDS:
-┌────┬────────────┬──────────────────┬────────────────┬──────────┬──────────────┬───────────────┬──────────┐
-│ id │ lot_number │  resident_name   │ bill_reference │  amount │ payment_date │ payment_method│ status  │
-├────┼────────────┼──────────────────┼────────────────┼──────────┼──────────────┼───────────────┼──────────┤
-│ 1  │    102     │   Maria Santos  │  BILL-102-001  │ 1500.00 │   2026-04-01 │     GCash     │ approved │
-│ 2  │    101     │  Juan dela Cruz  │  BILL-101-001  │ 1500.00 │   2026-04-05 │      Cash     │ pending  │
-└────┴────────────┴──────────────────┴────────────────┴──────────┴──────────────┴───────────────┴──────────┘
+Columns:
+  - id              SERIAL PRIMARY KEY      (Auto-increment ID)
+  - lot_number     VARCHAR(50)             (Unit/Lot number)
+  - resident_name  VARCHAR(255)            (Name of resident)
+  - bill_reference VARCHAR(100)            (Reference to bill)
+  - amount         DECIMAL(10,2) NOT NULL  (Payment amount in PHP)
+  - payment_date   DATE DEFAULT CURRENT_DATE  (Date of payment)
+  - payment_method VARCHAR(50)             (Method: GCash/Cash/Bank Transfer)
+  - status         VARCHAR(50) DEFAULT 'pending'  (Status: pending/approved/rejected)
+  - approved_date  DATE                    (Date approved)
+  - created_at     TIMESTAMP DEFAULT NOW   (Creation date)
+  - updated_at     TIMESTAMP DEFAULT NOW   (Last update)
 
+Indexes:
+  - Primary key on id
+  - idx_payments_lot_number
+  - idx_payments_status
+  - idx_payments_payment_date
 
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃  7. AUDIT_LOGS - Activity Logs                                ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+Status Values:
+  - pending = Awaiting approval
+  - approved = Payment confirmed
+  - rejected = Payment denied
 
-COLUMNS:
-  • id              (SERIAL PRIMARY KEY)
-  • user_name       (VARCHAR 255)
-  • user_role       (VARCHAR 50)
-  • action          (VARCHAR 100)
-  • module          (VARCHAR 100)
-  • description     (TEXT)
-  • ip_address      (VARCHAR 50)
-  • profile_image   (TEXT)
-  • status          (VARCHAR 50, DEFAULT 'success')
-  • timestamp       (TIMESTAMP)
+Payment Methods:
+  - GCash
+  - Cash
+  - Bank Transfer
+  - Credit Card
 
-RECORDS:
-┌────┬─────────────┬───────────┬──────────┬─────────────┬───────────────────┬──────────┐
-│ id │  user_name  │ user_role │  action  │   module   │   description     │ status   │
-├────┼─────────────┼───────────┼──────────┼─────────────┼───────────────────┼──────────┤
-│ 1  │ Peter Admin │   admin   │  Login   │ Authentication │ Admin logged in  │ success │
-│ 2  │  John Staff │   staff   │   View   │  Residents  │ Staff viewed list │ success │
-│ 3  │ Peter Admin │   admin   │  Create  │   Billing   │ Admin created bill│ success │
-└────┴─────────────┴───────────┴──────────┴─────────────┴───────────────────┴──────────┘
+Sample Data:
+  - Lot 102 - Maria Santos - BILL-102-001 - 1500 PHP - GCash - approved
+  - Lot 101 - Juan dela Cruz - BILL-101-001 - 1500 PHP - Cash - pending
 
+--------------------------------------------------------------------------------
+7. AUDIT_LOGS TABLE
+--------------------------------------------------------------------------------
+Purpose: Track all user activities for security and compliance
 
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃  8. NOTIFICATIONS - Mga Notification                         ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+Columns:
+  - id              SERIAL PRIMARY KEY      (Auto-increment ID)
+  - user_name       VARCHAR(255)            (Name of user)
+  - user_role       VARCHAR(50)             (Role: admin/staff/homeowner)
+  - action          VARCHAR(100)             (Action performed)
+  - module          VARCHAR(100)            (Module affected)
+  - description    TEXT                     (Detailed description)
+  - ip_address      VARCHAR(50)               (User's IP address)
+  - profile_image  TEXT                     (User's profile image)
+  - status         VARCHAR(50) DEFAULT 'success'  (Status of action)
+  - timestamp      TIMESTAMP DEFAULT NOW   (Time of action)
 
-COLUMNS:
-  • id              (SERIAL PRIMARY KEY)
-  • user_id         (INTEGER)
-  • type            (VARCHAR 50)
-  • title           (VARCHAR 255)
-  • message         (TEXT)
-  • status          (VARCHAR 20, DEFAULT 'unread')
-  • related_id      (INTEGER)
-  • related_type    (VARCHAR 50)
-  • created_at      (TIMESTAMP)
+Indexes:
+  - Primary key on id
+  - idx_audit_logs_user_name
+  - idx_audit_logs_user_role
+  - idx_audit_logs_timestamp
 
-RECORDS: (Empty - populate when users get notifications)
+User Roles:
+  - admin = Administrator
+  - staff = Staff Member
+  - homeowner = Resident/Homeowner
 
+Actions (examples):
+  - Login
+  - Logout
+  - Create
+  - Update
+  - Delete
+  - View
 
-===============================================================
-                  LOGIN CREDENTIALS
-===============================================================
+Modules (examples):
+  - Authentication
+  - Residents
+  - Billing
+  - Violations
+  - Payments
 
-┌──────────┬──────────┬────────────┐
-│   ROLE   │ USERNAME │  PASSWORD  │
-├──────────┼──────────┼────────────┤
-│   Admin  │   admin  │  admin123  │
-│   Staff  │   staff  │  staff123  │
-│ Resident │  (register through app)  │
-└──────────┴──────────┴────────────┘
+Sample Data:
+  - Peter Admin | admin | Login | Authentication | Admin logged in | 127.0.0.1 | success
+  - John Staff | staff | View | Residents | Staff viewed residents list | 127.0.0.1 | success
+  - Peter Admin | admin | Create | Billing | Admin created new bill | 127.0.0.1 | success
 
+--------------------------------------------------------------------------------
+8. NOTIFICATIONS TABLE
+--------------------------------------------------------------------------------
+Purpose: Store user notifications and alerts
 
-===============================================================
-                DATABASE INDEXES
-           (Para sa performance)
-===============================================================
+Columns:
+  - id              SERIAL PRIMARY KEY      (Auto-increment ID)
+  - user_id         INTEGER REFERENCES users(id)  (Reference to user)
+  - title           VARCHAR(255)            (Notification title)
+  - message         TEXT                     (Notification message)
+  - type            VARCHAR(50) DEFAULT 'info'  (Type: info/warning/error)
+  - is_read         BOOLEAN DEFAULT FALSE   (Read status)
+  - created_at      TIMESTAMP DEFAULT NOW   (Creation date)
 
-• idx_residents_lot_number, idx_residents_block, idx_residents_status
-• idx_violations_lot_number, idx_violations_status, idx_violations_date_issued
-• idx_bills_lot_number, idx_bills_status, idx_bills_due_date
-• idx_payments_lot_number, idx_payments_status, idx_payments_payment_date
-• idx_audit_logs_user_name, idx_audit_logs_user_role, idx_audit_logs_timestamp
-• idx_notifications_user_id, idx_notifications_status
+Indexes:
+  - Primary key on id
+  - idx_notifications_user_id
+
+Notification Types:
+  - info = Information
+  - warning = Warning
+  - error = Error
+
+================================================================================
+                           DATABASE CONNECTIONS
+================================================================================
+
+Database Configuration (db.js):
+  - Database Host: process.env.DATABASE_HOST || 'localhost'
+  - Database User: process.env.DATABASE_USER || 'postgres'
+  - Database Name: process.env.DATABASE_NAME || 'sentrina_db'
+  - Database Port: process.env.DATABASE_PORT || 5432
+  - Database Password: process.env.DATABASE_PASSWORD (Required in .env)
+
+================================================================================
+                           USERS AND ROLES
+================================================================================
+
+ROLES IN SYSTEM:
+1. ADMIN
+   - Full system access
+   - Can manage all modules
+   - Can create staff accounts
+   - View audit logs
+   - Generate reports
+
+2. STAFF
+   - Limited management access
+   - Can manage residents
+   - Can process bills and payments
+   - Cannot manage admin accounts
+   - Cannot view audit logs
+
+3. HOMEOWNER / RESIDENT
+   - Self-service portal
+   - View own bills
+   - Make payments
+   - View violations
+   - Update own profile
+
+================================================================================
+                         TABLE RELATIONSHIPS
+================================================================================
+
+RESIDENTS (residents)
+  - Central entity in the system
+  - lot_number uniquely identifies each resident
+  - Linked to violations via lot_number
+  - Linked to bills via lot_number
+  - Linked to payments via lot_number
+
+VIOLATIONS (violations)
+  - References residents via lot_number and resident_name
+
+BILLS (bills)
+  - References residents via lot_number and resident_name
+  - Paid via payments table (bill_reference)
+
+PAYMENTS (payments)
+  - References residents via lot_number and resident_name
+  - References bills via bill_reference
+
+AUDIT_LOGS (audit_logs)
+  - Tracks actions by all user types
+  - user_role indicates who performed action
+
+NOTIFICATIONS (notifications)
+  - References users via user_id
+
+================================================================================
+                         SAMPLE DATA SUMMARY
+================================================================================
+
+DEFAULT ACCOUNTS:
+  - Admin: admin / admin@sentrina.com
+  - Staff: staff / staff@sentrina.com
+
+SAMPLE RESIDENTS: 4 residents (Juan, Maria, Pedro, Ana)
+SAMPLE VIOLATIONS: 3 violations (2 pending, 1 settled)
+SAMPLE PAYMENTS: 2 payments (1 approved, 1 pending)
+SAMPLE AUDIT_LOGS: 3 logs
+
+================================================================================
+                         API ENDPOINTS (routes)
+================================================================================
+
+Server routes located in: Sentrina/server/routes/
+  - auth.js         - Authentication (login/logout)
+  - residents.js    - Resident management
+  - bills.js       - Billing management
+  - payments.js    - Payment processing
+  - violations.js  - Violation tracking
+  - dashboard.js   - Dashboard data
+  - audit.js       - Audit logs
+  - profiles.js    - Profile management
+  - notifications.js - Notifications
+
+================================================================================
+                              END OF NOTES
+================================================================================

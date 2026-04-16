@@ -18,9 +18,11 @@ function Residents() {
   });
   const [formMessage, setFormMessage] = useState(null);
 
-  useEffect(() => {
-    fetchResidents();
-  }, []);
+  const [filters, setFilters] = useState({
+    fullName: '',
+    block: '',
+    lot: ''
+  });
 
   const fetchResidents = async () => {
     try {
@@ -33,30 +35,6 @@ function Residents() {
       setLoading(false);
     }
   };
-
-  const [filters, setFilters] = useState({
-    fullName: '',
-    block: '',
-    lot: ''
-  });
-
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters(prev => ({ ...prev, [name]: value }));
-  };
-
-  useEffect(() => {
-    const hasContent = filters.fullName.trim() || filters.block.trim() || filters.lot.trim();
-    
-    if (hasContent) {
-      const timeoutId = setTimeout(() => {
-        handleSearch();
-      }, 300);
-      return () => clearTimeout(timeoutId);
-    } else {
-      fetchResidents();
-    }
-  }, [filters.fullName, filters.block, filters.lot]);
 
   const handleSearch = async () => {
     setLoading(true);
@@ -79,6 +57,50 @@ function Residents() {
       setLoading(false);
     }
   };
+
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Fetch residents on component mount
+  useEffect(() => {
+    (async () => {
+      try {
+        const response = await fetch('/api/residents');
+        const data = await response.json();
+        setResidents(Array.isArray(data) ? data : (data.residents || []));
+      } catch (error) {
+        console.error('Error fetching residents:', error);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    const hasContent = filters.fullName.trim() || filters.block.trim() || filters.lot.trim();
+    
+    if (hasContent) {
+      const timeoutId = setTimeout(() => {
+        handleSearch();
+      }, 300);
+      return () => clearTimeout(timeoutId);
+    } else {
+      (async () => {
+        try {
+          const response = await fetch('/api/residents');
+          const data = await response.json();
+          setResidents(Array.isArray(data) ? data : (data.residents || []));
+        } catch (error) {
+          console.error('Error fetching residents:', error);
+        } finally {
+          setLoading(false);
+        }
+      })();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.fullName, filters.block, filters.lot]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -116,7 +138,6 @@ function Residents() {
     <div className="residents-container">
       <div className="residents-header">
         <div className="header-title">
-          <h2>Residents</h2>
           <p className="header-subtitle">Manage and view all registered residents and their account information</p>
         </div>
         <button className="add-btn" onClick={() => setShowModal(true)}>
@@ -127,8 +148,8 @@ function Residents() {
         </button>
       </div>
 
-      <div className="search-filter-bar">
-        <div className="filter-group">
+      <div className="admin-admin-search-filter-bar">
+        <div className="admin-admin-filter-group">
           <label>Full Name</label>
           <input
             type="text"
@@ -138,7 +159,7 @@ function Residents() {
             onChange={handleFilterChange}
           />
         </div>
-        <div className="filter-group">
+        <div className="admin-admin-filter-group">
           <label>Block</label>
           <input
             type="text"
@@ -148,7 +169,7 @@ function Residents() {
             onChange={handleFilterChange}
           />
         </div>
-        <div className="filter-group">
+        <div className="admin-admin-filter-group">
           <label>Lot</label>
           <input
             type="text"
@@ -160,7 +181,7 @@ function Residents() {
         </div>
       </div>
 
-      <div className="table-container">
+      <div className="admin-admin-table-container">
         <table className="residents-table">
           <thead>
             <tr>
@@ -183,7 +204,7 @@ function Residents() {
               </tr>
             ) : residents.length === 0 ? (
               <tr>
-                <td colSpan="5" className="empty-row">
+                <td colSpan="5" className="admin-admin-empty-row">
                   {(filters.fullName || filters.block || filters.lot) ? 'No residents found matching your search' : 'No residents registered yet'}
                 </td>
               </tr>
@@ -207,24 +228,20 @@ function Residents() {
       </div>
 
       {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+        <div className="admin-admin-modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
+            <div className="admin-admin-modal-header">
               <h3>Add New Resident</h3>
-              <button className="close-btn" onClick={() => setShowModal(false)}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M18 6L6 18M6 6l12 12" />
-                </svg>
-              </button>
+              <button className="close-btn" onClick={() => setShowModal(false)}>X</button>
             </div>
-            <form className="modal-form" onSubmit={handleSubmit}>
+            <form className="admin-admin-modal-form" onSubmit={handleSubmit}>
               {formMessage && (
                 <div className={`message ${formMessage.type}`}>
                   {formMessage.text}
                 </div>
               )}
-              <div className="form-row">
-                <div className="form-group">
+              <div className="admin-admin-form-row">
+                <div className="admin-admin-form-group">
                   <label>Username <span className="required">*</span></label>
                   <input
                     type="text"
@@ -234,7 +251,7 @@ function Residents() {
                     required
                   />
                 </div>
-                <div className="form-group">
+                <div className="admin-admin-form-group">
                   <label>Password <span className="required">*</span></label>
                   <input
                     type="password"
@@ -244,7 +261,7 @@ function Residents() {
                     required
                   />
                 </div>
-                <div className="form-group span-2">
+                <div className="admin-admin-form-group span-2">
                   <label>Full Name</label>
                   <input
                     type="text"
@@ -254,7 +271,7 @@ function Residents() {
                     placeholder="Enter full name"
                   />
                 </div>
-                <div className="form-group">
+                <div className="admin-admin-form-group">
                   <label>Email</label>
                   <input
                     type="email"
@@ -264,7 +281,7 @@ function Residents() {
                     placeholder="Enter email"
                   />
                 </div>
-                <div className="form-group">
+                <div className="admin-admin-form-group">
                   <label>Phone</label>
                   <input
                     type="text"
@@ -274,7 +291,7 @@ function Residents() {
                     placeholder="Enter phone number"
                   />
                 </div>
-                <div className="form-group">
+                <div className="admin-admin-form-group">
                   <label>Block</label>
                   <input
                     type="text"
@@ -284,7 +301,7 @@ function Residents() {
                     placeholder="e.g., A"
                   />
                 </div>
-                <div className="form-group">
+                <div className="admin-admin-form-group">
                   <label>Lot</label>
                   <input
                     type="text"
@@ -295,7 +312,7 @@ function Residents() {
                   />
                 </div>
               </div>
-              <div className="modal-actions">
+              <div className="admin-admin-modal-actions">
                 <button type="button" className="cancel-btn" onClick={() => setShowModal(false)}>
                   Cancel
                 </button>
@@ -309,24 +326,20 @@ function Residents() {
       )}
 
       {showViewModal && selectedResident && (
-        <div className="view-modal-overlay" onClick={() => setShowViewModal(false)}>
+        <div className="view-admin-admin-modal-overlay" onClick={() => setShowViewModal(false)}>
           <div className="view-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="view-modal-header">
+            <div className="view-admin-admin-modal-header">
               <div className="view-modal-avatar">
                 {selectedResident.fullName ? selectedResident.fullName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : '??'}
               </div>
-              <div className="view-modal-header-info">
+              <div className="view-admin-admin-modal-header-info">
                 <h3>{selectedResident.fullName || 'Unknown'}</h3>
                 <span className="view-modal-location">Block {selectedResident.block || '-'}, Lot {selectedResident.lotNumber || '-'}</span>
               </div>
-              <button className="view-modal-close" onClick={() => setShowViewModal(false)}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M18 6L6 18M6 6l12 12" />
-                </svg>
-              </button>
+              <button className="view-admin-admin-modal-close" onClick={() => setShowViewModal(false)}>X</button>
             </div>
 
-            <div className="view-modal-content">
+            <div className="view-admin-admin-modal-content">
               <div className="view-modal-section">
                 <div className="view-modal-section-title">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -367,15 +380,15 @@ function Residents() {
               </div>
             </div>
 
-            <div className="view-modal-footer">
-              <a href="/payments" className="view-modal-action-btn view-modal-btn-primary">
+            <div className="view-admin-admin-modal-footer">
+              <a href="/payments" className="view-modal-action-btn view-modal-admin-admin-btn-primary">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
                   <line x1="1" y1="10" x2="23" y2="10" />
                 </svg>
                 View Payments
               </a>
-              <a href="/violations" className="view-modal-action-btn view-modal-btn-secondary">
+              <a href="/violations" className="view-modal-action-btn view-modal-admin-admin-btn-secondary">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
                   <line x1="12" y1="9" x2="12" y2="13" />

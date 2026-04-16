@@ -241,7 +241,7 @@ async function createTables() {
     await client.query(`
       CREATE TABLE IF NOT EXISTS notifications (
         id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id),
+        user_id INTEGER REFERENCES residents(id),
         title VARCHAR(255),
         message TEXT,
         type VARCHAR(50) DEFAULT 'info',
@@ -256,11 +256,11 @@ async function createTables() {
     
     // Sample residents
     await client.query(`
-      INSERT INTO residents (full_name, lot_number, block, email, phone, role, status) VALUES
-      ('Juan dela Cruz', '101', 'A', 'juan@example.com', '091234567890', 'homeowner', 'active'),
-      ('Maria Santos', '102', 'A', 'maria@example.com', '091234567891', 'homeowner', 'active'),
-      ('Pedro Garcia', '201', 'B', 'pedro@example.com', '091234567892', 'homeowner', 'active'),
-      ('Ana Reyes', '202', 'B', 'ana@example.com', '091234567893', 'homeowner', 'active')
+      INSERT INTO residents (username, password_hash, full_name, lot_number, block, email, phone, role, status) VALUES
+      ('juan101', NULL, 'Juan dela Cruz', '101', 'A', 'juan@example.com', '091234567890', 'homeowner', 'active'),
+      ('maria102', NULL, 'Maria Santos', '102', 'A', 'maria@example.com', '091234567891', 'homeowner', 'active'),
+      ('pedro201', NULL, 'Pedro Garcia', '201', 'B', 'pedro@example.com', '091234567892', 'homeowner', 'active'),
+      ('ana202', NULL, 'Ana Reyes', '202', 'B', 'ana@example.com', '091234567893', 'homeowner', 'active')
       ON CONFLICT DO NOTHING
     `);
     console.log('✅ Sample residents inserted');
@@ -345,7 +345,14 @@ async function createTables() {
     console.error('❌ Error:', error.message);
   } finally {
     client.release();
-    await pool.end();
+    // End the pool connection
+    try {
+      if (pool) {
+        await pool.end();
+      }
+    } catch (e) {
+      // Ignore errors when ending pool
+    }
   }
 }
 

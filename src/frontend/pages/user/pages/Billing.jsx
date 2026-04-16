@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import './Billing.css';
 
-function Billing() {
+function Billing({ user }) {
   // Filter states
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
@@ -10,12 +10,39 @@ function Billing() {
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const itemsPerPage = 10;
 
   // Bills data (empty - no API)
-  const [bills] = useState([]);
-  const [loading] = useState(false);
-  const [error] = useState(null);
+  const [bills, setBills] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Get user's lot number
+  const lotNumber = user?.lotNumber || user?.lotNumber;
+
+  // Fetch bills from API
+  useEffect(() => {
+    if (!lotNumber) return;
+
+    const fetchBills = async () => {
+      try {
+        const response = await fetch(`/api/bills/user/${encodeURIComponent(lotNumber)}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch bills');
+        }
+        const data = await response.json();
+        setBills(data || []);
+        setError(null);
+      } catch (err) {
+        setError('Failed to load bills');
+        console.error('Error fetching bills:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBills();
+  }, [lotNumber]);
 
   // Selected bill for details modal
   const [selectedBill, setSelectedBill] = useState(null);
@@ -176,7 +203,7 @@ function Billing() {
       {/* Filters Section */}
       <div className="filter-section">
         <div className="filter-row">
-          <div className="filter-group">
+          <div className="user-filter-group">
             <label>Search</label>
             <input
               type="text"
@@ -185,7 +212,7 @@ function Billing() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <div className="filter-group">
+          <div className="user-filter-group">
             <label>Due Date From</label>
             <input
               type="date"
@@ -193,7 +220,7 @@ function Billing() {
               onChange={(e) => setDateFrom(e.target.value)}
             />
           </div>
-          <div className="filter-group">
+          <div className="user-filter-group">
             <label>Due Date To</label>
             <input
               type="date"
@@ -201,7 +228,7 @@ function Billing() {
               onChange={(e) => setDateTo(e.target.value)}
             />
           </div>
-          <div className="filter-group">
+          <div className="user-filter-group">
             <label>Status</label>
             <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
               <option value="">All Statuses</option>
@@ -215,7 +242,7 @@ function Billing() {
 
       {/* Bills Table */}
       <div className="table-section">
-        <div className="table-container">
+        <div className="user-table-container">
           <table className="bills-table">
             <thead>
               <tr>
@@ -274,20 +301,20 @@ function Billing() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="pagination">
-            <button className="pagination-btn" onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>
+          <div className="user-pagination">
+            <button className="user-user-pagination-btn" onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <polyline points="11 17 6 12 11 7" />
                 <polyline points="18 17 13 12 18 7" />
               </svg>
             </button>
-            <button className="pagination-btn" onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1}>
+            <button className="user-user-pagination-btn" onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <polyline points="15 18 9 12 15 6" />
               </svg>
             </button>
             
-            <div className="pagination-pages">
+            <div className="user-pagination-pages">
               {Array.from({ length: totalPages }, (_, i) => i + 1)
                 .filter(page => {
                   if (totalPages <= 7) return true;
@@ -298,21 +325,21 @@ function Billing() {
                 .map((page, index, array) => (
                   <React.Fragment key={page}>
                     {index > 0 && array[index - 1] !== page - 1 && (
-                      <span className="pagination-ellipsis">...</span>
+                      <span className="user-pagination-ellipsis">...</span>
                     )}
-                    <button className={`pagination-page ${currentPage === page ? 'active' : ''}`} onClick={() => setCurrentPage(page)}>
+                    <button className={`user-pagination-page ${currentPage === page ? 'active' : ''}`} onClick={() => setCurrentPage(page)}>
                       {page}
                     </button>
                   </React.Fragment>
                 ))}
             </div>
 
-            <button className="pagination-btn" onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === totalPages}>
+            <button className="user-user-pagination-btn" onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === totalPages}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <polyline points="9 18 15 12 9 6" />
               </svg>
             </button>
-            <button className="pagination-btn" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>
+            <button className="user-user-pagination-btn" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <polyline points="13 17 18 12 13 7" />
                 <polyline points="6 17 11 12 6 7" />
@@ -324,48 +351,48 @@ function Billing() {
 
       {/* Bill Details Modal */}
       {selectedBill && (
-        <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
+        <div className="user-modal-overlay" onClick={closeModal}>
+          <div className="user-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="user-modal-header">
               <h2>Bill Details</h2>
-              <button className="modal-close" onClick={closeModal}>
+              <button className="user-modal-close" onClick={closeModal}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <line x1="18" y1="6" x2="6" y2="18" />
                   <line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
               </button>
             </div>
-            <div className="modal-body">
-              <div className="detail-row">
+            <div className="user-modal-body">
+              <div className="user-detail-row">
                 <label>Bill Number:</label>
                 <span>{selectedBill.billNumber}</span>
               </div>
-              <div className="detail-row">
+              <div className="user-detail-row">
                 <label>Description:</label>
                 <span>{selectedBill.description}</span>
               </div>
-              <div className="detail-row">
+              <div className="user-detail-row">
                 <label>Amount:</label>
                 <span className="amount">{formatCurrency(selectedBill.amount)}</span>
               </div>
-              <div className="detail-row">
+              <div className="user-detail-row">
                 <label>Due Date:</label>
                 <span>{formatDate(selectedBill.dueDate)}</span>
               </div>
-              <div className="detail-row">
+              <div className="user-detail-row">
                 <label>Status:</label>
                 <span className={`status-badge ${selectedBill.status?.toLowerCase()}`}>
                   {selectedBill.status}
                 </span>
               </div>
               {selectedBill.paidDate && (
-                <div className="detail-row">
+                <div className="user-detail-row">
                   <label>Paid Date:</label>
                   <span>{formatDate(selectedBill.paidDate)}</span>
                 </div>
               )}
             </div>
-            <div className="modal-footer">
+            <div className="user-modal-footer">
               {selectedBill.status !== 'Paid' && (
                 <a href="/user/payment" className="modal-btn pay">Pay Now</a>
               )}

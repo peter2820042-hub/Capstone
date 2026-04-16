@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './Sidebar.css';
 import logo from '../../../../assets/logo.png';
-import { DashboardIcon, GisIcon, BillingIcon, PaymentsIcon, ViolationsIcon, NotificationIcon, ProfileIcon } from '../../../../components/Icons';
+import { DashboardIcon, GisIcon, PaymentsIcon, ProfileIcon, FileIcon } from '../../../../components/Icons';
 
 const Sidebar = ({ onLogout, isDropdown = false }) => {
   const navigate = useNavigate();
@@ -21,24 +21,14 @@ const Sidebar = ({ onLogout, isDropdown = false }) => {
       icon: <GisIcon />
     },
     { 
-      label: "BILLING", 
-      path: "/billing",
-      icon: <BillingIcon />
+      label: "HISTORY", 
+      path: "/history",
+      icon: <FileIcon />
     },
     { 
       label: "PAYMENT", 
       path: "/payment",
       icon: <PaymentsIcon />
-    },
-    { 
-      label: "VIOLATION", 
-      path: "/violation",
-      icon: <ViolationsIcon />
-    },
-    { 
-      label: "NOTIFICATION", 
-      path: "/notification",
-      icon: <NotificationIcon />
     },
     { 
       label: "PROFILE", 

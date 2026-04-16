@@ -155,6 +155,10 @@ router.get('/pa-center', async (req, res) => {
     const pendingPaymentsCount = await pool.query('SELECT COUNT(*) as count FROM payments WHERE status = $1', ['pending']);
     const rejectedPaymentsCount = await pool.query('SELECT COUNT(*) as count FROM payments WHERE status = $1', ['rejected']);
     
+    // Get violations count
+    const totalViolations = await pool.query('SELECT COUNT(*) as count FROM violations');
+    const pendingViolations = await pool.query('SELECT COUNT(*) as count FROM violations WHERE status = $1', ['pending']);
+    
     res.json({
       // Financial totals
       totalBilled: totalBilled,
@@ -166,13 +170,19 @@ router.get('/pa-center', async (req, res) => {
       billsCount: {
         paid: parseInt(paidBillsCount.rows[0].count),
         unpaid: parseInt(unpaidBillsCount.rows[0].count),
-        overdue: parseInt(overdueBillsCount.rows[0].count)
+        overdue: parseInt(overdueBillsCount.rows[0].count),
+        total: parseInt(paidBillsCount.rows[0].count) + parseInt(unpaidBillsCount.rows[0].count) + parseInt(overdueBillsCount.rows[0].count)
       },
       // Payment counts
       paymentsCount: {
         approved: parseInt(approvedPaymentsCount.rows[0].count),
         pending: parseInt(pendingPaymentsCount.rows[0].count),
         rejected: parseInt(rejectedPaymentsCount.rows[0].count)
+      },
+      // Violations counts
+      violationsCount: {
+        total: parseInt(totalViolations.rows[0].count),
+        pending: parseInt(pendingViolations.rows[0].count)
       }
     });
   } catch (error) {

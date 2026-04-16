@@ -183,53 +183,9 @@ function Payment() {
 
   return (
     <div className="payment-container">
-      {/* Stats Cards Section */}
-      <div className="stats-section">
-        <div className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-icon total-payments">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-              </svg>
-            </div>
-            <div className="stat-content">
-              <span className="stat-label">Total Payments</span>
-              <span className="stat-value">{formatCurrency(totalPayments)}</span>
-            </div>
-          </div>
-
-          <div className="stat-card">
-            <div className="stat-icon pending-review">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="8" x2="12" y2="12" />
-                <line x1="12" y1="16" x2="12.01" y2="16" />
-              </svg>
-            </div>
-            <div className="stat-content">
-              <span className="stat-label">Pending Review</span>
-              <span className="stat-value">{pendingReview}</span>
-            </div>
-          </div>
-
-          <div className="stat-card">
-            <div className="stat-icon approved-today">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                <polyline points="22 4 12 14.01 9 11.01" />
-              </svg>
-            </div>
-            <div className="stat-content">
-              <span className="stat-label">Approved Today</span>
-              <span className="stat-value">{formatCurrency(approvedToday)}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Search/Filter - Horizontal Layout */}
-      <div className="search-filter-bar">
-        <div className="filter-group">
+      <div className="staff-search-filter-bar">
+        <div className="staff-filter-group">
           <label>Search</label>
           <input
             type="text"
@@ -239,7 +195,7 @@ function Payment() {
             onChange={handleFilterChange}
           />
         </div>
-        <div className="filter-group">
+        <div className="staff-filter-group">
           <label>Resident Name</label>
           <input
             type="text"
@@ -249,7 +205,7 @@ function Payment() {
             onChange={handleFilterChange}
           />
         </div>
-        <div className="filter-group">
+        <div className="staff-filter-group">
           <label>Bill Reference</label>
           <input
             type="text"
@@ -259,7 +215,7 @@ function Payment() {
             onChange={handleFilterChange}
           />
         </div>
-        <div className="filter-group">
+        <div className="staff-filter-group">
           <label>Payment Method</label>
           <select
             name="paymentMethod"
@@ -272,7 +228,7 @@ function Payment() {
             ))}
           </select>
         </div>
-        <div className="filter-group">
+        <div className="staff-filter-group">
           <label>Status</label>
           <select
             name="status"
@@ -285,11 +241,11 @@ function Payment() {
             <option value="rejected">Rejected</option>
           </select>
         </div>
-        <button className="clear-btn" onClick={clearFilters}>Clear</button>
+        <button className="staff-clear-btn" onClick={clearFilters}>Clear</button>
       </div>
 
       {/* Table */}
-      <div className="table-container">
+      <div className="staff-table-container">
         <table className="payments-table">
           <thead>
             <tr>
@@ -307,7 +263,7 @@ function Payment() {
               if (filteredPayments.length === 0) {
                 return (
                   <tr>
-                    <td colSpan="7" className="empty-row">
+                    <td colSpan="7" className="staff-empty-row">
                       {(filters.search || filters.residentName || filters.billReference || filters.paymentMethod || filters.status)
                         ? 'No payments found matching your search' 
                         : 'No payments logged yet'}
@@ -343,53 +299,53 @@ function Payment() {
 
       {/* View Modal */}
       {showViewModal && selectedPayment && (
-        <div className="modal-overlay" onClick={() => setShowViewModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
+        <div className="staff-modal-overlay" onClick={() => setShowViewModal(false)}>
+          <div className="staff-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="staff-modal-header">
               <h2>Payment Details</h2>
-              <button className="modal-close" onClick={() => setShowViewModal(false)}>×</button>
+              <button className="staff-modal-close" onClick={() => setShowViewModal(false)}>×</button>
             </div>
-            <div className="modal-body">
-              <div className="detail-row">
+            <div className="staff-modal-body">
+              <div className="staff-detail-row">
                 <span className="detail-label">Resident Name:</span>
                 <span className="detail-value">{selectedPayment.residentName || '-'}</span>
               </div>
-              <div className="detail-row">
+              <div className="staff-detail-row">
                 <span className="detail-label">Bill Reference:</span>
                 <span className="detail-value">{selectedPayment.billReference || '-'}</span>
               </div>
-              <div className="detail-row">
+              <div className="staff-detail-row">
                 <span className="detail-label">Amount:</span>
                 <span className="detail-value">{formatCurrency(selectedPayment.amount)}</span>
               </div>
-              <div className="detail-row">
+              <div className="staff-detail-row">
                 <span className="detail-label">Payment Date:</span>
                 <span className="detail-value">{formatDate(selectedPayment.paymentDate)}</span>
               </div>
-              <div className="detail-row">
+              <div className="staff-detail-row">
                 <span className="detail-label">Payment Method:</span>
                 <span className="detail-value">{selectedPayment.paymentMethod || '-'}</span>
               </div>
-              <div className="detail-row">
+              <div className="staff-detail-row">
                 <span className="detail-label">Status:</span>
                 <span className={getStatusBadgeClass(selectedPayment.status)}>
                   {formatStatus(selectedPayment.status)}
                 </span>
               </div>
               {selectedPayment.approvedDate && (
-                <div className="detail-row">
+                <div className="staff-detail-row">
                   <span className="detail-label">Approved Date:</span>
                   <span className="detail-value">{formatDate(selectedPayment.approvedDate)}</span>
                 </div>
               )}
               {selectedPayment.notes && (
-                <div className="detail-row">
+                <div className="staff-detail-row">
                   <span className="detail-label">Notes:</span>
                   <span className="detail-value">{selectedPayment.notes}</span>
                 </div>
               )}
             </div>
-            <div className="modal-footer">
+            <div className="staff-modal-footer">
               <button className="modal-btn cancel" onClick={() => setShowViewModal(false)}>Close</button>
             </div>
           </div>
@@ -398,14 +354,14 @@ function Payment() {
 
       {/* Edit Modal */}
       {showEditModal && selectedPayment && (
-        <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
+        <div className="staff-modal-overlay" onClick={() => setShowEditModal(false)}>
+          <div className="staff-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="staff-modal-header">
               <h2>Edit Payment</h2>
-              <button className="modal-close" onClick={() => setShowEditModal(false)}>×</button>
+              <button className="staff-modal-close" onClick={() => setShowEditModal(false)}>×</button>
             </div>
-            <div className="modal-body">
-              <div className="form-group">
+            <div className="staff-modal-body">
+              <div className="staff-form-group">
                 <label>Status</label>
                 <select
                   name="status"
@@ -417,7 +373,7 @@ function Payment() {
                   <option value="rejected">Rejected</option>
                 </select>
               </div>
-              <div className="form-group">
+              <div className="staff-form-group">
                 <label>Notes</label>
                 <textarea
                   name="notes"
@@ -428,7 +384,7 @@ function Payment() {
                 />
               </div>
             </div>
-            <div className="modal-footer">
+            <div className="staff-modal-footer">
               <button className="modal-btn cancel" onClick={() => setShowEditModal(false)}>Cancel</button>
               <button className="modal-btn save" onClick={saveEdit}>Save Changes</button>
             </div>

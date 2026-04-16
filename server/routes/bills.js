@@ -15,6 +15,7 @@ router.get('/', async (req, res) => {
       id: b.id,
       billReference: b.bill_reference || `BILL-${b.id.toString().padStart(4, '0')}`,
       lotNumber: b.lot_number,
+      block: b.block,
       residentName: b.resident_name,
       billType: b.bill_type,
       billingPeriod: b.billing_period || 'N/A',
@@ -91,13 +92,21 @@ router.get('/user/:lotNumber/unpaid', async (req, res) => {
 
 // ============ CREATE BILL ============
 router.post('/', async (req, res) => {
-  const { lot_number, resident_name, bill_type, amount, due_date, status, billing_period } = req.body;
+  // Handle both camelCase (frontend) and snake_case (server) formats
+  const { lot_number, block, resident_name, bill_type, amount, due_date, status, billing_period,
+        lotNumber, residentName, billType, billingPeriod } = req.body;
+
+  // Normalize field names
+  const normalizedLotNumber = lot_number || lotNumber;
+  const normalizedResidentName = resident_name || residentName;
+  const normalizedBillType = bill_type || billType;
+  const normalizedBillingPeriod = billing_period || billingPeriod || 'N/A';
   
   try {
     const result = await pool.query(
-      `INSERT INTO bills (lot_number, resident_name, bill_type, billing_period, amount, due_date, status) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-      [lot_number, resident_name, bill_type, billing_period || 'N/A', amount, due_date, status || 'unpaid']
+      `INSERT INTO bills (lot_number, block, resident_name, bill_type, billing_period, amount, due_date, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+      [normalizedLotNumber, block, normalizedResidentName, normalizedBillType, normalizedBillingPeriod, amount, due_date, status || 'unpaid']
     );
     res.json(result.rows[0]);
   } catch (error) {
@@ -108,13 +117,13 @@ router.post('/', async (req, res) => {
 
 // ============ UPDATE BILL ============
 router.put('/:id', async (req, res) => {
-  const { lot_number, resident_name, bill_type, amount, due_date, status } = req.body;
+  const { lot_number, block, resident_name, bill_type, amount, due_date, status } = req.body;
   
   try {
     const result = await pool.query(
-      `UPDATE bills SET lot_number = $1, resident_name = $2, bill_type = $3, amount = $4, due_date = $5, status = $6, updated_at = CURRENT_TIMESTAMP 
-       WHERE id = $7 RETURNING *`,
-      [lot_number, resident_name, bill_type, amount, due_date, status, req.params.id]
+      `UPDATE bills SET lot_number = $1, block = $2, resident_name = $3, bill_type = $4, amount = $5, due_date = $6, status = $7, updated_at = CURRENT_TIMESTAMP 
+       WHERE id = $8 RETURNING *`,
+      [lot_number, block, resident_name, bill_type, amount, due_date, status, req.params.id]
     );
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Bill not found' });

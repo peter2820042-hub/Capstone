@@ -96,8 +96,8 @@ const FiltersSection = ({
   uniqueUsers, uniqueActions, uniqueModules
 }) => {
   return (
-    <div className="search-filter-bar">
-      <div className="filter-group">
+    <div className="admin-admin-search-filter-bar">
+      <div className="admin-admin-filter-group">
         <label>Search</label>
         <input
           type="text"
@@ -106,7 +106,7 @@ const FiltersSection = ({
           onChange={(e) => setSearchQuery(e.target.value)}
         />
       </div>
-      <div className="filter-group">
+      <div className="admin-admin-filter-group">
         <label>Date From</label>
         <input
           type="date"
@@ -114,7 +114,7 @@ const FiltersSection = ({
           onChange={(e) => setDateFrom(e.target.value)}
         />
       </div>
-      <div className="filter-group">
+      <div className="admin-admin-filter-group">
         <label>Date To</label>
         <input
           type="date"
@@ -122,7 +122,7 @@ const FiltersSection = ({
           onChange={(e) => setDateTo(e.target.value)}
         />
       </div>
-      <div className="filter-group">
+      <div className="admin-admin-filter-group">
         <label>User</label>
         <select value={userFilter} onChange={(e) => setUserFilter(e.target.value)}>
           <option value="">All Users</option>
@@ -131,7 +131,7 @@ const FiltersSection = ({
           ))}
         </select>
       </div>
-      <div className="filter-group">
+      <div className="admin-admin-filter-group">
         <label>Action</label>
         <select value={actionFilter} onChange={(e) => setActionFilter(e.target.value)}>
           <option value="">All Actions</option>
@@ -140,7 +140,7 @@ const FiltersSection = ({
           ))}
         </select>
       </div>
-      <div className="filter-group">
+      <div className="admin-admin-filter-group">
         <label>Module</label>
         <select value={moduleFilter} onChange={(e) => setModuleFilter(e.target.value)}>
           <option value="">All Modules</option>
@@ -350,13 +350,13 @@ function AuditLogs() {
 
       {/* Logs Table */}
       <div className="logs-table-section">
-        <div className="table-header">
-          <div className="table-info">
+        <div className="admin-admin-table-header">
+          <div className="admin-admin-table-info">
             <span className="results-count">
               Showing {filteredLogs.length > 0 ? startIndex + 1 : 0}-{Math.min(startIndex + itemsPerPage, filteredLogs.length)} of {filteredLogs.length} logs
             </span>
           </div>
-          <div className="table-actions">
+          <div className="admin-admin-table-actions">
             <div className="items-per-page">
               <label>Show:</label>
               <select value={itemsPerPage} onChange={(e) => {
@@ -420,7 +420,7 @@ function AuditLogs() {
           </div>
         </div>
 
-        <div className="table-container">
+        <div className="admin-admin-table-container">
           {loading ? (
             <div className="loading-state">
               <Loader2 size={48} className="spinner-large" />
@@ -522,9 +522,9 @@ function AuditLogs() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="pagination">
+          <div className="admin-admin-pagination">
             <button
-              className="pagination-btn"
+              className="admin-admin-admin-admin-pagination-btn"
               onClick={() => setCurrentPage(1)}
               disabled={currentPage === 1}
               title="First Page"
@@ -532,7 +532,7 @@ function AuditLogs() {
               <ChevronFirst size={16} />
             </button>
             <button
-              className="pagination-btn"
+              className="admin-admin-admin-admin-pagination-btn"
               onClick={() => setCurrentPage(currentPage - 1)}
               disabled={currentPage === 1}
               title="Previous Page"
@@ -540,7 +540,7 @@ function AuditLogs() {
               <ChevronLeft size={16} />
             </button>
             
-            <div className="pagination-pages">
+            <div className="admin-admin-pagination-pages">
               {Array.from({ length: totalPages }, (_, i) => i + 1)
                 .filter(page => {
                   if (totalPages <= 7) return true;
@@ -551,10 +551,10 @@ function AuditLogs() {
                 .map((page, index, array) => (
                   <React.Fragment key={page}>
                     {index > 0 && array[index - 1] !== page - 1 && (
-                      <span className="pagination-ellipsis">...</span>
+                      <span className="admin-admin-pagination-ellipsis">...</span>
                     )}
                     <button
-                      className={`pagination-page ${currentPage === page ? 'active' : ''}`}
+                      className={`admin-admin-pagination-page ${currentPage === page ? 'active' : ''}`}
                       onClick={() => setCurrentPage(page)}
                     >
                       {page}
@@ -564,7 +564,7 @@ function AuditLogs() {
             </div>
 
             <button
-              className="pagination-btn"
+              className="admin-admin-admin-admin-pagination-btn"
               onClick={() => setCurrentPage(currentPage + 1)}
               disabled={currentPage === totalPages}
               title="Next Page"
@@ -572,7 +572,7 @@ function AuditLogs() {
               <ChevronRight size={16} />
             </button>
             <button
-              className="pagination-btn"
+              className="admin-admin-admin-admin-pagination-btn"
               onClick={() => setCurrentPage(totalPages)}
               disabled={currentPage === totalPages}
               title="Last Page"
@@ -585,41 +585,41 @@ function AuditLogs() {
 
       {/* Log Details Modal */}
       {selectedLog && (
-        <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
+        <div className="admin-admin-modal-overlay" onClick={closeModal}>
+          <div className="admin-admin-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="admin-admin-modal-header">
               <h2>Audit Log Details</h2>
-              <button className="modal-close" onClick={closeModal}>
+              <button className="admin-admin-modal-close" onClick={closeModal}>
                 <X size={20} />
               </button>
             </div>
-            <div className="modal-body">
-              <div className="detail-row">
+            <div className="admin-admin-modal-body">
+              <div className="admin-admin-detail-row">
                 <label>Log ID:</label>
                 <span>#{selectedLog.id}</span>
               </div>
-              <div className="detail-row">
+              <div className="admin-admin-detail-row">
                 <label>Timestamp:</label>
                 <span>{formatTimestamp(selectedLog.timestamp)}</span>
               </div>
-              <div className="detail-row">
+              <div className="admin-admin-detail-row">
                 <label>User:</label>
                 <span>{selectedLog.user}</span>
               </div>
-              <div className="detail-row">
+              <div className="admin-admin-detail-row">
                 <label>Action:</label>
                 <span>{selectedLog.action}</span>
               </div>
-              <div className="detail-row">
+              <div className="admin-admin-detail-row">
                 <label>Module:</label>
                 <span>{selectedLog.module}</span>
               </div>
-              <div className="detail-row">
+              <div className="admin-admin-detail-row">
                 <label>Description:</label>
                 <span>{selectedLog.description}</span>
               </div>
             </div>
-            <div className="modal-footer">
+            <div className="admin-admin-modal-footer">
               <button className="modal-btn close" onClick={closeModal}>
                 Close
               </button>

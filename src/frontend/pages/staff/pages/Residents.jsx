@@ -127,8 +127,8 @@ function Residents() {
         </button>
       </div>
 
-      <div className="search-filter-bar">
-        <div className="filter-group">
+      <div className="staff-search-filter-bar">
+        <div className="staff-filter-group">
           <label>Full Name</label>
           <input
             type="text"
@@ -138,7 +138,7 @@ function Residents() {
             onChange={handleFilterChange}
           />
         </div>
-        <div className="filter-group">
+        <div className="staff-filter-group">
           <label>Block</label>
           <input
             type="text"
@@ -148,7 +148,7 @@ function Residents() {
             onChange={handleFilterChange}
           />
         </div>
-        <div className="filter-group">
+        <div className="staff-filter-group">
           <label>Lot</label>
           <input
             type="text"
@@ -160,7 +160,7 @@ function Residents() {
         </div>
       </div>
 
-      <div className="table-container">
+      <div className="staff-table-container">
         <table className="residents-table">
           <thead>
             <tr>
@@ -183,7 +183,7 @@ function Residents() {
               </tr>
             ) : residents.length === 0 ? (
               <tr>
-                <td colSpan="5" className="empty-row">
+                <td colSpan="5" className="staff-empty-row">
                   {(filters.fullName || filters.block || filters.lot) ? 'No residents found matching your search' : 'No residents registered yet'}
                 </td>
               </tr>
@@ -207,9 +207,9 @@ function Residents() {
       </div>
 
       {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+        <div className="staff-modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
+            <div className="staff-modal-header">
               <h3>Add New Resident</h3>
               <button className="close-btn" onClick={() => setShowModal(false)}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -217,14 +217,14 @@ function Residents() {
                 </svg>
               </button>
             </div>
-            <form className="modal-form" onSubmit={handleSubmit}>
+            <form className="staff-modal-form" onSubmit={handleSubmit}>
               {formMessage && (
                 <div className={`message ${formMessage.type}`}>
                   {formMessage.text}
                 </div>
               )}
-              <div className="form-row">
-                <div className="form-group">
+              <div className="staff-form-row">
+                <div className="staff-form-group">
                   <label>Username <span className="required">*</span></label>
                   <input
                     type="text"
@@ -234,7 +234,7 @@ function Residents() {
                     required
                   />
                 </div>
-                <div className="form-group">
+                <div className="staff-form-group">
                   <label>Password <span className="required">*</span></label>
                   <input
                     type="password"
@@ -244,7 +244,7 @@ function Residents() {
                     required
                   />
                 </div>
-                <div className="form-group span-2">
+                <div className="staff-form-group span-2">
                   <label>Full Name</label>
                   <input
                     type="text"
@@ -254,7 +254,7 @@ function Residents() {
                     placeholder="Enter full name"
                   />
                 </div>
-                <div className="form-group">
+                <div className="staff-form-group">
                   <label>Email</label>
                   <input
                     type="email"
@@ -264,7 +264,7 @@ function Residents() {
                     placeholder="Enter email"
                   />
                 </div>
-                <div className="form-group">
+                <div className="staff-form-group">
                   <label>Phone</label>
                   <input
                     type="text"
@@ -274,7 +274,7 @@ function Residents() {
                     placeholder="Enter phone number"
                   />
                 </div>
-                <div className="form-group">
+                <div className="staff-form-group">
                   <label>Block</label>
                   <input
                     type="text"
@@ -284,7 +284,7 @@ function Residents() {
                     placeholder="e.g., A"
                   />
                 </div>
-                <div className="form-group">
+                <div className="staff-form-group">
                   <label>Lot</label>
                   <input
                     type="text"
@@ -295,7 +295,7 @@ function Residents() {
                   />
                 </div>
               </div>
-              <div className="modal-actions">
+              <div className="staff-modal-actions">
                 <button type="button" className="cancel-btn" onClick={() => setShowModal(false)}>
                   Cancel
                 </button>
@@ -309,24 +309,24 @@ function Residents() {
       )}
 
       {showViewModal && selectedResident && (
-        <div className="view-modal-overlay" onClick={() => setShowViewModal(false)}>
+        <div className="view-staff-modal-overlay" onClick={() => setShowViewModal(false)}>
           <div className="view-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="view-modal-header">
+            <div className="view-staff-modal-header">
               <div className="view-modal-avatar">
                 {selectedResident.fullName ? selectedResident.fullName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : '??'}
               </div>
-              <div className="view-modal-header-info">
+              <div className="view-staff-modal-header-info">
                 <h3>{selectedResident.fullName || 'Unknown'}</h3>
                 <span className="view-modal-location">Block {selectedResident.block || '-'}, Lot {selectedResident.lotNumber || '-'}</span>
               </div>
-              <button className="view-modal-close" onClick={() => setShowViewModal(false)}>
+              <button className="view-staff-modal-close" onClick={() => setShowViewModal(false)}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M18 6L6 18M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
-            <div className="view-modal-content">
+            <div className="view-staff-modal-content">
               <div className="view-modal-section">
                 <div className="view-modal-section-title">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -367,15 +367,15 @@ function Residents() {
               </div>
             </div>
 
-            <div className="view-modal-footer">
-              <a href="/payments" className="view-modal-action-btn view-modal-btn-primary">
+            <div className="view-staff-modal-footer">
+              <a href="/payments" className="view-modal-action-btn view-modal-staff-btn-primary">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
                   <line x1="1" y1="10" x2="23" y2="10" />
                 </svg>
                 View Payments
               </a>
-              <a href="/violations" className="view-modal-action-btn view-modal-btn-secondary">
+              <a href="/violations" className="view-modal-action-btn view-modal-staff-btn-secondary">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
                   <line x1="12" y1="9" x2="12" y2="13" />
