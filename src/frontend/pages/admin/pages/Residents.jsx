@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import './Residents.css';
 
 function Residents() {
@@ -60,24 +60,21 @@ function Residents() {
     });
   };
 
-  // Filter lots based on selected block - derived during render for React Compiler compatibility
-  // Removed useMemo to let React Compiler optimize automatically
-  // eslint-disable-next-line react-compiler/react
-  const computedAvailableLots = (() => {
-    const allLots = [...new Set(residents.map((r) => r.lotNumber).filter(Boolean))];
-
-    if (filters.block) {
-      const filtered = [...new Set(
-        residents
-          .filter((r) => r.block === filters.block)
-          .map((r) => r.lotNumber)
-          .filter(Boolean)
-      )];
-      return filtered.slice().sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
+  // Filter lots based on selected block
+  const computedAvailableLots = useMemo(() => {
+    const targetBlock = filters.block;
+    
+    // Get unique lot numbers with a single pass through the data
+    const lotSet = new Set();
+    for (const resident of residents) {
+      if (resident.lotNumber && (!targetBlock || resident.block === targetBlock)) {
+        lotSet.add(resident.lotNumber);
+      }
     }
-
-    return allLots.slice().sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
-  })();
+    
+    // Convert to array and sort numerically
+    return Array.from(lotSet).sort((a, b) => (parseInt(a, 10) || 0) - (parseInt(b, 10) || 0));
+  }, [residents, filters.block]);
 
   // Flag to track if initial fetch is done
   const [initialLoadDone, setInitialLoadDone] = useState(false);
@@ -92,13 +89,8 @@ function Residents() {
         const data = await response.json();
         const residentsData = Array.isArray(data) ? data : (data.residents || []);
         
-        // Extract unique blocks and lots for dropdowns
+        // Extract unique blocks for dropdowns
         const blocks = [...new Set(residentsData.map(r => r.block).filter(Boolean))].sort();
-        const lots = [...new Set(residentsData.map(r => r.lotNumber).filter(Boolean))].sort((a, b) => {
-          const numA = parseInt(a) || 0;
-          const numB = parseInt(b) || 0;
-          return numA - numB;
-        });
         setAvailableBlocks(blocks);
       } catch (error) {
         console.error('Error fetching residents:', error);
