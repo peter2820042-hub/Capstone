@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './Dashboard.css';
 
 const Dashboard = () => {
-  const [currentDateTime, setCurrentDateTime] = useState(new Date());
+  const currentDate = new Date();
   const [kpis, setKpis] = useState({
     totalResidents: 0,
     pendingPayment: 0,
@@ -14,18 +14,14 @@ const Dashboard = () => {
   const [violations, setViolations] = useState([]);
   const [pendingViolations, setPendingViolations] = useState([]);
   const [pendingBills, setPendingBills] = useState([]);
-
+  
+  // Violation statistics for line graph
+  const [violationStats, setViolationStats] = useState([]);
+  const [violationPeriod, setViolationPeriod] = useState('monthly');
+  const [violationTotal, setViolationTotal] = useState(0);
 
   // eslint-disable-next-line no-unused-vars
   const [period] = useState('yearly');
-
-  // Update the current date/time every minute
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentDateTime(new Date());
-    }, 60000); // Update every minute
-    return () => clearInterval(timer);
-  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -71,6 +67,23 @@ const Dashboard = () => {
     fetchData();
   }, []);
 
+  // Fetch violation statistics when period changes
+  useEffect(() => {
+    const fetchViolationStats = async () => {
+      try {
+        const res = await fetch(`/api/violations/statistics?period=${violationPeriod}`);
+        if (res.ok) {
+          const data = await res.json();
+          setViolationStats(data.data || []);
+          setViolationTotal(data.total || 0);
+        }
+      } catch (err) {
+        console.error('Error fetching violation stats:', err);
+      }
+    };
+    fetchViolationStats();
+  }, [violationPeriod]);
+
   return (
     <div className="sta-dashboard-container">
       {/* Dashboard Header */}
@@ -81,7 +94,7 @@ const Dashboard = () => {
         <div className="sta-datetime-section">
           <div className="sta-date-section">
             <span className="sta-current-date">
-              {currentDateTime.toLocaleDateString('en-PH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              {currentDate.toLocaleDateString('en-PH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </span>
           </div>
         </div>
@@ -151,6 +164,42 @@ const Dashboard = () => {
 
       {/* Two Column Layout for Pending Sections */}
       <div className="sta-pending-sections-row">
+        {/* Pending Bills Section */}
+        <div className="sta-pending-bills-section">
+        <div className="sta-section-header">
+          <h3>Pending Bills</h3>
+          <a href="/staff/billing" className="sta-view-all-link">View All</a>
+        </div>
+        {pendingBills.length > 0 ? (
+          <div className="sta-bills-table-container" style={{ flex: 1 }}>
+            <table className="sta-bills-table">
+              <thead>
+                <tr>
+                  <th>Resident</th>
+                  <th>Type</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pendingBills.slice(0, 6).map((bill) => (
+                  <tr key={bill.id || bill.bill_id}>
+                    <td>{bill.residentName || 'N/A'}</td>
+                    <td>{bill.billType || bill.bill_type || 'N/A'}</td>
+                    <td>₱{bill.amount ? Number(bill.amount).toLocaleString('en-PH', { minimumFractionDigits: 2 }) : '0.00'}</td>
+                    <td>
+                      <span className={`sta-status-badge sta-bill-${bill.status?.toLowerCase() || 'pending'}`}>{bill.status || 'Pending'}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="sta-empty-message">No pending bills</div>
+        )}
+        </div>
+
         {/* Pending Violations Section */}
         <div className="sta-pending-violations-section">
         <div className="sta-section-header">
@@ -158,7 +207,7 @@ const Dashboard = () => {
           <a href="/staff/violations" className="sta-view-all-link">View All</a>
         </div>
         {pendingViolations.length > 0 ? (
-          <div className="sta-violations-table-container">
+          <div className="sta-violations-table-container" style={{ flex: 1 }}>
             <table className="sta-violations-table">
               <thead>
                 <tr>
@@ -169,7 +218,7 @@ const Dashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {pendingViolations.slice(0, 5).map((violation) => (
+                {pendingViolations.slice(0, 6).map((violation) => (
                   <tr key={violation.id || violation.violation_id}>
                     <td>{violation.residentName || 'N/A'}</td>
                     <td>{violation.violationType || 'N/A'}</td>
@@ -186,53 +235,28 @@ const Dashboard = () => {
           <div className="sta-empty-message">No pending violations</div>
         )}
         </div>
-
-        {/* Pending Bills Section */}
-        <div className="sta-pending-bills-section">
-        <div className="sta-section-header">
-          <h3>Pending Bills</h3>
-          <a href="/staff/billing" className="sta-view-all-link">View All</a>
-        </div>
-        {pendingBills.length > 0 ? (
-          <div className="sta-bills-table-container">
-            <table className="sta-bills-table">
-              <thead>
-                <tr>
-                  <th>Resident</th>
-                  <th>Type</th>
-                  <th>Amount</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pendingBills.slice(0, 5).map((bill) => (
-                  <tr key={bill.id || bill.bill_id}>
-                    <td>{bill.residentName || 'N/A'}</td>
-                    <td>{bill.billType || bill.bill_type || 'N/A'}</td>
-                    <td>₱{bill.amount ? Number(bill.amount).toLocaleString('en-PH', { minimumFractionDigits: 2 }) : '0.00'}</td>
-                    <td>
-                      <span className={`sta-status-badge bill-${bill.status?.toLowerCase() || 'pending'}`}>{bill.status || 'Pending'}</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="sta-empty-message">No pending bills</div>
-        )}
-        </div>
       </div>
 
-      {/* Charts Section - Line Graph and Pie Chart */}
+      {/* Charts Section - Line Graph, Bar Chart and Pie Charts */}
       <div className="sta-charts-section">
-        {/* Line Graph */}
+        {/* Violation Line Graph with Period Filter */}
         <div className="sta-chart-card">
           <div className="sta-chart-header">
-            <h3>Payment Trends</h3>
-            <a href="/staff/payment" className="sta-chart-link">View</a>
+            <h3>Violation Trends</h3>
+            <div className="sta-chart-filter">
+              <select 
+                value={violationPeriod} 
+                onChange={(e) => setViolationPeriod(e.target.value)}
+                className="sta-period-select"
+              >
+                <option value="daily">Daily (7 days)</option>
+                <option value="weekly">Weekly (4 weeks)</option>
+                <option value="monthly">Monthly (12 months)</option>
+                <option value="yearly">Yearly (5 years)</option>
+              </select>
+            </div>
           </div>
-          <div className="sta-line-chart-container">
+          <div className="sta-violation-chart-container">
             <svg viewBox="0 0 400 200" style={{ width: '100%', height: '100%' }}>
               {/* Grid lines */}
               <line x1="40" y1="180" x2="380" y2="180" stroke="#e5e7eb" strokeWidth="1" />
@@ -243,40 +267,63 @@ const Dashboard = () => {
               
               {/* Y-axis labels */}
               <text x="35" y="185" fontSize="10" fill="#6b7280" textAnchor="end">0</text>
-              <text x="35" y="145" fontSize="10" fill="#6b7280" textAnchor="end">5K</text>
-              <text x="35" y="105" fontSize="10" fill="#6b7280" textAnchor="end">10K</text>
-              <text x="35" y="65" fontSize="10" fill="#6b7280" textAnchor="end">15K</text>
-              <text x="35" y="25" fontSize="10" fill="#6b7280" textAnchor="end">20K</text>
+              <text x="35" y="145" fontSize="10" fill="#6b7280" textAnchor="end">{Math.ceil(violationTotal / 4) || 5}</text>
+              <text x="35" y="105" fontSize="10" fill="#6b7280" textAnchor="end">{Math.ceil(violationTotal / 2) || 10}</text>
+              <text x="35" y="65" fontSize="10" fill="#6b7280" textAnchor="end">{Math.ceil(violationTotal * 3 / 4) || 15}</text>
+              <text x="35" y="25" fontSize="10" fill="#6b7280" textAnchor="end">{violationTotal || 20}</text>
               
-              {/* X-axis labels */}
-              <text x="80" y="195" fontSize="10" fill="#6b7280" textAnchor="middle">Jan</text>
-              <text x="150" y="195" fontSize="10" fill="#6b7280" textAnchor="middle">Feb</text>
-              <text x="220" y="195" fontSize="10" fill="#6b7280" textAnchor="middle">Mar</text>
-              <text x="290" y="195" fontSize="10" fill="#6b7280" textAnchor="middle">Apr</text>
-              <text x="360" y="195" fontSize="10" fill="#6b7280" textAnchor="middle">May</text>
-              
-              {/* Line chart path */}
-              <polyline 
-                fill="none" 
-                stroke="#3b82f6" 
-                strokeWidth="3"
-                points="80,160 150,140 220,100 290,80 360,40"
-              />
-              
-              {/* Data points */}
-              <circle cx="80" cy="160" r="5" fill="#3b82f6" />
-              <circle cx="150" cy="140" r="5" fill="#3b82f6" />
-              <circle cx="220" cy="100" r="5" fill="#3b82f6" />
-              <circle cx="290" cy="80" r="5" fill="#3b82f6" />
-              <circle cx="360" cy="40" r="5" fill="#3b82f6" />
+              {/* Generate chart points from violationStats data */}
+              {violationStats.length > 0 && (() => {
+                const maxCount = Math.max(...violationStats.map(d => parseInt(d.count || 0)), 1);
+                const width = 340; // 380 - 40
+                const height = 160; // 180 - 20
+                const step = width / Math.max(violationStats.length - 1, 1);
+                
+                const points = violationStats.map((d, i) => {
+                  const x = 40 + (i * step);
+                  const y = 180 - ((parseInt(d.count || 0) / maxCount) * height);
+                  return `${x},${y}`;
+                }).join(' ');
+                
+                // X-axis labels
+                const labelStep = Math.ceil(violationStats.length / 5);
+                const xLabelsArr = violationStats.filter((_, i) => i % labelStep === 0 || i === violationStats.length - 1);
+                
+                return (
+                  <g>
+                    <polyline 
+                      fill="none" 
+                      stroke="#ef4444" 
+                      strokeWidth="3"
+                      points={points}
+                    />
+                    {violationStats.map((d, i) => {
+                      const x = 40 + (i * step);
+                      const y = 180 - ((parseInt(d.count || 0) / maxCount) * height);
+                      return <circle key={i} cx={x} cy={y} r="4" fill="#ef4444" />;
+                    })}
+                    {xLabelsArr.map((d, i) => {
+                      const idx = violationStats.indexOf(d);
+                      const x = 40 + (idx * step);
+                      const periodLabel = violationPeriod === 'monthly' ? d.period?.substring(5) : 
+                                         violationPeriod === 'yearly' ? d.period : 
+                                         d.period;
+                      return <text key={i} x={x} y="195" fontSize="9" fill="#6b7280" textAnchor="middle">{periodLabel}</text>;
+                    })}
+                  </g>
+                );
+              })()}
             </svg>
+          </div>
+          <div className="sta-chart-summary">
+            <span className="sta-total-violations">Total: {violationTotal} violations</span>
           </div>
         </div>
         
-        {/* Pie Chart */}
+        {/* Pie Chart - Registered Residents */}
         <div className="sta-chart-card">
           <div className="sta-chart-header">
-            <h3>Residents Distribution</h3>
+            <h3>Registered Residents</h3>
             <a href="/staff/residents" className="sta-chart-link">View</a>
           </div>
           <div className="sta-pie-chart-container">
@@ -301,6 +348,68 @@ const Dashboard = () => {
               </text>
             </svg>
           </div>
+        </div>
+      </div>
+
+      {/* Quick Actions Section */}
+      <div className="sta-quick-actions-section">
+        <h3 className="sta-quick-actions-title">Quick Actions</h3>
+        <div className="sta-quick-actions-grid">
+          <a href="/staff/residents?action=add" className="sta-quick-action-card">
+            <div className="sta-quick-action-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="8.5" cy="7" r="4" />
+                <line x1="20" y1="8" x2="20" y2="14" />
+                <line x1="23" y1="11" x2="17" y2="11" />
+              </svg>
+            </div>
+            <span className="sta-quick-action-label">Add Resident</span>
+          </a>
+          
+          <a href="/staff/billing?action=create" className="sta-quick-action-card">
+            <div className="sta-quick-action-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2">
+                <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                <line x1="1" y1="10" x2="23" y2="10" />
+              </svg>
+            </div>
+            <span className="sta-quick-action-label">Create Bill</span>
+          </a>
+          
+          <a href="/staff/violations?action=add" className="sta-quick-action-card">
+            <div className="sta-quick-action-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+            </div>
+            <span className="sta-quick-action-label">Record Violation</span>
+          </a>
+          
+          <a href="/staff/reports" className="sta-quick-action-card">
+            <div className="sta-quick-action-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" strokeWidth="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+                <polyline points="10 9 9 9 8 9" />
+              </svg>
+            </div>
+            <span className="sta-quick-action-label">View Reports</span>
+          </a>
+          
+          <a href="/staff/payment" className="sta-quick-action-card">
+            <div className="sta-quick-action-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2">
+                <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                <line x1="1" y1="10" x2="23" y2="10" />
+              </svg>
+            </div>
+            <span className="sta-quick-action-label">Manage Payments</span>
+          </a>
         </div>
       </div>
     </div>

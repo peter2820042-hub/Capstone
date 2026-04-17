@@ -1,11 +1,9 @@
-/* Staff Dashboard Styles - Matching Admin Design */
-
 /* Two column layout for pending sections */
 .sta-pending-sections-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 24px;
-  margin-bottom: 32px;
+  margin-bottom: 0;
 }
 
 @media (max-width: 1024px) {
@@ -72,47 +70,6 @@
   border-radius: 8px;
 }
 
-/* Welcome Section */
-.sta-welcome-section {
-  margin-bottom: 32px;
-}
-
-.sta-welcome-section h2 {
-  font-size: 28px;
-  font-weight: 600;
-  color: #1a1a2e;
-  margin-bottom: 8px;
-}
-
-.sta-welcome-section p {
-  color: #6b7280;
-  font-size: 15px;
-}
-
-/* Section Header */
-.sta-section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.sta-section-header h3 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1a1a2e;
-  margin: 0;
-}
-
-.sta-total-count {
-  font-size: 14px;
-  font-weight: 600;
-  color: #3b82f6;
-  background: #eff6ff;
-  padding: 6px 12px;
-  border-radius: 20px;
-}
-
 /* KPI Grid */
 .sta-kpi-grid {
   display: grid;
@@ -121,57 +78,18 @@
   margin-bottom: 32px;
 }
 
-/* Charts Section */
-.sta-charts-section {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
+@media (max-width: 1200px) {
+  .sta-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
-.sta-chart-card {
-  background: white;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+@media (max-width: 640px) {
+  .sta-kpi-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
-.sta-chart-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.sta-chart-header h3 {
-  font-size: 16px;
-  font-weight: 600;
-  color: #1a1a2e;
-  margin: 0;
-}
-
-.sta-chart-link {
-  font-size: 14px;
-  color: #3b82f6;
-  text-decoration: none;
-  font-weight: 500;
-}
-
-.sta-chart-link:hover {
-  text-decoration: underline;
-}
-
-.sta-line-chart-container {
-  height: 200px;
-}
-
-.sta-pie-chart-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 200px;
-}
-
-/* KPI Card */
 .sta-kpi-card {
   background: white;
   border-radius: 12px;
@@ -207,11 +125,6 @@
   color: #3b82f6;
 }
 
-.sta-kpi-icon.violations {
-  background: #fee2e2;
-  color: #ef4444;
-}
-
 .sta-kpi-icon.pending {
   background: #fef3c7;
   color: #f59e0b;
@@ -220,6 +133,11 @@
 .sta-kpi-icon.dues {
   background: #d1fae5;
   color: #10b981;
+}
+
+.sta-kpi-icon.violations {
+  background: #fee2e2;
+  color: #ef4444;
 }
 
 .sta-kpi-content {
@@ -240,195 +158,15 @@
   margin-top: 4px;
 }
 
-/* Dashboard Sections */
-.sta-dashboard-section {
-  background: #fff;
-  border-radius: 12px;
-  padding: 24px;
-  margin-bottom: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.sta-dashboard-section .sta-section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.sta-dashboard-section h3 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1a1a2e;
-  margin-bottom: 20px;
-}
-
-/* Activity List */
-.sta-activity-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.sta-activity-item {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px;
-  background: #f9fafb;
-  border-radius: 8px;
-  transition: background 0.2s;
-}
-
-.sta-activity-item:hover {
-  background: #f3f4f6;
-}
-
-.sta-activity-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #fef2f2;
-  color: #dc2626;
-}
-
-.sta-activity-icon svg {
-  width: 20px;
-  height: 20px;
-}
-
-.sta-activity-details {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.sta-activity-description {
-  font-size: 14px;
-  font-weight: 500;
-  color: #1a1a2e;
-}
-
-.sta-activity-meta {
-  font-size: 13px;
-  color: #6b7280;
-  margin-top: 2px;
-}
-
-.sta-activity-status {
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 500;
-  text-transform: capitalize;
-}
-
-.sta-activity-status.pending {
-  background: #fefce8;
-  color: #ca8a04;
-}
-
-.sta-activity-status.resolved {
-  background: #f0fdf4;
-  color: #16a34a;
-}
-
-.sta-activity-status.dismissed {
-  background: #f3f4f6;
-  color: #6b7280;
-}
-
-/* Residents Table */
-.sta-residents-table {
-  overflow-x: auto;
-}
-
-.sta-residents-table table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.sta-residents-table th,
-.sta-residents-table td {
-  padding: 12px 16px;
-  text-align: left;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.sta-residents-table th {
-  font-weight: 600;
-  color: #374151;
-  background: #f9fafb;
-  font-size: 0.875rem;
-}
-
-.sta-residents-table td {
-  color: #6b7280;
-  font-size: 0.875rem;
-}
-
-.sta-residents-table tr:hover td {
-  background: #f9fafb;
-}
-
-/* Empty State */
-.sta-empty-state {
-  text-align: center;
-  padding: 40px 20px;
-  color: #6b7280;
-}
-
-/* Loading State */
-.sta-loading-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 20px;
-}
-
-.sta-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid #e5e7eb;
-  border-top-color: #3b82f6;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* Message */
-.sta-message {
-  padding: 12px 16px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  font-size: 14px;
-}
-
-.sta-message.success {
-  background: #f0fdf4;
-  color: #16a34a;
-  border: 1px solid #bbf7d0;
-}
-
-.sta-message.error {
-  background: #fef2f2;
-  color: #dc2626;
-  border: 1px solid #fecaca;
-}
-
 /* Pending Violations Section */
 .sta-pending-violations-section {
   background: white;
   padding: 24px;
   margin-bottom: 32px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  height: 350px;
+  display: flex;
+  flex-direction: column;
 }
 
 .sta-section-header {
@@ -464,10 +202,16 @@
   font-size: 14px;
   background: #f9fafb;
   border-radius: 8px;
+  height: 100%;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .sta-violations-table-container {
   overflow-x: auto;
+  flex: 1;
 }
 
 .sta-violations-table {
@@ -496,84 +240,20 @@
   color: #374151;
 }
 
-.sta-status-badge {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.sta-status-badge.pending {
-  background: #fef3c7;
-  color: #d97706;
-}
-
-.sta-status-badge.bill-pending {
-  background: #dbeafe;
-  color: #1d4ed8;
-}
-
-.sta-status-badge.bill-unpaid {
-  background: #fee2e2;
-  color: #dc2626;
-}
-
-.sta-status-badge.bill-overdue {
-  background: #fef3c7;
-  color: #d97706;
-}
-
-.sta-status-badge.bill-paid {
-  background: #d1fae5;
-  color: #059669;
-}
-
-.sta-status-badge.bill-partial {
-  background: #ede9fe;
-  color: #7c3aed;
-}
-
-.sta-status-badge.unpaid {
-  background: #fee2e2;
-  color: #dc2626;
-}
-
-.sta-status-badge.overdue {
-  background: #fef3c7;
-  color: #d97706;
-}
-
-.sta-status-badge.paid {
-  background: #d1fae5;
-  color: #059669;
-}
-
-.sta-status-badge.resolved {
-  background: #d1fae5;
-  color: #059669;
-}
-
-.sta-status-badge.dismissed {
-  background: #e5e7eb;
-  color: #4b5563;
-}
-
-.sta-status-badge.active {
-  background: #dbeafe;
-  color: #1d4ed8;
-}
-
 /* Pending Bills Section */
 .sta-pending-bills-section {
   background: white;
   padding: 24px;
   margin-bottom: 32px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  height: 350px;
+  display: flex;
+  flex-direction: column;
 }
 
 .sta-bills-table-container {
   overflow-x: auto;
+  flex: 1;
 }
 
 .sta-bills-table {
@@ -602,32 +282,243 @@
   color: #374151;
 }
 
-/* Responsive */
+/* Status Badges */
+.sta-status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.sta-status-badge.bill-pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.sta-status-badge.bill-unpaid {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.sta-status-badge.bill-overdue {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.sta-status-badge.bill-paid {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+/* Generic status badge for violations - must be scoped */
+.sta-status-badge.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.sta-status-badge.unpaid {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.sta-status-badge.overdue {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.sta-status-badge.paid {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+
+
+/* Charts Section */
+.sta-charts-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 0;
+}
+
+@media (max-width: 1024px) {
+  .sta-charts-section {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sta-chart-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.sta-chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.sta-chart-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin: 0;
+}
+
+.sta-chart-link {
+  font-size: 13px;
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.sta-chart-link:hover {
+  text-decoration: underline;
+}
+
+.sta-chart-filter {
+  display: flex;
+  align-items: center;
+}
+
+.sta-period-select {
+  padding: 6px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #1a1a2e;
+  background: white;
+  cursor: pointer;
+}
+
+.sta-period-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.sta-line-chart-container,
+.sta-violation-chart-container {
+  height: 200px;
+}
+
+.sta-pie-chart-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+}
+
+.sta-financial-chart {
+  height: 160px;
+  padding: 16px;
+}
+
+.sta-chart-legend {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.sta-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.sta-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.sta-chart-summary {
+  margin-top: 12px;
+  text-align: center;
+}
+
+.sta-total-violations {
+  font-size: 14px;
+  font-weight: 500;
+  color: #ef4444 !important;
+}
+
+/* Quick Actions Section */
+.sta-quick-actions-section {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-top: 24px;
+}
+
+.sta-quick-actions-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin: 0 0 16px 0;
+}
+
+.sta-quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+}
+
 @media (max-width: 1200px) {
-  .sta-kpi-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .sta-quick-actions-grid {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
 @media (max-width: 768px) {
-  .sta-dashboard-container {
-    padding: 16px;
+  .sta-quick-actions-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
+}
 
-  .sta-kpi-grid {
-    grid-template-columns: 1fr;
-  }
+.sta-quick-action-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 12px;
+  text-decoration: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 1px solid #e5e7eb;
+}
 
+.sta-quick-action-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
 
-  .sta-charts-section {
-    grid-template-columns: 1fr;
-  }
+.sta-quick-action-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f4f6;
+}
 
-  .sta-quick-actions {
-    flex-direction: column;
-  }
+.sta-quick-action-icon svg {
+  width: 20px;
+  height: 20px;
+}
 
-  .sta-quick-action-btn {
-    justify-content: center;
-  }
+.sta-quick-action-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #1a1a2e;
+  text-align: center;
 }
