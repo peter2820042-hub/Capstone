@@ -4,7 +4,7 @@ import './Profile.css';
 const Profile = ({ user }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [profileImage, setProfileImage] = useState(() => {
-    return localStorage.getItem('userProfileImage') || user?.profileImage || null;
+    return sessionStorage.getItem('userProfileImage') || user?.profileImage || null;
   });
   const [formData, setFormData] = useState(() => {
     if (user) {
@@ -70,7 +70,7 @@ const Profile = ({ user }) => {
       const reader = new FileReader();
       reader.onloadend = () => {
         setProfileImage(reader.result);
-        localStorage.setItem('userProfileImage', reader.result);
+        sessionStorage.setItem('userProfileImage', reader.result);
       };
       reader.readAsDataURL(file);
     }
@@ -110,22 +110,22 @@ const Profile = ({ user }) => {
       if (response.ok) {
         const data = await response.json();
         
-        localStorage.setItem('userProfileData', JSON.stringify({
+        sessionStorage.setItem('userProfileData', JSON.stringify({
           ...formData,
           profileImage
         }));
         
-        const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-        localStorage.setItem('user', JSON.stringify({
+        const storedUser = JSON.parse(sessionStorage.getItem('user') || '{}');
+        sessionStorage.setItem('user', JSON.stringify({
           ...storedUser,
           ...data.user
         }));
         
         // Also update the profile image in localStorage for header
         if (data.user.profileImage) {
-          localStorage.setItem('userProfileImage', data.user.profileImage);
+          sessionStorage.setItem('userProfileImage', data.user.profileImage);
         } else if (profileImage) {
-          localStorage.setItem('userProfileImage', profileImage);
+          sessionStorage.setItem('userProfileImage', profileImage);
         }
         
         alert('Profile updated successfully!');
@@ -151,14 +151,14 @@ const Profile = ({ user }) => {
       email: user?.email || '',
       phone: user?.phone || ''
     });
-    const storedImage = localStorage.getItem('userProfileImage');
+    const storedImage = sessionStorage.getItem('userProfileImage');
     setProfileImage(storedImage || user?.profileImage || null);
     setIsEditing(false);
   };
 
   const handleRemoveImage = () => {
     setProfileImage(null);
-    localStorage.removeItem('userProfileImage');
+    sessionStorage.removeItem('userProfileImage');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }

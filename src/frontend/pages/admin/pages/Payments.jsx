@@ -2,14 +2,38 @@ import React, { useState, useEffect } from 'react';
 import './Payments.css';
 
 function Payments() {
+  // Payment data
+  const [payments, setPayments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch payments from API
+  useEffect(() => {
+    const fetchPayments = async () => {
+      try {
+        const response = await fetch('/api/payments');
+        if (!response.ok) throw new Error('Failed to fetch payments');
+        const data = await response.json();
+        setPayments(data);
+      } catch (err) {
+        setError(err.message);
+        console.error('Error fetching payments:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPayments();
+  }, []);
+
+  // KPIs state
   const [kpis, setKpis] = useState({
     totalAmount: 0,
     totalBills: 0,
     totalPayments: 0,
     totalViolations: 0
   });
-  const [loading, setLoading] = useState(true);
 
+  // Fetch KPIs
   useEffect(() => {
     const fetchKPIs = async () => {
       try {
@@ -25,19 +49,120 @@ function Payments() {
         }
       } catch (err) {
         console.error('Error fetching KPIs:', err);
-      } finally {
-        setLoading(false);
       }
     };
     fetchKPIs();
   }, []);
 
+  // Filter states
+  const [filters, setFilters] = useState({
+    search: '',
+    residentName: '',
+    billReference: '',
+    paymentMethod: '',
+    status: ''
+  });
+
+  // Modal states
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState(null);
+
+  // Payment methods for filter dropdown
+  const paymentMethods = ['Cash', 'GCash', 'Bank Transfer', 'Check', 'Other'];
+
+  // Handle filter input change
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Filter payments based on all criteria
+  const filteredPayments = payments.filter(payment => {
+    const matchesSearch = 
+      filters.search === '' ||
+      payment.residentName?.toLowerCase().includes(filters.search.toLowerCase()) ||
+      payment.billReference?.toLowerCase().includes(filters.search.toLowerCase());
+    
+    const matchesResident = filters.residentName === '' || payment.residentName?.toLowerCase().includes(filters.residentName.toLowerCase());
+    const matchesBillReference = filters.billReference === '' || payment.billReference?.toLowerCase().includes(filters.billReference.toLowerCase());
+    const matchesPaymentMethod = filters.paymentMethod === '' || payment.paymentMethod === filters.paymentMethod;
+    const matchesStatus = filters.status === '' || payment.status === filters.status;
+
+    return matchesSearch && matchesResident && matchesBillReference && matchesPaymentMethod && matchesStatus;
+  });
+
+  // Handle view details
+  const handleViewDetails = (payment) => {
+    setSelectedPayment(payment);
+    setShowViewModal(true);
+  };
+
+  // Clear filters
+  const clearFilters = () => {
+    setFilters({
+      search: '',
+      residentName: '',
+      billReference: '',
+      paymentMethod: '',
+      status: ''
+    });
+  };
+
+  // Get status badge class
+  const getStatusBadgeClass = (status) => {
+    switch (status) {
+      case 'approved':
+        return 'status-badge approved';
+      case 'pending':
+        return 'status-badge pending';
+      case 'rejected':
+        return 'status-badge rejected';
+      default:
+        return 'status-badge';
+    }
+  };
+
+  // Format status text
+  const formatStatus = (status) => {
+    return status?.charAt(0).toUpperCase() + status?.slice(1);
+  };
+
+  // Format date
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
+  // Format currency
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-PH', {
       style: 'currency',
       currency: 'PHP'
     }).format(amount);
   };
+
+  if (error) {
+    return (
+      <div className="pay-dashboard-container">
+        <h1 style={{ marginBottom: '24px', fontSize: '24px', fontWeight: '700', color: '#1a1a2e' }}>
+          Payments
+        </h1>
+        <div style={{ 
+          background: 'white', 
+          borderRadius: '12px', 
+          padding: '40px', 
+          textAlign: 'center',
+          color: '#ef4444'
+        }}>
+          <p>Error: {error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="pay-dashboard-container">
@@ -116,20 +241,183 @@ function Payments() {
         </div>
       </div>
 
-      {/* Placeholder for payment content */}
-      <div style={{
-        background: 'white',
-        borderRadius: '12px',
-        padding: '40px',
-        textAlign: 'center',
-        color: '#718096'
-      }}>
-        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#cbd5e0" strokeWidth="1.5" style={{ marginBottom: '16px' }}>
-          <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-          <line x1="1" y1="10" x2="23" y2="10"></line>
-        </svg>
-        <p>Payment records and transactions will appear here.</p>
+      {/* Search/Filter Bar */}
+      <div className="admin-search-filter-bar">
+        <div className="admin-filter-group">
+          <label>Search</label>
+          <input
+            type="text"
+            name="search"
+            placeholder="Search resident or bill reference..."
+            value={filters.search}
+            onChange={handleFilterChange}
+          />
+        </div>
+        <div className="admin-filter-group">
+          <label>Resident Name</label>
+          <input
+            type="text"
+            name="residentName"
+            placeholder="Filter by resident name..."
+            value={filters.residentName}
+            onChange={handleFilterChange}
+          />
+        </div>
+        <div className="admin-filter-group">
+          <label>Bill Reference</label>
+          <input
+            type="text"
+            name="billReference"
+            placeholder="Filter by bill reference..."
+            value={filters.billReference}
+            onChange={handleFilterChange}
+          />
+        </div>
+        <div className="admin-filter-group">
+          <label>Payment Method</label>
+          <select
+            name="paymentMethod"
+            value={filters.paymentMethod}
+            onChange={handleFilterChange}
+          >
+            <option value="">All Methods</option>
+            {paymentMethods.map((method, index) => (
+              <option key={index} value={method}>{method}</option>
+            ))}
+          </select>
+        </div>
+        <div className="admin-filter-group">
+          <label>Status</label>
+          <select
+            name="status"
+            value={filters.status}
+            onChange={handleFilterChange}
+          >
+            <option value="">All Statuses</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+        <button className="admin-clear-btn" onClick={clearFilters}>Clear</button>
       </div>
+
+      {/* Table */}
+      <div className="admin-table-container">
+        <table className="admin-payments-table">
+          <thead>
+            <tr>
+              <th>Resident Name</th>
+              <th>Bill Reference</th>
+              <th>Amount</th>
+              <th>Payment Date</th>
+              <th>Payment Method</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {(() => {
+              if (loading) {
+                return (
+                  <tr>
+                    <td colSpan="7" className="admin-empty-row">
+                      Loading payments...
+                    </td>
+                  </tr>
+                );
+              }
+              
+              if (filteredPayments.length === 0) {
+                return (
+                  <tr>
+                    <td colSpan="7" className="admin-empty-row">
+                      {(filters.search || filters.residentName || filters.billReference || filters.paymentMethod || filters.status)
+                        ? 'No payments found matching your search' 
+                        : 'No payments logged yet'}
+                    </td>
+                  </tr>
+                );
+              }
+              
+              return filteredPayments.map((payment) => (
+                <tr key={payment.id}>
+                  <td>{payment.residentName || '-'}</td>
+                  <td>{payment.billReference || '-'}</td>
+                  <td>{formatCurrency(payment.amount)}</td>
+                  <td>{formatDate(payment.paymentDate)}</td>
+                  <td>{payment.paymentMethod || '-'}</td>
+                  <td>
+                    <span className={getStatusBadgeClass(payment.status)}>
+                      {formatStatus(payment.status)}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="action-buttons">
+                      <button className="view-btn" onClick={() => handleViewDetails(payment)}>View</button>
+                    </div>
+                  </td>
+                </tr>
+              ));
+            })()}
+          </tbody>
+        </table>
+      </div>
+
+      {/* View Modal */}
+      {showViewModal && selectedPayment && (
+        <div className="admin-modal-overlay" onClick={() => setShowViewModal(false)}>
+          <div className="admin-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="admin-modal-header">
+              <h2>Payment Details</h2>
+              <button className="admin-modal-close" onClick={() => setShowViewModal(false)}>×</button>
+            </div>
+            <div className="admin-modal-body">
+              <div className="admin-detail-row">
+                <span className="detail-label">Resident Name:</span>
+                <span className="detail-value">{selectedPayment.residentName || '-'}</span>
+              </div>
+              <div className="admin-detail-row">
+                <span className="detail-label">Bill Reference:</span>
+                <span className="detail-value">{selectedPayment.billReference || '-'}</span>
+              </div>
+              <div className="admin-detail-row">
+                <span className="detail-label">Amount:</span>
+                <span className="detail-value">{formatCurrency(selectedPayment.amount)}</span>
+              </div>
+              <div className="admin-detail-row">
+                <span className="detail-label">Payment Date:</span>
+                <span className="detail-value">{formatDate(selectedPayment.paymentDate)}</span>
+              </div>
+              <div className="admin-detail-row">
+                <span className="detail-label">Payment Method:</span>
+                <span className="detail-value">{selectedPayment.paymentMethod || '-'}</span>
+              </div>
+              <div className="admin-detail-row">
+                <span className="detail-label">Status:</span>
+                <span className={getStatusBadgeClass(selectedPayment.status)}>
+                  {formatStatus(selectedPayment.status)}
+                </span>
+              </div>
+              {selectedPayment.approvedDate && (
+                <div className="admin-detail-row">
+                  <span className="detail-label">Approved Date:</span>
+                  <span className="detail-value">{formatDate(selectedPayment.approvedDate)}</span>
+                </div>
+              )}
+              {selectedPayment.notes && (
+                <div className="admin-detail-row">
+                  <span className="detail-label">Notes:</span>
+                  <span className="detail-value">{selectedPayment.notes}</span>
+                </div>
+              )}
+            </div>
+            <div className="admin-modal-footer">
+              <button className="modal-btn cancel" onClick={() => setShowViewModal(false)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

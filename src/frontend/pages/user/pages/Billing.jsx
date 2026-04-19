@@ -3,10 +3,12 @@ import './Billing.css';
 
 function Billing({ user }) {
   // Filter states
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Bill types for filter dropdown
+  const billTypes = ['Monthly Dues', 'Parking Fee', 'Utility Fee', 'Association Fee', 'Special Assessment', 'Violations', 'Other'];
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -55,12 +57,11 @@ function Billing({ user }) {
   // Filter bills based on search and filters
   const filteredBills = useMemo(() => {
     return bills.filter(bill => {
-      // Date filter
-      if (dateFrom && bill.dueDate < dateFrom) return false;
-      if (dateTo && bill.dueDate > dateTo) return false;
-
       // Status filter
       if (statusFilter && bill.status !== statusFilter) return false;
+
+      // Type filter
+      if (typeFilter && bill.billType !== typeFilter) return false;
 
       // Search query filter
       if (searchQuery) {
@@ -72,7 +73,7 @@ function Billing({ user }) {
 
       return true;
     });
-  }, [bills, dateFrom, dateTo, statusFilter, searchQuery]);
+  }, [bills, statusFilter, typeFilter, searchQuery]);
 
   // Pagination calculation
   const totalPages = Math.ceil(filteredBills.length / itemsPerPage);
@@ -83,7 +84,6 @@ function Billing({ user }) {
   const totalAmount = filteredBills.reduce((sum, bill) => sum + (bill.amount || 0), 0);
   const paidAmount = filteredBills.filter(bill => bill.status === 'Paid').reduce((sum, bill) => sum + (bill.amount || 0), 0);
   const pendingAmount = filteredBills.filter(bill => bill.status === 'Pending').reduce((sum, bill) => sum + (bill.amount || 0), 0);
-  const overdueAmount = filteredBills.filter(bill => bill.status === 'Overdue').reduce((sum, bill) => sum + (bill.amount || 0), 0);
 
   // Format currency (PHP)
   const formatCurrency = (amount) => {
@@ -183,20 +183,6 @@ function Billing({ user }) {
               <span className="card-value">{formatCurrency(pendingAmount)}</span>
             </div>
           </div>
-
-          <div className="summary-card overdue">
-            <div className="card-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                <line x1="12" y1="9" x2="12" y2="13" />
-                <line x1="12" y1="17" x2="12.01" y2="17" />
-              </svg>
-            </div>
-            <div className="card-content">
-              <span className="card-label">Overdue</span>
-              <span className="card-value">{formatCurrency(overdueAmount)}</span>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -213,27 +199,19 @@ function Billing({ user }) {
             />
           </div>
           <div className="user-filter-group">
-            <label>Due Date From</label>
-            <input
-              type="date"
-              value={dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
-            />
-          </div>
-          <div className="user-filter-group">
-            <label>Due Date To</label>
-            <input
-              type="date"
-              value={dateTo}
-              onChange={(e) => setDateTo(e.target.value)}
-            />
-          </div>
-          <div className="user-filter-group">
             <label>Status</label>
             <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-              <option value="">All Statuses</option>
-              {uniqueStatuses.map(status => (
-                <option key={status} value={status}>{status}</option>
+              <option value="">All Status</option>
+              <option value="Pending">Pending</option>
+              <option value="Paid">Paid</option>
+            </select>
+          </div>
+          <div className="user-filter-group">
+            <label>Type</label>
+            <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
+              <option value="">All Types</option>
+              {billTypes.map(type => (
+                <option key={type} value={type}>{type}</option>
               ))}
             </select>
           </div>

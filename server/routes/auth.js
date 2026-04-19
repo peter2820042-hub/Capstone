@@ -40,14 +40,14 @@ router.post('/login', async (req, res) => {
       } else {
         // Check residents table (homeowners)
         result = await pool.query(
-          'SELECT id, username, password_hash, full_name, lot_number, block, phase, email, phone, profile_image FROM residents WHERE username = $1 AND status = $2',
+          'SELECT id, username, passwords, full_name, lot_number, block, phase, email, phone, profile_image FROM residents WHERE username = $1 AND status = $2',
           [username, 'active']
         );
         
         if (result.rows.length > 0) {
           user = result.rows[0];
           role = 'resident';
-          passwordHash = user.password_hash;
+          passwordHash = user.passwords;
         }
       }
     }
@@ -100,7 +100,7 @@ router.post('/login', async (req, res) => {
 
 // ============ REGISTER ============
 router.post('/register', async (req, res) => {
-  const { username, password, full_name, lot_number, block, email, phone } = req.body;
+  const { username, password, role, full_name, lot_number, block, email, phone, position } = req.body;
   
   try {
     // Input validation
@@ -112,6 +112,16 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Password must be at least 6 characters' });
     }
     
+    if (!role) {
+      return res.status(400).json({ error: 'Role is required' });
+    }
+    
+    // Validate role
+    const validRoles = ['admin', 'staff', 'homeowner'];
+    if (!validRoles.includes(role)) {
+      return res.status(400).json({ error: 'Invalid role' });
+    }
+    
     // Email format validation (if provided)
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({ error: 'Invalid email format' });
@@ -121,17 +131,42 @@ router.post('/register', async (req, res) => {
     if (phone && !/^09\d{9}$/.test(phone)) {
       return res.status(400).json({ error: 'Phone must be 11 digits starting with 09' });
     }
+    
     const hashedPassword = await bcrypt.hash(password, 10);
+    let result;
     
-    const result = await pool.query(
-      `INSERT INTO residents (username, password_hash, full_name, lot_number, block, email, phone, status) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, username, full_name`,
-      [username, hashedPassword, full_name || username, lot_number || null, block || null, email || null, phone || null, 'active']
-    );
+    // Insert based on role
+    if (role === 'admin') {
+      result = await pool.query(
+        `INSERT INTO admins (username, password_hash, full_name, email, phone, position, status) 
+         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, username, full_name, position`,
+        [username, hashedPassword, full_name || username, email || null, phone || null, position || 'Administrator', 'active']
+      );
+    } else if (role === 'staff') {
+      result = await pool.query(
+        `INSERT INTO staffs (username, password_hash, full_name, email, phone, position, status) 
+         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, username, full_name, position`,
+        [username, hashedPassword, full_name || username, email || null, phone || null, position || 'Staff', 'active']
+      );
+    } else {
+      // For residents, role is always 'homeowner'
+      result = await pool.query(
+        `INSERT INTO residents (username, passwords, full_name, lot_number, block, email, phone, role, status) 
+         VALUES ($1, $2, $3, $4, $5, $6, $7, 'homeowner', 'active') RETURNING id, username, full_name, lot_number, block`,
+        [username, hashedPassword, full_name || username, lot_number || null, block || null, email || null, phone || null]
+      );
+    }
     
-    res.json({ success: true, user: result.rows[0] });
+    res.json({ 
+      success: true, 
+      user: result.rows[0],
+      role: role
+    });
   } catch (error) {
     console.error('Register error:', error);
+    if (error.code === '23505') {
+      return res.status(400).json({ error: 'Username already exists' });
+    }
     res.status(500).json({ error: error.message });
   }
 });
@@ -179,6 +214,77 @@ router.post('/logout', async (req, res) => {
     res.json({ success: true, message: 'Logout logged successfully' });
   } catch (error) {
     console.error('Error logging logout:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============ GET ALL ACCOUNTS ============
+router.get('/accounts', async (req, res) => {
+  try {
+    // Get all admins
+    const adminsResult = await pool.query(
+      'SELECT id, username, full_name, email, phone, position, profile_image, status, created_at FROM admins ORDER BY created_at DESC'
+    );
+    
+    // Get all staffs
+    const staffsResult = await pool.query(
+      'SELECT id, username, full_name, email, phone, position, profile_image, status, created_at FROM staffs ORDER BY created_at DESC'
+    );
+    
+    // Get all residents/homeowners
+    const residentsResult = await pool.query(
+      'SELECT id, username, full_name, lot_number, block, phase, email, phone, profile_image, status, created_at FROM residents ORDER BY created_at DESC'
+    );
+    
+    // Format accounts with role information
+    const accounts = [
+      ...adminsResult.rows.map(admin => ({
+        id: admin.id,
+        username: admin.username,
+        fullName: admin.full_name,
+        email: admin.email,
+        phone: admin.phone,
+        position: admin.position,
+        profileImage: admin.profile_image,
+        status: admin.status,
+        createdAt: admin.created_at,
+        role: 'admin',
+        lotNumber: null,
+        block: null
+      })),
+      ...staffsResult.rows.map(staff => ({
+        id: staff.id,
+        username: staff.username,
+        fullName: staff.full_name,
+        email: staff.email,
+        phone: staff.phone,
+        position: staff.position,
+        profileImage: staff.profile_image,
+        status: staff.status,
+        createdAt: staff.created_at,
+        role: 'staff',
+        lotNumber: null,
+        block: null
+      })),
+      ...residentsResult.rows.map(resident => ({
+        id: resident.id,
+        username: resident.username,
+        fullName: resident.full_name,
+        email: resident.email,
+        phone: resident.phone,
+        position: null,
+        profileImage: resident.profile_image,
+        status: resident.status,
+        createdAt: resident.created_at,
+        role: 'homeowner',
+        lotNumber: resident.lot_number,
+        block: resident.block
+      }))
+    ];
+    
+    res.json({ success: true, accounts });
+  } catch (error) {
+    console.error('Error fetching accounts:', error);
     res.status(500).json({ error: error.message });
   }
 });

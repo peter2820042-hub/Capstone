@@ -218,5 +218,5 @@ app.get('/api/dashboard-stats', (req, res) => {
 
 // ============ SERVER START ============
 app.listen(3001, '0.0.0.0', () => {
-  console.log('✅ Server is online and ready!');
+  console.log('Server is online and ready!');
 });

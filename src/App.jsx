@@ -23,26 +23,24 @@ import './App.css'
 
 function App() {
   const [currentUser, setCurrentUser] = useState(() => {
-    // Check localStorage on initial load to persist user session
-    // WARNING: This data is vulnerable to XSS attacks - do not store sensitive information unencrypted
-    const stored = localStorage.getItem('user');
+    // Check sessionStorage on initial load to persist user session per tab
+    const stored = sessionStorage.getItem('user');
     return stored ? JSON.parse(stored) : null;
   });
   const navigate = useNavigate()
   const location = useLocation()
 
-  // Save current path to localStorage when navigating
-  // WARNING: Storing path data in localStorage - ensure no sensitive data is exposed
+  // Save current path to sessionStorage when navigating
   useEffect(() => {
     if (currentUser) {
-      localStorage.setItem('lastPath', location.pathname);
+      sessionStorage.setItem('lastPath', location.pathname);
     }
   }, [location.pathname, currentUser]);
 
   // Redirect to last saved path on page refresh when user is already logged in
   useEffect(() => {
     if (currentUser) {
-      const lastPath = localStorage.getItem('lastPath');
+      const lastPath = sessionStorage.getItem('lastPath');
       if (lastPath && lastPath !== location.pathname && lastPath !== '/login' && lastPath !== '/') {
         navigate(lastPath, { replace: true });
       }
@@ -51,24 +49,21 @@ function App() {
 
   const handleLogin = (user) => {
     setCurrentUser(user)
-    // WARNING: Storing user object in localStorage - vulnerable to XSS attacks
-    // Sensitive user data is stored without encryption
-    localStorage.setItem('user', JSON.stringify(user));
+    // Use sessionStorage for per-tab session storage
+    sessionStorage.setItem('user', JSON.stringify(user));
     
     // Save profile image separately for header
-    // WARNING: Profile image data stored in localStorage - potential XSS vector if not properly sanitized
     if (user.profileImage) {
-      localStorage.setItem('userProfileImage', user.profileImage);
+      sessionStorage.setItem('userProfileImage', user.profileImage);
     }
     
     // Save full name for logout tracking
-    // WARNING: Personal data stored in localStorage
-    localStorage.setItem('lastFullName', user.fullName || user.username || '');
+    sessionStorage.setItem('lastFullName', user.fullName || user.username || '');
     
     // Check if there's a saved path to redirect to
-    const lastPath = localStorage.getItem('lastPath');
+    const lastPath = sessionStorage.getItem('lastPath');
     if (lastPath && lastPath !== '/login' && lastPath !== '/') {
-      localStorage.removeItem('lastPath');
+      sessionStorage.removeItem('lastPath');
       navigate(lastPath, { replace: true });
     } else if (user.role === 'admin') {
       navigate('/dashboard', { replace: true })
@@ -81,13 +76,12 @@ function App() {
 
   const handleLogout = async () => {
     try {
-      // Get user from localStorage
-      // WARNING: Reading sensitive user data from localStorage - vulnerable to XSS
-      const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-      const userProfileData = JSON.parse(localStorage.getItem('userProfileData') || '{}');
+      // Get user from sessionStorage
+      const storedUser = JSON.parse(sessionStorage.getItem('user') || '{}');
+      const userProfileData = JSON.parse(sessionStorage.getItem('userProfileData') || '{}');
       
       // Get the full name (from login or from profile updates)
-      const fullName = localStorage.getItem('lastFullName') || storedUser.full_name || storedUser.username;
+      const fullName = sessionStorage.getItem('lastFullName') || storedUser.full_name || storedUser.username;
       
       // Call logout endpoint to log the action
       const response = await fetch('/api/logout', {
@@ -105,13 +99,12 @@ function App() {
       console.error('Error logging logout:', error);
     }
     
-    // Clear localStorage and navigate
-    // SECURITY: Clear ALL sensitive localStorage items on logout to prevent XSS data theft
-    localStorage.removeItem('user');
-    localStorage.removeItem('userProfileData');
-    localStorage.removeItem('userProfileImage');
-    localStorage.removeItem('lastPath');
-    localStorage.removeItem('lastFullName');
+    // Clear sessionStorage and navigate
+    sessionStorage.removeItem('user');
+    sessionStorage.removeItem('userProfileData');
+    sessionStorage.removeItem('userProfileImage');
+    sessionStorage.removeItem('lastPath');
+    sessionStorage.removeItem('lastFullName');
     setCurrentUser(null);
     navigate('/login', { replace: true });
   }

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './Notification.css';
 
 function Notification(props) {
-  const user = props.user || JSON.parse(localStorage.getItem('user') || '{}');
+  const user = props.user || JSON.parse(sessionStorage.getItem('user') || '{}');
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 

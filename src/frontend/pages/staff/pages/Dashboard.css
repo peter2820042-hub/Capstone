@@ -291,26 +291,6 @@
   font-weight: 500;
 }
 
-.sta-status-badge.bill-pending {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.sta-status-badge.bill-unpaid {
-  background: #fee2e2;
-  color: #991b1b;
-}
-
-.sta-status-badge.bill-overdue {
-  background: #fef2f2;
-  color: #dc2626;
-}
-
-.sta-status-badge.bill-paid {
-  background: #d1fae5;
-  color: #065f46;
-}
-
 /* Generic status badge for violations - must be scoped */
 .sta-status-badge.pending {
   background: #fef3c7;

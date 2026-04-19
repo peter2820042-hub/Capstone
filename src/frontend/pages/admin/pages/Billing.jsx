@@ -6,171 +6,63 @@ function Billing() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
+  // Search and filter states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filters, setFilters] = useState({
+    status: '',
+    billType: ''
+  });
+
   // Data states
   const [bills, setBills] = useState([]);
   const [residents, setResidents] = useState([]);
 
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   // Modal states
   const [showModal, setShowModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedBill, setSelectedBill] = useState(null);
   const [editingBill, setEditingBill] = useState(null);
 
   // Form state
-  const [formData, setFormData] = useState({
-    lotNumber: '',
-    block: '',
-    residentName: '',
-    billType: 'Monthly Dues',
-    amount: '',
-    dueDate: '',
-    billingPeriod: '',
-    status: 'unpaid'
+  const [formData, setFormData] = useState(() => {
+    const today = new Date().toISOString().split('T')[0];
+    return {
+      lotNumber: '',
+      block: '',
+      residentName: '',
+      billType: 'Monthly Dues',
+      amount: '',
+      dueDate: today,
+      status: 'pending'
+    };
   });
-  const [formMessage, setFormMessage] = useState(null);
+  const [toast, setToast] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // Auto-dismiss toast after 3 seconds
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => {
+        setToast(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   // Bill types with colors (matching Violations design)
   const billTypes = ['Monthly Dues', 'Parking Fee', 'Utility Fee', 'Association Fee', 'Special Assessment', 'Violations', 'Other'];
 
   // Bill type colors and icons
-  const getBillStyle = (type) => {
-    const styles = {
-      'Monthly Dues': {
-        icon: (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-            <line x1="16" y1="2" x2="16" y2="6"/>
-            <line x1="8" y1="2" x2="8" y2="6"/>
-            <line x1="3" y1="10" x2="21" y2="10"/>
-          </svg>
-        ),
-        color: '#3b82f6',
-        bg: '#dbeafe'
-      },
-      'Parking Fee': {
-        icon: (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="10" />
-            <path d="M9 17H7a2 2 0 0 1 0-4h2" />
-            <path d="M15 3h2a2 2 0 0 1 0 4h-2" />
-          </svg>
-        ),
-        color: '#f59e0b',
-        bg: '#fef3c7'
-      },
-      'Utility Fee': {
-        icon: (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-          </svg>
-        ),
-        color: '#10b981',
-        bg: '#d1fae5'
-      },
-      'Association Fee': {
-        icon: (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-            <polyline points="9 22 9 12 15 12 15 22" />
-          </svg>
-        ),
-        color: '#8b5cf6',
-        bg: '#ede9fe'
-      },
-      'Special Assessment': {
-        icon: (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-            <line x1="12" y1="9" x2="12" y2="13" />
-            <line x1="12" y1="17" x2="12.01" y2="17" />
-          </svg>
-        ),
-        color: '#ef4444',
-        bg: '#fee2e2'
-      },
-      'Violations': {
-        icon: (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="8" x2="12" y2="12" />
-            <line x1="12" y1="16" x2="12.01" y2="16" />
-          </svg>
-        ),
-        color: '#dc2626',
-        bg: '#fee2e2'
-      },
-      'Other': {
-        icon: (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-            <polyline points="14 2 14 8 20 8" />
-          </svg>
-        ),
-        color: '#6b7280',
-        bg: '#f3f4f6'
-      }
-    };
-    return styles[type] || styles['Other'];
-  };
-
-  const fetchBills = async () => {
-    try {
-      const response = await fetch('/api/bills');
-      const data = await response.json();
-      setBills(Array.isArray(data) ? data : []);
-      setError(null);
-    } catch {
-      console.error('Error fetching bills:');
-      setError('Failed to load bills');
-    }
-  };
-
-  const fetchResidents = async () => {
-    try {
-      const response = await fetch('/api/residents');
-      const data = await response.json();
-      setResidents(Array.isArray(data) ? data : []);
-    } catch {
-      console.error('Error fetching residents:');
-    }
-  };
-
-  // Fetch data on mount
-  useEffect(() => {
-    (async () => {
-      await fetchBills();
-      await fetchResidents();
-    })();
-  }, []);
-
-  // Filter bills - show all without search/filter
-  const filteredBills = useMemo(() => {
-    return bills;
-  }, [bills]);
-
-  // Pagination
-  const totalPages = Math.ceil(filteredBills.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedBills = filteredBills.slice(startIndex, startIndex + itemsPerPage);
-
-  // Calculate totals (for future use if needed)
-  const totalAmount = bills.reduce((sum, b) => sum + (parseFloat(b.amount) || 0), 0);
-  
-  // Debug: Check what the data looks like
-  console.log('[Billing] bills count:', bills.length);
-  console.log('[Billing] sample bill:', bills[0]);
-  console.log('[Billing] totalAmount:', totalAmount);
 
   // Format currency
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-PH', {
       style: 'currency',
       currency: 'PHP'
-    }).format(amount || 0);
+    }).format(amount);
   };
 
   // Format date
@@ -183,169 +75,216 @@ function Billing() {
     });
   };
 
-  // Handle lot number change - auto-fill resident name
-  const handleLotNumberChange = (e) => {
-    const lotNumber = e.target.value;
-    const { block } = formData;
-    const resident = residents.find(r => r.block === block && r.lotNumber === lotNumber);
-    setFormData(prev => ({
-      ...prev,
-      lotNumber,
-      residentName: resident ? resident.fullName : '',
-      block: resident ? resident.block : prev.block
-    }));
-  };
-
-  // Handle block selection change
-  const handleBlockChange = (e) => {
-    const selectedBlock = e.target.value;
-    setFormData(prev => ({ ...prev, block: selectedBlock, lotNumber: '', residentName: '' }));
-  };
-
-  // Get unique blocks from residents
-  const uniqueBlocks = [...new Set(residents.map(r => r.block).filter(Boolean))].sort();
-
-  // Filter residents by selected block
-  const filteredResidents = formData.block 
-    ? residents.filter(r => r.block === formData.block) 
-    : residents;
-
-  // Handle input change
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    if (name === 'lotNumber') {
-      handleLotNumberChange(e);
-    } else if (name === 'block') {
-      handleBlockChange(e);
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
+  // Fetch residents
+  const fetchResidents = async () => {
+    try {
+      const response = await fetch('/api/residents');
+      const data = await response.json();
+      setResidents(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Error fetching residents:', error);
     }
   };
 
-  // Open create modal
-  const openCreateModal = () => {
+  // Fetch bills
+  const fetchBills = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/bills?_t=' + Date.now());
+      const data = await response.json();
+      console.log('Fetched bills:', data);
+      console.log('Sample bill:', data[0] ? { dueDate: data[0].dueDate, dateIssued: data[0].dateIssued } : 'no data');
+      setBills(Array.isArray(data) ? data : []);
+      setError(null);
+    } catch {
+      console.error('Error fetching bills:');
+      setError('Failed to load bills');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const loadData = async () => {
+      await fetchResidents();
+      await fetchBills();
+    };
+    loadData();
+  }, []);
+
+  // Get unique blocks for filter
+  const uniqueBlocks = useMemo(() => {
+    return [...new Set(residents.map(r => r.block).filter(Boolean))];
+  }, [residents]);
+
+  // Filter residents by selected block for modal lot number dropdown
+  const filteredResidents = formData.block
+    ? residents.filter(r => r.block === formData.block)
+    : residents;
+
+  // Filtered and paginated bills
+  const filteredBills = useMemo(() => {
+    return bills.filter(bill => {
+      const matchesSearch = !searchQuery ||
+        bill.residentName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        bill.billReference?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        bill.lotNumber?.toLowerCase().includes(searchQuery.toLowerCase());
+
+      const matchesStatus = !filters.status || bill.status?.toLowerCase() === filters.status.toLowerCase();
+      const matchesBillType = !filters.billType || bill.billType === filters.billType;
+
+      return matchesSearch && matchesStatus && matchesBillType;
+    });
+  }, [bills, searchQuery, filters]);
+
+  const totalPages = Math.ceil(filteredBills.length / itemsPerPage);
+  const paginatedBills = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredBills.slice(start, start + itemsPerPage);
+  }, [filteredBills, currentPage, itemsPerPage]);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCurrentPage(1);
+  }, [searchQuery, filters]);
+
+  // Modal handlers
+  const closeModal = () => {
+    const today = new Date().toISOString().split('T')[0];
+    setShowModal(false);
+    setShowViewModal(false);
+    setSelectedBill(null);
+    setEditingBill(null);
+    setToast(null);
     setFormData({
       lotNumber: '',
+      block: '',
       residentName: '',
       billType: 'Monthly Dues',
       amount: '',
-      dueDate: '',
-      billingPeriod: '',
-      status: 'unpaid'
+      dueDate: today,
+      status: 'pending'
     });
-    setFormMessage(null);
-    setEditingBill(null);
-    setShowModal(true);
   };
 
-  // Open edit modal
+  const openAddViolationModal = () => {
+    const today = new Date().toISOString().split('T')[0];
+    setEditingBill(null);
+    setFormData({
+      lotNumber: '',
+      block: '',
+      residentName: '',
+      billType: 'Violations',
+      amount: '',
+      dueDate: today,
+      status: 'pending'
+    });
+    setShowModal(true);
+    setToast(null);
+  };
+
   const openEditModal = (bill) => {
+    setEditingBill(bill);
     setFormData({
       lotNumber: bill.lotNumber || '',
       block: bill.block || '',
       residentName: bill.residentName || '',
       billType: bill.billType || 'Monthly Dues',
-      amount: bill.amount || '',
-      dueDate: bill.dueDate ? bill.dueDate.split('T')[0] : '',
+      amount: bill.amount?.toString() || '',
+      dueDate: bill.dueDate?.split('T')[0] || '',
       billingPeriod: bill.billingPeriod || '',
-      status: bill.status || 'unpaid'
+      status: bill.status?.toLowerCase() || 'pending'
     });
-    setFormMessage(null);
-    setEditingBill(bill);
     setShowModal(true);
   };
 
-  // View bill details
   const viewBillDetails = (bill) => {
     setSelectedBill(bill);
     setShowViewModal(true);
   };
 
-  // Open delete confirmation
-  const openDeleteModal = (bill) => {
-    setSelectedBill(bill);
-    setShowDeleteModal(true);
+  // Handle block change to update lot numbers
+  const handleBlockChange = (e) => {
+    const selectedBlock = e.target.value;
+    setFormData(prev => ({
+      ...prev,
+      block: selectedBlock,
+      lotNumber: '',
+      residentName: ''
+    }));
   };
 
-  // Close all modals
-  const closeModal = () => {
-    setShowModal(false);
-    setShowViewModal(false);
-    setShowDeleteModal(false);
-    setSelectedBill(null);
-    setEditingBill(null);
-    setFormMessage(null);
-  };
+  // Handle input change
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    console.log('handleInputChange:', name, '=', value);
+    setFormData(prev => ({ ...prev, [name]: value }));
 
-  // Handle form submit
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setFormMessage(null);
-    setSubmitting(true);
-
-    try {
-      const payload = {
-        lot_number: formData.lotNumber,
-        block: formData.block,
-        resident_name: formData.residentName,
-        bill_type: formData.billType,
-        amount: parseFloat(formData.amount),
-        due_date: formData.dueDate,
-        billing_period: formData.billingPeriod || formData.billType,
-        status: formData.status
-      };
-
-      let response;
-      if (editingBill) {
-        response = await fetch(`/api/bills/${editingBill.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-      } else {
-        response = await fetch('/api/bills', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
+    // Auto-fill resident name when lot number changes
+    if (name === 'lotNumber') {
+      const selectedResident = residents.find(r => r.lotNumber === value && r.block === formData.block);
+      if (selectedResident) {
+        setFormData(prev => ({
+          ...prev,
+          residentName: selectedResident.fullName || selectedResident.name || ''
+        }));
       }
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setFormMessage({ type: 'success', text: editingBill ? 'Bill updated successfully' : 'Bill created successfully' });
-        fetchBills();
-        setTimeout(() => {
-          closeModal();
-        }, 1000);
-      } else {
-        setFormMessage({ type: 'error', text: data.error || 'Failed to save bill' });
-      }
-    } catch {
-      setFormMessage({ type: 'error', text: 'An error occurred' });
-    } finally {
-      setSubmitting(false);
     }
   };
 
-  // Handle delete
-  const handleDelete = async () => {
-    if (!selectedBill) return;
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setToast(null);
+
+    const billData = {
+      lotNumber: formData.lotNumber,
+      block: formData.block,
+      residentName: formData.residentName,
+      billType: formData.billType,
+      billingPeriod: formData.billingPeriod || 'N/A',
+      amount: parseFloat(formData.amount),
+      dueDate: formData.dueDate,
+      status: 'pending'
+    };
+
+    console.log('Frontend sending billData:', JSON.stringify(billData));
 
     try {
-      const response = await fetch(`/api/bills/${selectedBill.id}`, {
-        method: 'DELETE'
+      const url = editingBill ? `/api/bills/${editingBill.id}` : '/api/bills';
+      const method = editingBill ? 'PUT' : 'POST';
+      console.log('Sending', method, 'to', url);
+      console.log('Request body:', JSON.stringify(billData));
+
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(billData)
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
+
+      const result = await response.json();
+      console.log('Response result:', result);
+
+      // Check if response is OK - show success or error toast accordingly
       if (response.ok) {
-        fetchBills();
-        closeModal();
+        setToast({ type: 'success', message: editingBill ? 'Bill updated successfully!' : 'Bill created successfully!' });
+        setTimeout(() => {
+          closeModal();
+          fetchBills();
+        }, 1500);
       } else {
-        const data = await response.json();
-        setFormMessage({ type: 'error', text: data.error || 'Failed to delete bill' });
+        setToast({ type: 'error', message: result.error || 'Failed to save bill' });
       }
-    } catch {
-      setFormMessage({ type: 'error', text: 'An error occurred' });
+    } catch (error) {
+      console.error('Error saving bill:', error);
+      setToast({ type: 'error', message: 'Failed to save bill' });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -355,45 +294,62 @@ function Billing() {
       const response = await fetch(`/api/bills/${bill.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...bill,
-          status: 'Paid'
-        })
+        body: JSON.stringify({ status: 'paid' })
       });
 
       if (response.ok) {
         fetchBills();
+        setToast({ type: 'success', message: 'Bill marked as paid successfully!' });
       }
-    } catch {
-      console.error('Error marking bill as paid:');
+    } catch (error) {
+      console.error('Error marking bill as paid:', error);
     }
   };
 
-  // Error state
-  if (error && bills.length === 0) {
-    return (
-      <div className="billing-container">
-        <div className="error-state">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="8" x2="12" y2="12" />
-            <line x1="12" y1="16" x2="12.01" y2="16" />
-          </svg>
-          <p>{error}</p>
-          <button onClick={fetchBills}>Retry</button>
-        </div>
-      </div>
-    );
-  }
+  // Handle delete
+  const handleDelete = async (id) => {
+    try {
+      const response = await fetch(`/api/bills/${id}`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        fetchBills();
+        setToast({ type: 'success', message: 'Bill deleted successfully!' });
+      }
+    } catch (error) {
+      console.error('Error deleting bill:', error);
+    }
+  };
 
   return (
     <div className="billing-container">
-      {/* Header */}
-      <div className="billing-header">
-        <div className="billing-header-title">
-          <p className="header-subtitle">Manage and monitor resident billing and payments</p>
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`sr-toast ${toast.type}`}>
+          {toast.type === 'success' ? (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+              <polyline points="22 4 12 14.01 9 11.01" />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+          )}
+          <span>{toast.message}</span>
+          <button className="sr-toast-close" onClick={() => setToast(null)}>×</button>
         </div>
-        <button className="add-btn" onClick={openCreateModal}>
+      )}
+
+      {/* Page Header */}
+      <div className="sr-header">
+        <div className="sr-title">
+          <p className="sr-subtitle">Manage resident bills, payments, and financial records</p>
+        </div>
+        <button className="sr-add-btn" onClick={openAddViolationModal}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M12 5v14M5 12h14" />
           </svg>
@@ -401,122 +357,199 @@ function Billing() {
         </button>
       </div>
 
-      {/* Stats - KPIs removed */}
+      {/* Error State */}
+      {error && (
+        <div className="error-state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="15" y1="9" x2="9" y2="15"/>
+            <line x1="9" y1="9" x2="15" y2="15"/>
+          </svg>
+          <p>{error}</p>
+          <button onClick={fetchBills}>Try Again</button>
+        </div>
+      )}
 
-      {/* Table */}
-      <div className="billing-admin-admin-table-container">
-        <table className="violations-table">
-          <thead>
-            <tr>
-              <th>Resident Name</th>
-              <th>Bill Type</th>
-              <th>Amount</th>
-              <th>Date Issued</th>
-              <th>Due Date</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedBills.length > 0 ? (
-              paginatedBills.map(bill => {
-                const billStyle = getBillStyle(bill.billType);
-                return (
-                  <tr key={bill.id}>
-                    <td className="resident-name">{bill.residentName}</td>
-                    <td>
-                      <div className="billing-bill-type-badge">
-                        <span className="billing-bill-type-icon">{billStyle.icon}</span>
-                        <span>{bill.billType}</span>
-                      </div>
-                    </td>
-                    <td className="amount">{formatCurrency(bill.amount)}</td>
-                    <td className="date-issued">{bill.dateIssued ? formatDate(bill.dateIssued) : '-'}</td>
-                    <td className="due-date">{formatDate(bill.dueDate)}</td>
-                    <td className="status">
-                      <span className={`status-badge ${bill.status?.toLowerCase()}`}>
-                        {bill.status?.charAt(0).toUpperCase() + bill.status?.slice(1)}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="action-buttons" style={{ display: 'flex', flexDirection: 'row', gap: '8px' }}>
-                        <button className="view-btn" onClick={() => viewBillDetails(bill)}>
-                          View
-                        </button>
-                        <button className="edit-btn" onClick={() => openEditModal(bill)}>
-                          Edit
-                        </button>
-                        <button className="delete-btn" onClick={() => openDeleteModal(bill)}>
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            ) : (
-              <tr>
-                <td colSpan="8" className="billing-admin-admin-empty-row">
-                  No bills found
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {totalPages > 1 && (
-        <div className="billing-admin-admin-pagination">
-            <button className="admin-admin-admin-admin-pagination-btn" onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="11 17 6 12 11 7" />
-                <polyline points="18 17 13 12 18 7" />
-              </svg>
-            </button>
-            <button className="admin-admin-admin-admin-pagination-btn" onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="15 18 9 12 15 6" />
-              </svg>
-            </button>
-            
-            <div className="billing-admin-admin-admin-admin-pagination-info">
-              Page {currentPage} of {totalPages}
-            </div>
-
-            <button className="admin-admin-admin-admin-pagination-btn" onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === totalPages}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="9 18 15 12 9 6" />
-              </svg>
-            </button>
-            <button className="admin-admin-admin-admin-pagination-btn" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="13 17 18 12 13 7" />
-                <polyline points="6 17 11 12 6 7" />
-              </svg>
-            </button>
-
-            <select 
-              className="items-per-page"
-              value={itemsPerPage}
-              onChange={(e) => {
-                setItemsPerPage(Number(e.target.value));
-                setCurrentPage(1);
-              }}
+      {/* Search and Filter Bar */}
+      <div className="sr-search-filter-bar">
+        <div className="sr-filters-row">
+          <div className="sr-filter-group">
+            <label>Search</label>
+            <input
+              type="text"
+              placeholder="Search by resident name, bill reference, or lot number..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <div className="sr-filter-group">
+            <label>Status</label>
+            <select
+              value={filters.status}
+              onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
             >
-              <option value={10}>10 / page</option>
-              <option value={25}>25 / page</option>
-              <option value={50}>50 / page</option>
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="paid">Paid</option>
             </select>
           </div>
-        )}
+          <div className="sr-filter-group">
+            <label>Type</label>
+            <select
+              value={filters.billType}
+              onChange={(e) => setFilters(prev => ({ ...prev, billType: e.target.value }))}
+            >
+              <option value="">All Types</option>
+              {billTypes.map(type => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="sr-buttons-row">
+          <button className="sr-search-btn" onClick={() => setCurrentPage(1)}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+            Search
+          </button>
+          <button
+            className="sr-reset-btn"
+            onClick={() => {
+              setSearchQuery('');
+              setFilters({ status: '', billType: '' });
+            }}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+              <path d="M3 3v5h5" />
+            </svg>
+            Reset
+          </button>
+        </div>
+      </div>
+
+      {/* Table Section */}
+      <section className="sr-table-section">
+        <h3 className="sr-table-title">Billing List</h3>
+        <div className="sr-table-container">
+          <table className="sr-table">
+            <thead>
+              <tr>
+                <th>Resident Name</th>
+                <th>Bill Type</th>
+                <th>Amount</th>
+                <th>Date Issued</th>
+                <th>Due Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="sr-loading-cell">
+                    <div className="sr-loading-state">
+                      <div className="sr-spinner"></div>
+                      <span>Loading bills...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : paginatedBills.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="sr-empty-row">
+                    No bills found
+                  </td>
+                </tr>
+              ) : (
+                paginatedBills.map(bill => {
+                  return (
+                    <tr key={bill.id}>
+                      <td>{bill.residentName || '-'}</td>
+                      <td>
+                        <span className={`sr-bill-type-badge ${bill.billType.toLowerCase().replace(' ', '-')}`}>
+                          {bill.billType}
+                        </span>
+                      </td>
+                      <td className="amount">{formatCurrency(bill.amount)}</td>
+                      <td className="date-issued">{bill.dateIssued ? formatDate(bill.dateIssued) : '-'}</td>
+                      <td className="due-date">{formatDate(bill.dueDate)}</td>
+                      <td>
+                        <span className={`sr-status-badge status-${(bill.status || 'unpaid').toLowerCase()}`}>
+                          {bill.status?.charAt(0).toUpperCase() + bill.status?.slice(1)}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="sr-table-actions">
+                          <button className="sr-view-btn" onClick={() => viewBillDetails(bill)}>View</button>
+                          <button className="sr-edit-btn" onClick={() => openEditModal(bill)}>Edit</button>
+                          <button className="sr-delete-btn" onClick={() => handleDelete(bill.id)}>Delete</button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="billing-admin-admin-pagination">
+          <button className="admin-admin-admin-admin-pagination-btn" onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="11 17 6 12 11 7" />
+              <polyline points="18 17 13 12 18 7" />
+            </svg>
+          </button>
+          <button className="admin-admin-admin-admin-pagination-btn" onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
+
+          <div className="billing-admin-admin-admin-admin-pagination-info">
+            Page {currentPage} of {totalPages}
+          </div>
+
+          <button className="admin-admin-admin-admin-pagination-btn" onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === totalPages}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </button>
+          <button className="admin-admin-admin-admin-pagination-btn" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="13 17 18 12 13 7" />
+              <polyline points="6 17 11 12 6 7" />
+            </svg>
+          </button>
+
+          <select
+            className="items-per-page"
+            value={itemsPerPage}
+            onChange={(e) => {
+              setItemsPerPage(Number(e.target.value));
+              setCurrentPage(1);
+            }}
+          >
+            <option value={10}>10 / page</option>
+            <option value={25}>25 / page</option>
+            <option value={50}>50 / page</option>
+          </select>
+        </div>
+      )}
 
       {/* Create/Edit Modal */}
       {showModal && (
-        <div className="admin-admin-modal-overlay" onClick={closeModal}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="admin-admin-modal-header">
-              <h3>{editingBill ? 'Edit Bill' : 'Create New Bill'}</h3>
-              <button className="close-btn" onClick={closeModal}>
+        <div className="sr-modal-overlay" onClick={closeModal}>
+          <div className="sr-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="sr-modal-header">
+              <h3 style={{ textAlign: 'center', flex: 1 }}>{editingBill ? 'Edit Bill' : 'Create New Bill'}</h3>
+              <button className="sr-modal-close" onClick={closeModal}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <line x1="18" y1="6" x2="6" y2="18" />
                   <line x1="6" y1="6" x2="18" y2="18" />
@@ -524,19 +557,14 @@ function Billing() {
               </button>
             </div>
             <form onSubmit={handleSubmit}>
-              <div className="admin-admin-modal-body">
-                {formMessage && (
-                  <div className={`admin-admin-form-message ${formMessage.type}`}>
-                    {formMessage.text}
-                  </div>
-                )}
-                
-                <div className="form-grid">
-                  <div className="form-group">
+              <div className="sr-modal-form">
+
+                <div className="sr-form-row">
+                  <div className="sr-form-group">
                     <label>Block <span className="required">*</span></label>
-                    <select 
-                      name="block" 
-                      value={formData.block} 
+                    <select
+                      name="block"
+                      value={formData.block}
                       onChange={handleBlockChange}
                       required
                     >
@@ -547,11 +575,11 @@ function Billing() {
                     </select>
                   </div>
 
-                  <div className="form-group">
+                  <div className="sr-form-group">
                     <label>Lot Number <span className="required">*</span></label>
-                    <select 
-                      name="lotNumber" 
-                      value={formData.lotNumber} 
+                    <select
+                      name="lotNumber"
+                      value={formData.lotNumber}
                       onChange={handleInputChange}
                       required
                     >
@@ -564,22 +592,22 @@ function Billing() {
                     </select>
                   </div>
 
-                  <div className="form-group">
+                  <div className="sr-form-group">
                     <label>Resident Name</label>
-                    <input 
-                      type="text" 
-                      name="residentName" 
-                      value={formData.residentName} 
+                    <input
+                      type="text"
+                      name="residentName"
+                      value={formData.residentName}
                       readOnly
                       placeholder="Auto-filled from lot"
                     />
                   </div>
 
-                  <div className="form-group">
+                  <div className="sr-form-group">
                     <label>Bill Type <span className="required">*</span></label>
-                    <select 
-                      name="billType" 
-                      value={formData.billType} 
+                    <select
+                      name="billType"
+                      value={formData.billType}
                       onChange={handleInputChange}
                       required
                     >
@@ -589,12 +617,12 @@ function Billing() {
                     </select>
                   </div>
 
-                  <div className="form-group">
+                  <div className="sr-form-group">
                     <label>Amount <span className="required">*</span></label>
-                    <input 
-                      type="number" 
-                      name="amount" 
-                      value={formData.amount} 
+                    <input
+                      type="number"
+                      name="amount"
+                      value={formData.amount}
                       onChange={handleInputChange}
                       placeholder="0.00"
                       step="0.01"
@@ -603,47 +631,23 @@ function Billing() {
                     />
                   </div>
 
-                  <div className="form-group">
+                  <div className="sr-form-group">
                     <label>Due Date <span className="required">*</span></label>
-                    <input 
-                      type="date" 
-                      name="dueDate" 
-                      value={formData.dueDate} 
+                    <input
+                      type="date"
+                      name="dueDate"
+                      value={formData.dueDate}
                       onChange={handleInputChange}
                       required
                     />
-                  </div>
-
-                  <div className="form-group">
-                    <label>Billing Period</label>
-                    <input 
-                      type="text" 
-                      name="billingPeriod" 
-                      value={formData.billingPeriod} 
-                      onChange={handleInputChange}
-                      placeholder="e.g., January 2024"
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label>Status <span className="required">*</span></label>
-                    <select 
-                      name="status" 
-                      value={formData.status} 
-                      onChange={handleInputChange}
-                      required
-                    >
-                      <option value="unpaid">Unpaid</option>
-                      <option value="pending">Pending</option>
-                      <option value="Paid">Paid</option>
-                      <option value="overdue">Overdue</option>
-                    </select>
                   </div>
                 </div>
 
-                <div className="admin-admin-modal-actions">
-                  <button type="button" className="cancel-btn" onClick={closeModal}>Cancel</button>
-                  <button type="submit" className="submit-btn" disabled={submitting}>
+                <div className="sr-modal-actions" style={{ justifyContent: 'center', gap: '20px' }}>
+                  <button type="button" className="sr-cancel-btn" onClick={closeModal} style={{ padding: '10px 100px', fontSize: '16px' }}>
+                    Cancel
+                  </button>
+                  <button type="submit" className="sr-submit-btn" disabled={submitting} style={{ padding: '10px 100px', fontSize: '16px' }}>
                     {submitting ? 'Saving...' : (editingBill ? 'Update Bill' : 'Create Bill')}
                   </button>
                 </div>
@@ -667,150 +671,61 @@ function Billing() {
               </button>
             </div>
             <div className="admin-admin-modal-body">
-              {/* Bill Header Card */}
-              <div className="bill-header-card">
-                <div className="billing-bill-type-badge">
-                  <span className="billing-bill-type-icon">{getBillStyle(selectedBill.billType)?.icon}</span>
-                  <span>{selectedBill.billType}</span>
-                </div>
-                <div className="bill-header-info">
-                  <h2 className="bill-type-title">{selectedBill.billType}</h2>
-                  <p className="bill-id">Bill Reference: {selectedBill.billReference}</p>
-                </div>
-                <div className={`status-pill ${selectedBill.status}`}>
-                  {selectedBill.status}
-                </div>
+              {/* Simple Bill Info */}
+              <div className="bill-detail-header">
+                <h3>{selectedBill.billType}</h3>
+                <p className="bill-ref">Reference: {selectedBill.billReference}</p>
               </div>
 
-              {/* Detail Cards */}
-              <div className="detail-cards-grid">
-                <div className="admin-admin-detail-card">
-                  <div className="card-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                    </svg>
-                  </div>
-                  <div className="card-content">
-                    <span className="card-label">Lot Number</span>
-                    <span className="card-value">{selectedBill.lotNumber || 'N/A'}</span>
-                  </div>
+              {/* Simple Detail Rows */}
+              <div className="bill-detail-list">
+                <div className="bill-detail-row">
+                  <span className="detail-label">Resident Name</span>
+                  <span className="detail-value">{selectedBill.residentName || 'N/A'}</span>
                 </div>
-
-                <div className="admin-admin-detail-card">
-                  <div className="card-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                    </svg>
-                  </div>
-                  <div className="card-content">
-                    <span className="card-label">Block</span>
-                    <span className="card-value">{selectedBill.block || 'N/A'}</span>
-                  </div>
+                <div className="bill-detail-row">
+                  <span className="detail-label">Lot Number</span>
+                  <span className="detail-value">{selectedBill.lotNumber || 'N/A'}</span>
                 </div>
-                
-                <div className="admin-admin-detail-card">
-                  <div className="card-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                      <circle cx="12" cy="7" r="4" />
-                    </svg>
-                  </div>
-                  <div className="card-content">
-                    <span className="card-label">Resident</span>
-                    <span className="card-value">{selectedBill.residentName || 'N/A'}</span>
-                  </div>
+                <div className="bill-detail-row">
+                  <span className="detail-label">Block</span>
+                  <span className="detail-value">{selectedBill.block || 'N/A'}</span>
                 </div>
-                
-                <div className="admin-admin-detail-card">
-                  <div className="card-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                      <line x1="16" y1="2" x2="16" y2="6" />
-                      <line x1="8" y1="2" x2="8" y2="6" />
-                      <line x1="3" y1="10" x2="21" y2="10" />
-                    </svg>
-                  </div>
-                  <div className="card-content">
-                    <span className="card-label">Due Date</span>
-                    <span className="card-value">{formatDate(selectedBill.dueDate)}</span>
-                  </div>
+                <div className="bill-detail-row">
+                  <span className="detail-label">Date Issued</span>
+                  <span className="detail-value">{selectedBill.dateIssued ? formatDate(selectedBill.dateIssued) : 'N/A'}</span>
                 </div>
-                
-                <div className="admin-admin-detail-card highlight">
-                  <div className="card-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <line x1="12" y1="1" x2="12" y2="23" />
-                      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                    </svg>
-                  </div>
-                  <div className="card-content">
-                    <span className="card-label">Amount</span>
-                    <span className="card-value">{formatCurrency(selectedBill.amount)}</span>
-                  </div>
+                <div className="bill-detail-row">
+                  <span className="detail-label">Due Date</span>
+                  <span className="detail-value">{formatDate(selectedBill.dueDate)}</span>
+                </div>
+                <div className="bill-detail-row">
+                  <span className="detail-label">Billing Period</span>
+                  <span className="detail-value">{selectedBill.billingPeriod || 'N/A'}</span>
+                </div>
+                <div className="bill-detail-row">
+                  <span className="detail-label">Status</span>
+                  <span className={`detail-value status-${(selectedBill.status || 'unpaid').toLowerCase()}`}>{selectedBill.status?.charAt(0).toUpperCase() + selectedBill.status?.slice(1)}</span>
+                </div>
+                <div className="bill-detail-row total-row">
+                  <span className="detail-label">Total Amount</span>
+                  <span className="detail-value">{formatCurrency(selectedBill.amount)}</span>
                 </div>
               </div>
             </div>
             <div className="billing-admin-admin-modal-footer">
+              <button className="billing-admin-admin-btn-secondary" onClick={closeModal}>Close</button>
               {selectedBill.status !== 'Paid' && (
                 <button className="billing-admin-admin-btn-primary" onClick={() => { handleMarkAsPaid(selectedBill); closeModal(); }}>
                   Mark as Paid
                 </button>
               )}
-              <button className="billing-admin-admin-btn-secondary" onClick={closeModal}>Close</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
-      {showDeleteModal && selectedBill && (
-        <div className="billing-admin-admin-modal-overlay" onClick={closeModal}>
-          <div className="billing-admin-admin-modal delete-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="billing-admin-admin-modal-header">
-              <h2>Delete Bill</h2>
-              <button className="billing-admin-admin-modal-close" onClick={closeModal}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
-            </div>
-            <div className="admin-admin-modal-body">
-              <div className="delete-warning">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                  <line x1="12" y1="9" x2="12" y2="13" />
-                  <line x1="12" y1="17" x2="12.01" y2="17" />
-                </svg>
-                <p>Are you sure you want to delete this bill?</p>
-              </div>
-              <div className="delete-details">
-                <div className="admin-admin-detail-row">
-                  <label>Bill Reference:</label>
-                  <span>{selectedBill.billReference}</span>
-                </div>
-                <div className="admin-admin-detail-row">
-                  <label>Resident:</label>
-                  <span>{selectedBill.residentName}</span>
-                </div>
-                <div className="admin-admin-detail-row">
-                  <label>Amount:</label>
-                  <span>{formatCurrency(selectedBill.amount)}</span>
-                </div>
-              </div>
-              {formMessage && (
-                <div className={`admin-admin-form-message ${formMessage.type}`}>
-                  {formMessage.text}
-                </div>
-              )}
-            </div>
-            <div className="admin-admin-modal-footer">
-              <button className="billing-admin-admin-btn-secondary" onClick={closeModal}>Cancel</button>
-              <button className="billing-admin-admin-btn-danger" onClick={handleDelete}>Delete</button>
-            </div>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 }

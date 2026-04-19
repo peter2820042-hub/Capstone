@@ -53,9 +53,9 @@ const Dashboard = () => {
         if (billsRes.ok) {
           const billsData = await billsRes.json();
           const billsArray = Array.isArray(billsData) ? billsData : [];
-          // Filter bills with pending, unpaid, or overdue status
+          // Filter bills with pending status
           const pending = billsArray.filter(b => b.status && 
-            ['pending', 'unpaid', 'overdue'].includes(b.status.toLowerCase()));
+            b.status.toLowerCase() === 'pending');
           setPendingBills(pending);
           // Update the pending bill count in KPIs
           setKpis(prev => ({ ...prev, pendingBill: pending.length }));
@@ -188,7 +188,7 @@ const Dashboard = () => {
                     <td>{bill.billType || bill.bill_type || 'N/A'}</td>
                     <td>₱{bill.amount ? Number(bill.amount).toLocaleString('en-PH', { minimumFractionDigits: 2 }) : '0.00'}</td>
                     <td>
-                      <span className={`sta-status-badge sta-bill-${bill.status?.toLowerCase() || 'pending'}`}>{bill.status || 'Pending'}</span>
+                      <span className={`sta-status-badge ${bill.status?.toLowerCase() || 'pending'}`}>{bill.status || 'Pending'}</span>
                     </td>
                   </tr>
                 ))}

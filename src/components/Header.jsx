@@ -39,8 +39,8 @@ const Header = ({ pageName, user }) => {
     navigate('/notification');
   };
   
-  // Get profile image from localStorage or user object
-  const profileImage = localStorage.getItem('userProfileImage') || user?.profileImage || null;
+  // Get profile image from sessionStorage or user object
+  const profileImage = sessionStorage.getItem('userProfileImage') || user?.profileImage || null;
   
   return (
     <header className="header">

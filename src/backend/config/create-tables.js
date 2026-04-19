@@ -48,7 +48,7 @@ async function createTables() {
       CREATE TABLE IF NOT EXISTS residents (
         id SERIAL PRIMARY KEY,
         username VARCHAR(100) UNIQUE NOT NULL,
-        password_hash VARCHAR(255) NOT NULL,
+        passwords VARCHAR(255) NOT NULL,
         full_name VARCHAR(255) NOT NULL,
         lot_number VARCHAR(50),
         block VARCHAR(50),
@@ -171,7 +171,11 @@ async function createTables() {
         await client.query(`ALTER TABLE admins ADD COLUMN IF NOT EXISTS full_name VARCHAR(255)`);
         await client.query(`ALTER TABLE admins ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'active'`);
         await client.query(`ALTER TABLE admins ADD COLUMN IF NOT EXISTS last_login TIMESTAMP`);
-      } catch (_) { /* columns may exist */ }
+      } catch (err) { 
+        if (!err.message.includes('already exists')) {
+          console.log('⚠️ Admin column check:', err.message);
+        }
+      }
     }
 
     // Table 7b: staff (staff login accounts)
@@ -208,7 +212,11 @@ async function createTables() {
         await client.query(`ALTER TABLE staffs ADD COLUMN IF NOT EXISTS position VARCHAR(100)`);
         await client.query(`ALTER TABLE staffs ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'active'`);
         await client.query(`ALTER TABLE staffs ADD COLUMN IF NOT EXISTS last_login TIMESTAMP`);
-      } catch (_) { /* columns may exist */ }
+      } catch (err) {
+        if (!err.message.includes('already exists')) {
+          console.log('⚠️ Staff column check:', err.message);
+        }
+      }
     }
 
     // Add login columns to residents table (for homeowner login)
@@ -216,10 +224,14 @@ async function createTables() {
     console.log('📋 Adding login columns to residents table...');
     try {
       await client.query(`ALTER TABLE residents ADD COLUMN IF NOT EXISTS username VARCHAR(100) UNIQUE`);
-      await client.query(`ALTER TABLE residents ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255)`);
+      await client.query(`ALTER TABLE residents ADD COLUMN IF NOT EXISTS passwords VARCHAR(255)`);
       await client.query(`ALTER TABLE residents ADD COLUMN IF NOT EXISTS last_login TIMESTAMP`);
       console.log('✅ Login columns added to residents table');
-    } catch (_) { /* columns may exist */ }
+    } catch (err) {
+      if (!err.message.includes('already exists')) {
+        console.log('⚠️ Resident column check:', err.message);
+      }
+    }
 
     // Insert default admin account
     await client.query(`
@@ -256,7 +268,7 @@ async function createTables() {
     
     // Sample residents
     await client.query(`
-      INSERT INTO residents (username, password_hash, full_name, lot_number, block, email, phone, role, status) VALUES
+      INSERT INTO residents (username, passwords, full_name, lot_number, block, email, phone, role, status) VALUES
       ('juan101', NULL, 'Juan dela Cruz', '101', 'A', 'juan@example.com', '091234567890', 'homeowner', 'active'),
       ('maria102', NULL, 'Maria Santos', '102', 'A', 'maria@example.com', '091234567891', 'homeowner', 'active'),
       ('pedro201', NULL, 'Pedro Garcia', '201', 'B', 'pedro@example.com', '091234567892', 'homeowner', 'active'),
@@ -351,7 +363,10 @@ async function createTables() {
         await pool.end();
       }
     } catch (e) {
-      // Ignore errors when ending pool
+      // Log any errors when ending pool (non-critical)
+      if (e.message) {
+        console.log('⚠️ Pool cleanup:', e.message);
+      }
     }
   }
 }

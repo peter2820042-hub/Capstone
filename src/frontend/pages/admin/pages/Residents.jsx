@@ -5,19 +5,39 @@ function Residents() {
   const [residents, setResidents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedResident, setSelectedResident] = useState(null);
   const [formData, setFormData] = useState({
     username: '',
     password: '',
-    fullName: '',
+    full_name: '',
     email: '',
     phone: '',
     block: '',
-    lot: '',
-    role: 'Resident'
+    lot_number: '',
+    role: 'homeowner'
+  });
+  const [simpleFormData, setSimpleFormData] = useState({
+    username: '',
+    block: '',
+    lot_number: '',
+    full_name: '',
+    password: ''
   });
   const [formMessage, setFormMessage] = useState(null);
+  const [simpleMessage, setSimpleMessage] = useState(null);
+  const [toast, setToast] = useState(null);
+
+  // Auto-dismiss toast after 3 seconds
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => {
+        setToast(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   const [filters, setFilters] = useState({
     fullName: '',
@@ -105,6 +125,11 @@ function Residents() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleSimpleInputChange = (e) => {
+    const { name, value } = e.target;
+    setSimpleFormData(prev => ({ ...prev, [name]: value }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormMessage(null);
@@ -120,30 +145,90 @@ function Residents() {
 
       if (response.ok) {
         setFormMessage({ type: 'success', text: 'Resident added successfully!' });
-        setFormData({ username: '', password: '', fullName: '', email: '', phone: '', block: '', lot: '' });
+        setToast({ type: 'success', message: 'Resident added successfully!' });
+        setFormData({ username: '', password: '', full_name: '', email: '', phone: '', block: '', lot_number: '' });
         fetchResidents();
         setTimeout(() => setShowModal(false), 1500);
       } else {
-        setFormMessage({ type: 'error', text: data.message || 'Failed to add resident' });
+        setFormMessage({ type: 'error', text: data.error || data.message || 'Failed to add resident' });
+        setToast({ type: 'error', message: data.error || data.message || 'Failed to add resident' });
       }
     } catch (error) {
       console.error('Error adding resident:', error);
       setFormMessage({ type: 'error', text: 'An error occurred. Please try again.' });
+      setToast({ type: 'error', message: 'An error occurred. Please try again.' });
+    }
+  };
+
+  const handleSimpleSubmit = async (e) => {
+    e.preventDefault();
+    setSimpleMessage(null);
+
+    try {
+      const response = await fetch('/api/residents', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(simpleFormData)
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSimpleMessage({ type: 'success', text: 'Resident registered successfully!' });
+        setToast({ type: 'success', message: 'Resident registered successfully!' });
+        setSimpleFormData({ username: '', block: '', lot_number: '', full_name: '', password: '' });
+        fetchResidents();
+        setTimeout(() => setShowRegisterModal(false), 1500);
+      } else {
+        setSimpleMessage({ type: 'error', text: data.error || data.message || 'Failed to register resident' });
+        setToast({ type: 'error', message: data.error || data.message || 'Failed to register resident' });
+      }
+    } catch (error) {
+      console.error('Error registering resident:', error);
+      setSimpleMessage({ type: 'error', text: 'An error occurred. Please try again.' });
+      setToast({ type: 'error', message: 'An error occurred. Please try again.' });
     }
   };
 
   return (
     <div className="sr-container">
+      {toast && (
+        <div className={`sr-toast ${toast.type}`}>
+          {toast.type === 'success' ? (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+              <polyline points="22 4 12 14.01 9 11.01" />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+          )}
+          <span>{toast.message}</span>
+          <button className="sr-toast-close" onClick={() => setToast(null)}>×</button>
+        </div>
+      )}
       <div className="sr-header">
         <div className="sr-title">
           <p className="sr-subtitle">Manage and view all registered residents and their account information</p>
         </div>
-        <button className="sr-add-btn" onClick={() => setShowModal(true)}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M12 5v14M5 12h14" />
-          </svg>
-          Add Resident
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button className="sr-add-btn" onClick={() => setShowModal(true)}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            Add Resident
+          </button>
+          <button className="sr-add-btn" onClick={() => setShowRegisterModal(true)}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            Register
+          </button>
+
+        </div>
       </div>
 
       <div className="sr-search-filter-bar">
@@ -272,12 +357,10 @@ function Residents() {
           <thead>
             <tr>
               <th>Full Name</th>
+              <th>Block</th>
               <th>Lot</th>
-              <th>Date Registered</th>
               <th>Email</th>
               <th>Phone</th>
-              <th>Block</th>
-              <th>Role</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
@@ -295,7 +378,7 @@ function Residents() {
             ) : !initialLoadDone ? (
               <tr>
                 <td colSpan={9} className="sr-empty-row">
-                  Enter search criteria to find residents
+                  Enter criteria to search for residents
                 </td>
               </tr>
             ) : residents.length === 0 ? (
@@ -310,23 +393,17 @@ function Residents() {
                 .map((resident) => (
                   <tr key={resident.id}>
                     <td>{resident.fullName || '-'}</td>
+                    <td>{resident.block || '-'}</td>
                     <td>{resident.lotNumber || '-'}</td>
-                    <td>{resident.dateRegistered ? new Date(resident.dateRegistered).toLocaleDateString() : '-'}</td>
                     <td>{resident.email || '-'}</td>
                     <td>{resident.phone || '-'}</td>
-                    <td>{resident.block || '-'}</td>
-                    <td>
-                      <span className={`sr-role-badge role-${(resident.role || 'homeowner').toLowerCase()}`}>
-                        {resident.role || 'homeowner'}
-                      </span>
-                    </td>
                     <td>
                       <span className={`sr-status-badge status-${(resident.status || 'active').toLowerCase()}`}>
                         {resident.status || 'active'}
                       </span>
                     </td>
-                    <td className="sr-table-actions">
-                      <button className="sr-view-btn" onClick={() => { setSelectedResident(resident); setShowViewModal(true); }}>
+                    <td className="resident-tbl-actions">
+                      <button className="resident-tbl-view-btn" onClick={() => { setSelectedResident(resident); setShowViewModal(true); }}>
                         View
                       </button>
                     </td>
@@ -346,11 +423,6 @@ function Residents() {
               <button className="sr-modal-close" onClick={() => setShowModal(false)}>X</button>
             </div>
             <form className="sr-modal-form" onSubmit={handleSubmit}>
-              {formMessage && (
-                <div className={`sr-message ${formMessage.type}`}>
-                  {formMessage.text}
-                </div>
-              )}
               <div className="sr-form-row">
                 <div className="sr-form-group">
                   <label>Username <span className="required">*</span></label>
@@ -376,8 +448,8 @@ function Residents() {
                   <label>Full Name</label>
                   <input
                     type="text"
-                    name="fullName"
-                    value={formData.fullName}
+                    name="full_name"
+                    value={formData.full_name}
                     onChange={handleInputChange}
                     placeholder="Enter full name"
                   />
@@ -417,8 +489,8 @@ function Residents() {
                   <label>Lot <span className="required">*</span></label>
                   <input
                     type="text"
-                    name="lot"
-                    value={formData.lot}
+                    name="lot_number"
+                    value={formData.lot_number}
                     onChange={handleInputChange}
                     placeholder="e.g., 101"
                     required
@@ -432,6 +504,84 @@ function Residents() {
                 </button>
                 <button type="submit" className="sr-submit-btn" style={{ padding: '10px 100px', fontSize: '16px' }}>
                   Add
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showRegisterModal && (
+        <div className="sr-modal-overlay" onClick={() => setShowRegisterModal(false)}>
+          <div className="sr-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="sr-modal-header">
+              <h3 style={{ textAlign: 'center', flex: 1 }}>Register Resident</h3>
+              <button className="sr-modal-close" onClick={() => setShowRegisterModal(false)}>X</button>
+            </div>
+            <form className="sr-modal-form" onSubmit={handleSimpleSubmit}>
+              {simpleMessage && (
+                <div className={`sr-message ${simpleMessage.type}`}>
+                  {simpleMessage.text}
+                </div>
+              )}
+              <div className="sr-form-row">
+                <div className="sr-form-group">
+                  <label>Username <span className="required">*</span></label>
+                  <input
+                    type="text"
+                    name="username"
+                    value={simpleFormData.username}
+                    onChange={handleSimpleInputChange}
+                    required
+                  />
+                </div>
+                <div className="sr-form-group">
+                  <label>Block <span className="required">*</span></label>
+                  <input
+                    type="text"
+                    name="block"
+                    value={simpleFormData.block}
+                    onChange={handleSimpleInputChange}
+                    required
+                  />
+                </div>
+                <div className="sr-form-group">
+                  <label>Lot <span className="required">*</span></label>
+                  <input
+                    type="text"
+                    name="lot_number"
+                    value={simpleFormData.lot_number}
+                    onChange={handleSimpleInputChange}
+                    required
+                  />
+                </div>
+                <div className="sr-form-group">
+                  <label>Full Name <span className="required">*</span></label>
+                  <input
+                    type="text"
+                    name="full_name"
+                    value={simpleFormData.full_name}
+                    onChange={handleSimpleInputChange}
+                    required
+                  />
+                </div>
+                <div className="sr-form-group">
+                  <label>Password <span className="required">*</span></label>
+                  <input
+                    type="password"
+                    name="password"
+                    value={simpleFormData.password}
+                    onChange={handleSimpleInputChange}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="sr-modal-actions" style={{ justifyContent: 'center', gap: '20px' }}>
+                <button type="button" className="sr-cancel-btn" onClick={() => setShowRegisterModal(false)} style={{ padding: '10px 100px', fontSize: '16px' }}>
+                  Cancel
+                </button>
+                <button type="submit" className="sr-submit-btn" style={{ padding: '10px 100px', fontSize: '16px' }}>
+                  Register
                 </button>
               </div>
             </form>

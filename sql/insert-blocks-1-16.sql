@@ -1,0 +1,17 @@
+INSERT INTO residents (username, passwords, full_name, first_name, last_name, lot_number, block, phase, email, phone, role, status) VALUES
+('block1resident', 'placeholder', 'Block 1 Resident', 'Block', '1 Resident', '1', '1', 'A', 'block1@example.com', '09170000001', 'homeowner', 'active'),
+('block2resident', NULL, 'Block 2 Resident', 'Block', '2 Resident', '1', '2', 'A', 'block2@example.com', '09170000002', 'homeowner', 'active'),
+('block3resident', NULL, 'Block 3 Resident', 'Block', '3 Resident', '1', '3', 'A', 'block3@example.com', '09170000003', 'homeowner', 'active'),
+('block4resident', NULL, 'Block 4 Resident', 'Block', '4 Resident', '1', '4', 'A', 'block4@example.com', '09170000004', 'homeowner', 'active'),
+('block5resident', NULL, 'Block 5 Resident', 'Block', '5 Resident', '1', '5', 'A', 'block5@example.com', '09170000005', 'homeowner', 'active'),
+('block6resident', NULL, 'Block 6 Resident', 'Block', '6 Resident', '1', '6', 'A', 'block6@example.com', '09170000006', 'homeowner', 'active'),
+('block7resident', NULL, 'Block 7 Resident', 'Block', '7 Resident', '1', '7', 'A', 'block7@example.com', '09170000007', 'homeowner', 'active'),
+('block8resident', NULL, 'Block 8 Resident', 'Block', '8 Resident', '1', '8', 'A', 'block8@example.com', '09170000008', 'homeowner', 'active'),
+('block9resident', NULL, 'Block 9 Resident', 'Block', '9 Resident', '1', '9', 'A', 'block9@example.com', '09170000009', 'homeowner', 'active'),
+('block10resident', NULL, 'Block 10 Resident', 'Block', '10 Resident', '1', '10', 'A', 'block10@example.com', '09170000010', 'homeowner', 'active'),
+('block11resident', NULL, 'Block 11 Resident', 'Block', '11 Resident', '1', '11', 'A', 'block11@example.com', '09170000011', 'homeowner', 'active'),
+('block12resident', NULL, 'Block 12 Resident', 'Block', '12 Resident', '1', '12', 'A', 'block12@example.com', '09170000012', 'homeowner', 'active'),
+('block13resident', NULL, 'Block 13 Resident', 'Block', '13 Resident', '1', '13', 'A', 'block13@example.com', '09170000013', 'homeowner', 'active'),
+('block14resident', NULL, 'Block 14 Resident', 'Block', '14 Resident', '1', '14', 'A', 'block14@example.com', '09170000014', 'homeowner', 'active'),
+('block15resident', NULL, 'Block 15 Resident', 'Block', '15 Resident', '1', '15', 'A', 'block15@example.com', '09170000015', 'homeowner', 'active'),
+('block16resident', NULL, 'Block 16 Resident', 'Block', '16 Resident', '1', '16', 'A', 'block16@example.com', '09170000016', 'homeowner', 'active');

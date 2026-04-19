@@ -6,6 +6,15 @@ function Violations() {
   const [residents, setResidents] = useState([]);
   const [filteredResidents, setFilteredResidents] = useState([]);
 
+  // Search and filter states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+  const [filterType, setFilterType] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Add Modal - Resident search
+  const [residentSearch, setResidentSearch] = useState('');
+
   // Modal states
   const [showViewModal, setShowViewModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -60,6 +69,35 @@ function Violations() {
   const handleBlockChange = (e) => {
     const selectedBlock = e.target.value;
     setFormData(prev => ({ ...prev, block: selectedBlock, lotNumber: '', residentName: '' }));
+    setResidentSearch('');
+  };
+
+  // Handle resident search in Add Modal
+  const handleResidentSearchChange = (e) => {
+    setResidentSearch(e.target.value);
+    setFormData(prev => ({ ...prev, block: '', lotNumber: '', residentName: '' }));
+  };
+
+  // Filter residents for Add Modal based on search
+  const searchedResidents = residents.filter(resident => {
+    if (!residentSearch) return true;
+    const search = residentSearch.toLowerCase();
+    return (
+      (resident.fullName && resident.fullName.toLowerCase().includes(search)) ||
+      (resident.lotNumber && resident.lotNumber.toLowerCase().includes(search)) ||
+      (resident.block && resident.block.toLowerCase().includes(search))
+    );
+  });
+
+  // Handle selecting a resident from search results
+  const handleResidentSelect = (resident) => {
+    setFormData(prev => ({
+      ...prev,
+      block: resident.block,
+      lotNumber: resident.lotNumber,
+      residentName: resident.fullName || ''
+    }));
+    setResidentSearch('');
   };
 
   // Handle lot selection change
@@ -88,8 +126,8 @@ function Violations() {
     setSubmitting(true);
     setMessage({ type: '', text: '' });
 
-    // Get user from localStorage for authorization
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    // Get user from sessionStorage for authorization
+    const user = JSON.parse(sessionStorage.getItem('user') || '{}');
 
     try {
       const response = await fetch('/api/violations', {
@@ -104,16 +142,37 @@ function Violations() {
       const data = await response.json();
 
       if (response.ok) {
-        setMessage({ type: 'success', text: 'Violation added successfully!' });
+        // Also create a bill if there's a penalty amount
+        if (formData.penalty && parseFloat(formData.penalty) > 0) {
+          const billData = {
+            lotNumber: formData.lotNumber,
+            block: formData.block,
+            residentName: formData.residentName,
+            billType: 'Violations',
+            amount: parseFloat(formData.penalty),
+            dueDate: formData.dateIssued,
+            billingPeriod: formData.violationType,
+            status: 'pending'
+          };
+
+          await fetch('/api/bills', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(billData)
+          });
+        }
+
+        setMessage({ type: 'success', text: 'Violation added successfully! Bill created for penalty amount.' });
         setFormData({
           lotNumber: '',
           block: '',
           residentName: '',
           violationType: '',
           description: '',
-          fine: '',
-          status: 'pending'
+          penalty: '',
+          dateIssued: new Date().toISOString().split('T')[0]
         });
+        setResidentSearch('');
         fetch('/api/violations').then(res => res.json()).then(data => setViolations(data || []));
         setTimeout(() => {
           setShowAddModal(false);
@@ -155,8 +214,8 @@ function Violations() {
       return;
     }
 
-    // Get user from localStorage for authorization
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    // Get user from sessionStorage for authorization
+    const user = JSON.parse(sessionStorage.getItem('user') || '{}');
 
     try {
       const response = await fetch(`/api/violations/${id}`, {
@@ -179,8 +238,19 @@ function Violations() {
     }
   };
 
-  // Show all violations
-  const filteredViolations = violations;
+  // Filter violations based on search and filter criteria
+  const filteredViolations = violations.filter(violation => {
+    const matchesSearch = searchQuery === '' || 
+      (violation.residentName && violation.residentName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (violation.lotNumber && violation.lotNumber.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (violation.block && violation.block.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (violation.violationType && violation.violationType.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    const matchesStatus = filterStatus === '' || violation.status === filterStatus;
+    const matchesType = filterType === '' || violation.violationType === filterType;
+    
+    return matchesSearch && matchesStatus && matchesType;
+  });
 
   const formatDate = (dateString) => {
     if (!dateString) return '';
@@ -192,13 +262,13 @@ function Violations() {
   };
 
   return (
-    <div className="violations-container">
+    <div className="billing-container">
       {/* Header */}
-      <div className="violations-header">
-        <div className="header-title">
-          <p className="header-subtitle">Manage and monitor community policy infractions</p>
+      <div className="sr-header">
+        <div className="sr-title">
+          <p className="sr-subtitle">Manage and monitor community policy infractions</p>
         </div>
-        <button className="add-btn" onClick={() => setShowAddModal(true)}>
+        <button className="sr-add-btn" onClick={() => setShowAddModal(true)}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M12 5v14M5 12h14" />
           </svg>
@@ -213,11 +283,73 @@ function Violations() {
         </div>
       )}
 
-      {/* Stats - KPIs removed */}
+      {/* Search and Filter Bar */}
+      <div className="sr-search-filter-bar">
+        <div className="sr-filters-row">
+          <div className="sr-filter-group">
+            <label>Search</label>
+            <input
+              type="text"
+              placeholder="Search by name, block, lot..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <div className="sr-filter-group">
+            <label>Status</label>
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+            >
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="paid">Paid</option>
+              <option value="unpaid">Unpaid</option>
+            </select>
+          </div>
+          <div className="sr-filter-group">
+            <label>Type</label>
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+            >
+              <option value="">All Types</option>
+              {violationTypes.map(type => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div className="sr-buttons-row">
+          <button className="sr-search-btn" onClick={() => setCurrentPage(1)}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+            Search
+          </button>
+          <button
+            className="sr-reset-btn"
+            onClick={() => {
+              setSearchQuery('');
+              setFilterStatus('');
+              setFilterType('');
+            }}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+              <path d="M3 3v5h5" />
+            </svg>
+            Reset
+          </button>
+        </div>
+      </div>
 
-      {/* Table */}
-      <div className="admin-admin-table-container">
-        <table className="violations-table">
+      {/* Table Section */}
+      <section className="sr-table-section">
+        <h3 className="sr-table-title">Violations List</h3>
+        <div className="sr-table-container">
+          <table className="sr-table">
           <thead>
             <tr>
               <th>Resident Name</th>
@@ -233,8 +365,9 @@ function Violations() {
           <tbody>
             {filteredViolations.length === 0 ? (
               <tr>
-                <td colSpan="8" className="admin-admin-empty-row">
-                  </td>
+                <td colSpan={8} className="sr-empty-row">
+                  No violations found
+                </td>
               </tr>
             ) : (
               filteredViolations.map((violation) => (
@@ -246,26 +379,26 @@ function Violations() {
                   <td>{violation.fine ? `₱${parseFloat(violation.fine).toFixed(2)}` : '-'}</td>
                   <td>{formatDate(violation.dateIssued)}</td>
                   <td>
-                    <span className={`status-badge ${violation.status}`}>
+                    <span className={`sr-status-badge status-${violation.status}`}>
                       {violation.status}
                     </span>
                   </td>
                   <td>
-                    <div className="action-buttons" style={{ display: 'flex', flexDirection: 'row', gap: '8px' }}>
+                    <div className="sr-table-actions" style={{ display: 'flex', flexDirection: 'row', gap: '8px' }}>
                       <button
-                        className="view-btn"
+                        className="sr-view-btn"
                         onClick={() => handleViewViolation(violation)}
                       >
                         View
                       </button>
                       <button
-                        className="edit-btn"
+                        className="sr-edit-btn"
                         onClick={() => handleEditViolation(violation)}
                       >
                         Edit
                       </button>
                       <button
-                        className="delete-btn"
+                        className="sr-delete-btn"
                         onClick={() => handleDeleteViolation(violation.id)}
                       >
                         Delete
@@ -277,62 +410,67 @@ function Violations() {
             )}
           </tbody>
         </table>
-      </div>
+        </div>
+      </section>
 
       {/* View Modal */}
       {showViewModal && selectedViolation && (
-        <div className="admin-admin-modal-overlay" onClick={() => setShowViewModal(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="admin-admin-modal-header">
-              <h3>Violation Details</h3>
-              <button className="close-btn" onClick={() => setShowViewModal(false)}>X</button>
+        <div className="billing-admin-admin-modal-overlay" onClick={() => setShowViewModal(false)}>
+          <div className="billing-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="billing-admin-admin-modal-header">
+              <h2>Violation Details</h2>
+              <button className="billing-admin-admin-modal-close" onClick={() => setShowViewModal(false)}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
             </div>
-            <div className="admin-admin-modal-content">
-              <div className="detail-grid">
-                <div className="detail-item">
-                  <label>Lot Number</label>
-                  <span>{selectedViolation.lotNumber || '-'}</span>
+            <div className="admin-admin-modal-body">
+              <div className="bill-detail-header">
+                <h3>{selectedViolation.violationType}</h3>
+                <p className="bill-ref">Status: {selectedViolation.status}</p>
+              </div>
+
+              <div className="bill-detail-list">
+                <div className="bill-detail-row">
+                  <span className="detail-label">Resident Name</span>
+                  <span className="detail-value">{selectedViolation.residentName || 'N/A'}</span>
                 </div>
-                <div className="detail-item">
-                  <label>Block</label>
-                  <span>{selectedViolation.block || '-'}</span>
+                <div className="bill-detail-row">
+                  <span className="detail-label">Lot Number</span>
+                  <span className="detail-value">{selectedViolation.lotNumber || 'N/A'}</span>
                 </div>
-                <div className="detail-item">
-                  <label>Resident Name</label>
-                  <span>{selectedViolation.residentName || '-'}</span>
+                <div className="bill-detail-row">
+                  <span className="detail-label">Block</span>
+                  <span className="detail-value">{selectedViolation.block || 'N/A'}</span>
                 </div>
-                <div className="detail-item">
-                  <label>Violation Type</label>
-                  <span>{selectedViolation.violationType || '-'}</span>
+                <div className="bill-detail-row">
+                  <span className="detail-label">Date Issued</span>
+                  <span className="detail-value">{formatDate(selectedViolation.dateIssued)}</span>
                 </div>
-                <div className="detail-item">
-                  <label>Fine Amount</label>
-                  <span>
+                <div className="bill-detail-row">
+                  <span className="detail-label">Fine Amount</span>
+                  <span className="detail-value">
                     {selectedViolation.fine 
                       ? `₱${parseFloat(selectedViolation.fine).toFixed(2)}` 
-                      : '-'}
+                      : 'N/A'}
                   </span>
                 </div>
-                <div className="detail-item">
-                  <label>Status</label>
-                  <span className={`status-badge ${selectedViolation.status}`}>
+                <div className="bill-detail-row total-row">
+                  <span className="detail-label">Status</span>
+                  <span className={`detail-value status-${(selectedViolation.status || 'unpaid').toLowerCase()}`}>
                     {selectedViolation.status}
                   </span>
                 </div>
-                <div className="detail-item full-width">
-                  <label>Description</label>
-                  <span>{selectedViolation.description || '-'}</span>
+                <div className="bill-detail-row">
+                  <span className="detail-label">Description</span>
+                  <span className="detail-value">{selectedViolation.description || 'N/A'}</span>
                 </div>
               </div>
-
-              <div className="admin-admin-modal-actions">
-                <button
-                  className="cancel-btn"
-                  onClick={() => setShowViewModal(false)}
-                >
-                  Close
-                </button>
-              </div>
+            </div>
+            <div className="billing-admin-admin-modal-footer">
+              <button className="billing-admin-admin-btn-secondary" onClick={() => setShowViewModal(false)}>Close</button>
             </div>
           </div>
         </div>
@@ -340,61 +478,69 @@ function Violations() {
 
       {/* Edit Modal */}
       {showEditModal && selectedViolation && (
-        <div className="admin-admin-modal-overlay" onClick={() => setShowEditModal(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="admin-admin-modal-header">
-              <h3>Edit Violation</h3>
-              <button className="close-btn" onClick={() => setShowEditModal(false)}>X</button>
+        <div className="sr-modal-overlay" onClick={() => setShowEditModal(false)}>
+          <div className="sr-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="sr-modal-header">
+              <h3 style={{ textAlign: 'center', flex: 1 }}>Edit Violation</h3>
+              <button className="sr-modal-close" onClick={() => setShowEditModal(false)}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
             </div>
-            <form className="admin-admin-modal-content" onSubmit={handleSubmit} style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-              <div className="form-grid">
-                <div className="form-group">
-                  <label>Block</label>
-                  <select name="block" value={formData.block} onChange={handleBlockChange}>
+            <form onSubmit={handleSubmit} className="sr-modal-form">
+              {message.text && (
+                <div className={`admin-admin-form-message ${message.type}`}>
+                  {message.text}
+                </div>
+              )}
+
+              <div className="sr-form-row">
+                <div className="sr-form-group">
+                  <label>Block <span className="required">*</span></label>
+                  <select name="block" value={formData.block} onChange={handleBlockChange} required>
                     <option value="">Select Block</option>
-                    {uniqueBlocks.map(block => (
-                      <option key={block} value={block}>{block}</option>
-                    ))}
+                    {uniqueBlocks.map((block) => (<option key={block} value={block}>{block}</option>))}
                   </select>
                 </div>
-                <div className="form-group">
-                  <label>Lot Number</label>
-                  <select name="lotNumber" value={formData.lotNumber} onChange={handleLotChange}>
+                <div className="sr-form-group">
+                  <label>Lot Number <span className="required">*</span></label>
+                  <select name="lotNumber" value={formData.lotNumber} onChange={handleLotChange} required>
                     <option value="">Select Lot</option>
-                    {filteredResidents.map(resident => (
-                      <option key={resident.lotNumber} value={resident.lotNumber}>{resident.lotNumber}</option>
-                    ))}
+                    {filteredResidents.map((resident) => (<option key={resident.lotNumber} value={resident.lotNumber}>{resident.lotNumber}</option>))}
                   </select>
                 </div>
-                <div className="form-group">
+                <div className="sr-form-group">
                   <label>Resident Name</label>
-                  <input type="text" name="residentName" value={formData.residentName} onChange={handleChange} readOnly />
-                </div>
-                <div className="form-group">
-                  <label>Violation Type</label>
-                  <select name="violationType" value={formData.violationType} onChange={handleChange}>
-                    <option value="">Select Type</option>
-                    {violationTypes.map(type => (
-                      <option key={type} value={type}>{type}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>Fine Amount</label>
-                  <input type="number" name="penalty" value={formData.penalty} onChange={handleChange} step="0.01" />
-                </div>
-                <div className="form-group">
-                  <label>Date Issued</label>
-                  <input type="date" name="dateIssued" value={formData.dateIssued} onChange={handleChange} />
-                </div>
-                <div className="form-group full-width">
-                  <label>Description</label>
-                  <textarea name="description" value={formData.description} onChange={handleChange} rows="3" />
+                  <input type="text" name="residentName" value={formData.residentName} onChange={handleChange} readOnly placeholder="Auto-filled from lot" />
                 </div>
               </div>
-              <div className="modal-actions">
-                <button type="button" className="cancel-btn" onClick={() => setShowEditModal(false)}>Cancel</button>
-                <button type="submit" className="submit-btn" disabled={submitting}>
+
+              <div className="sr-form-row">
+                <div className="sr-form-group">
+                  <label>Violation Type <span className="required">*</span></label>
+                  <select name="violationType" value={formData.violationType} onChange={handleChange} required>
+                    <option value="">Select type</option>
+                    {violationTypes.map((type) => (<option key={type} value={type}>{type}</option>))}
+                  </select>
+                </div>
+                <div className="sr-form-group">
+                  <label>Fine Amount</label>
+                  <input type="number" name="penalty" value={formData.penalty} onChange={handleChange} min="0" step="0.01" />
+                </div>
+              </div>
+
+              <div className="sr-form-group">
+                <label>Description</label>
+                <textarea name="description" value={formData.description} onChange={handleChange} rows="3" />
+              </div>
+
+              <div className="sr-modal-actions" style={{ justifyContent: 'center', gap: '20px' }}>
+                <button type="button" className="sr-cancel-btn" onClick={() => setShowEditModal(false)} style={{ padding: '10px 100px', fontSize: '16px' }}>
+                  Cancel
+                </button>
+                <button type="submit" className="sr-submit-btn" disabled={submitting} style={{ padding: '10px 100px', fontSize: '16px' }}>
                   {submitting ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
@@ -405,65 +551,71 @@ function Violations() {
 
       {/* Add Modal */}
       {showAddModal && (
-        <div className="admin-admin-modal-overlay" onClick={() => setShowAddModal(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="admin-admin-modal-header">
-              <h3>Add New Violation</h3>
-              <button className="close-btn" onClick={() => setShowAddModal(false)}>X</button>
+        <div className="sr-modal-overlay" onClick={() => setShowAddModal(false)}>
+          <div className="sr-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="sr-modal-header">
+              <h3 style={{ textAlign: 'center', flex: 1 }}>Add New Violation</h3>
+              <button className="sr-modal-close" onClick={() => setShowAddModal(false)}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
             </div>
-            <form onSubmit={handleSubmit} className="admin-admin-modal-form" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+            <form onSubmit={handleSubmit} className="sr-modal-form">
               {message.text && (
-                <div className={`message ${message.type}`}>
+                <div className={`admin-admin-form-message ${message.type}`}>
                   {message.text}
                 </div>
               )}
 
-              <div className="admin-admin-form-row">
-                <div className="admin-admin-form-group">
-                  <label>Block *</label>
+              <div className="sr-form-row">
+                <div className="sr-form-group">
+                  <label>Block <span className="required">*</span></label>
                   <select name="block" value={formData.block} onChange={handleBlockChange} required>
                     <option value="">Select Block</option>
                     {uniqueBlocks.map((block) => (<option key={block} value={block}>{block}</option>))}
                   </select>
                 </div>
-                <div className="admin-admin-form-group">
-                  <label>Lot Number *</label>
+                <div className="sr-form-group">
+                  <label>Lot Number <span className="required">*</span></label>
                   <select name="lotNumber" value={formData.lotNumber} onChange={handleLotChange} required>
                     <option value="">Select Lot</option>
                     {filteredResidents.map((resident) => (<option key={resident.lotNumber} value={resident.lotNumber}>{resident.lotNumber}</option>))}
                   </select>
                 </div>
+                <div className="sr-form-group">
+                  <label>Resident Name</label>
+                  <input type="text" name="residentName" value={formData.residentName} onChange={handleChange} readOnly placeholder="Auto-filled from lot" />
+                </div>
               </div>
 
-              <div className="admin-admin-form-group">
-                <label>Resident Name</label>
-                <input type="text" name="residentName" value={formData.residentName} onChange={handleChange} />
+              <div className="sr-form-row">
+                <div className="sr-form-group">
+                  <label>Violation Type <span className="required">*</span></label>
+                  <select name="violationType" value={formData.violationType} onChange={handleChange} required>
+                    <option value="">Select type</option>
+                    {violationTypes.map((type) => (<option key={type} value={type}>{type}</option>))}
+                  </select>
+                </div>
+                <div className="sr-form-group">
+                  <label>Fine Amount</label>
+                  <input type="number" name="penalty" value={formData.penalty} onChange={handleChange} min="0" step="0.01" />
+                </div>
               </div>
 
-              <div className="admin-admin-form-group">
-                <label>Violation Type *</label>
-                <select name="violationType" value={formData.violationType} onChange={handleChange} required>
-                  <option value="">Select type</option>
-                  {violationTypes.map((type) => (<option key={type} value={type}>{type}</option>))}
-                </select>
-              </div>
-
-              <div className="admin-admin-form-group">
+              <div className="sr-form-group">
                 <label>Description</label>
                 <textarea name="description" value={formData.description} onChange={handleChange} rows="3" />
               </div>
 
-              <div className="admin-admin-form-group">
-                <label>Fine Amount</label>
-                <input type="number" name="penalty" value={formData.penalty} onChange={handleChange} min="0" step="0.01" />
-              </div>
-              <div className="admin-admin-form-group">
-                
-              </div>
-
-              <div className="admin-admin-modal-actions">
-                <button type="button" className="cancel-btn" onClick={() => setShowAddModal(false)}>Cancel</button>
-                <button type="submit" className="submit-btn" disabled={submitting}>{submitting ? 'Sending...' : 'Send'}</button>
+              <div className="sr-modal-actions" style={{ justifyContent: 'center', gap: '20px' }}>
+                <button type="button" className="sr-cancel-btn" onClick={() => setShowAddModal(false)} style={{ padding: '10px 100px', fontSize: '16px' }}>
+                  Cancel
+                </button>
+                <button type="submit" className="sr-submit-btn" disabled={submitting} style={{ padding: '10px 100px', fontSize: '16px' }}>
+                  {submitting ? 'Saving...' : 'Create Violation'}
+                </button>
               </div>
             </form>
           </div>

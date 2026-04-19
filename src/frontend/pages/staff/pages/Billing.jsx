@@ -1,173 +1,49 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import './Billing.css';
 
 function Billing() {
-  // Billing data
-  const [bills, setBills] = useState([]);
-  const [error, setError] = useState(null);
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // Fetch bills from API
-  useEffect(() => {
-    const fetchBills = async () => {
-      try {
-        const response = await fetch('/api/bills');
-        if (!response.ok) throw new Error('Failed to fetch bills');
-        const data = await response.json();
-        setBills(data);
-      } catch (err) {
-        setError(err.message);
-        console.error('Error fetching bills:', err);
-      }
-    };
-    fetchBills();
-  }, []);
-
-  // Filter states
+  // Search and filter states
+  const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState({
-    search: '',
-    lotNumber: '',
-    residentName: '',
-    billType: '',
-    status: ''
+    status: '',
+    billType: ''
   });
+
+  // Data states
+  const [bills, setBills] = useState([]);
+  const [residents, setResidents] = useState([]);
+
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   // Modal states
+  const [showModal, setShowModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
   const [selectedBill, setSelectedBill] = useState(null);
+  const [editingBill, setEditingBill] = useState(null);
 
-  // Form state for editing
-  const [editForm, setEditForm] = useState({
+  // Form state
+  const [formData, setFormData] = useState({
+    lotNumber: '',
+    block: '',
+    residentName: '',
+    billType: 'Monthly Dues',
     amount: '',
-    billType: '',
     dueDate: '',
-    status: ''
+    billingPeriod: '',
+    status: 'pending'
   });
+  const [formMessage, setFormMessage] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  // Bill types for filter dropdown
-  const billTypes = ['Association Dues', 'Water Bill', 'Electric Bill', 'Penalties', 'Maintenance Fee', 'Other'];
+  // Bill types with colors (matching Violations design)
+  const billTypes = ['Monthly Dues', 'Parking Fee', 'Utility Fee', 'Association Fee', 'Special Assessment', 'Violations', 'Other'];
 
-  // Calculate stats
-  const totalBilled = bills.reduce((sum, bill) => sum + bill.amount, 0);
-  const totalPaid = bills.filter(bill => bill.status === 'paid').reduce((sum, bill) => sum + bill.amount, 0);
-  const totalOutstanding = bills.filter(bill => bill.status !== 'paid').reduce((sum, bill) => sum + bill.amount, 0);
-
-  // Handle filter input change
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters(prev => ({ ...prev, [name]: value }));
-  };
-
-  // Filter bills based on all criteria
-  const filteredBills = bills.filter(bill => {
-    const matchesSearch = 
-      filters.search === '' ||
-      bill.lotNumber?.toLowerCase().includes(filters.search.toLowerCase()) ||
-      bill.residentName?.toLowerCase().includes(filters.search.toLowerCase());
-    
-    const matchesLot = filters.lotNumber === '' || bill.lotNumber?.toLowerCase().includes(filters.lotNumber.toLowerCase());
-    const matchesResident = filters.residentName === '' || bill.residentName?.toLowerCase().includes(filters.residentName.toLowerCase());
-    const matchesBillType = filters.billType === '' || bill.billType === filters.billType;
-    const matchesStatus = filters.status === '' || bill.status === filters.status;
-
-    return matchesSearch && matchesLot && matchesResident && matchesBillType && matchesStatus;
-  });
-
-  // Handle view details
-  const handleViewDetails = (bill) => {
-    setSelectedBill(bill);
-    setShowViewModal(true);
-  };
-
-  // Handle edit
-  const handleEdit = (bill) => {
-    setSelectedBill(bill);
-    setEditForm({
-      amount: bill.amount,
-      billType: bill.billType,
-      dueDate: bill.dueDate ? bill.dueDate.split('T')[0] : '',
-      status: bill.status
-    });
-    setShowEditModal(true);
-  };
-
-  // Handle edit form change
-  const handleEditFormChange = (e) => {
-    const { name, value } = e.target;
-    setEditForm(prev => ({ ...prev, [name]: value }));
-  };
-
-  // Save edited bill
-  const saveEdit = async () => {
-    try {
-      const response = await fetch(`/api/bills/${selectedBill.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          amount: parseFloat(editForm.amount),
-          billType: editForm.billType,
-          dueDate: editForm.dueDate,
-          status: editForm.status
-        })
-      });
-      
-      if (!response.ok) throw new Error('Failed to update bill');
-      
-      // Refresh bills
-      const fetchBills = async () => {
-        const res = await fetch('/api/bills');
-        const data = await res.json();
-        setBills(data);
-      };
-      fetchBills();
-      
-      setShowEditModal(false);
-    } catch (err) {
-      console.error('Error updating bill:', err);
-    }
-  };
-
-  // Clear filters
-  const clearFilters = () => {
-    setFilters({
-      search: '',
-      lotNumber: '',
-      residentName: '',
-      billType: '',
-      status: ''
-    });
-  };
-
-  // Get status badge class
-  const getStatusBadgeClass = (status) => {
-    switch (status) {
-      case 'paid':
-        return 'status-badge paid';
-      case 'unpaid':
-        return 'status-badge unpaid';
-      case 'overdue':
-        return 'status-badge overdue';
-      case 'partial':
-        return 'status-badge partial';
-      default:
-        return 'status-badge';
-    }
-  };
-
-  // Format status text
-  const formatStatus = (status) => {
-    return status?.charAt(0).toUpperCase() + status?.slice(1);
-  };
-
-  // Format date
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
+  // Bill type colors and icons
 
   // Format currency
   const formatCurrency = (amount) => {
@@ -177,300 +53,657 @@ function Billing() {
     }).format(amount);
   };
 
-  if (error) {
-    return (
-      <div className="billing-error">
-        <p>Error: {error}</p>
-      </div>
-    );
-  }
+  // Format date
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleDateString('en-PH', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  // Fetch residents
+  const fetchResidents = async () => {
+    try {
+      const response = await fetch('/api/residents');
+      const data = await response.json();
+      setResidents(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Error fetching residents:', error);
+    }
+  };
+
+  // Fetch bills
+  const fetchBills = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/bills');
+      const data = await response.json();
+      setBills(Array.isArray(data) ? data : []);
+      setError(null);
+    } catch {
+      console.error('Error fetching bills:');
+      setError('Failed to load bills');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const loadData = async () => {
+      await fetchResidents();
+      await fetchBills();
+    };
+    loadData();
+  }, []);
+
+  // Get unique blocks for filter
+  const uniqueBlocks = useMemo(() => {
+    return [...new Set(residents.map(r => r.block).filter(Boolean))];
+  }, [residents]);
+
+  // Filter residents by selected block for modal lot number dropdown
+  const filteredResidents = formData.block
+    ? residents.filter(r => r.block === formData.block)
+    : residents;
+
+  // Filtered and paginated bills
+  const filteredBills = useMemo(() => {
+    return bills.filter(bill => {
+      const matchesSearch = !searchQuery ||
+        bill.residentName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        bill.billReference?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        bill.lotNumber?.toLowerCase().includes(searchQuery.toLowerCase());
+
+      const matchesStatus = !filters.status || bill.status?.toLowerCase() === filters.status.toLowerCase();
+      const matchesBillType = !filters.billType || bill.billType === filters.billType;
+
+      return matchesSearch && matchesStatus && matchesBillType;
+    });
+  }, [bills, searchQuery, filters]);
+
+  const totalPages = Math.ceil(filteredBills.length / itemsPerPage);
+  const paginatedBills = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredBills.slice(start, start + itemsPerPage);
+  }, [filteredBills, currentPage, itemsPerPage]);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCurrentPage(1);
+  }, [searchQuery, filters]);
+
+  // Modal handlers
+  const closeModal = () => {
+    setShowModal(false);
+    setShowViewModal(false);
+    setSelectedBill(null);
+    setEditingBill(null);
+    setFormMessage(null);
+    setFormData({
+      lotNumber: '',
+      block: '',
+      residentName: '',
+      billType: 'Monthly Dues',
+      amount: '',
+      dueDate: '',
+      billingPeriod: '',
+      status: 'pending'
+    });
+  };
+
+  const openAddViolationModal = () => {
+    setEditingBill(null);
+    setFormData({
+      lotNumber: '',
+      block: '',
+      residentName: '',
+      billType: 'Violations',
+      amount: '',
+      dueDate: '',
+      billingPeriod: '',
+      status: 'pending'
+    });
+    setShowModal(true);
+    setFormMessage(null);
+  };
+
+  const openEditModal = (bill) => {
+    setEditingBill(bill);
+    setFormData({
+      lotNumber: bill.lotNumber || '',
+      block: bill.block || '',
+      residentName: bill.residentName || '',
+      billType: bill.billType || 'Monthly Dues',
+      amount: bill.amount?.toString() || '',
+      dueDate: bill.dueDate?.split('T')[0] || '',
+      billingPeriod: bill.billingPeriod || '',
+      status: bill.status?.toLowerCase() || 'unpaid'
+    });
+    setShowModal(true);
+  };
+
+  const viewBillDetails = (bill) => {
+    setSelectedBill(bill);
+    setShowViewModal(true);
+  };
+
+  // Handle block change to update lot numbers
+  const handleBlockChange = (e) => {
+    const selectedBlock = e.target.value;
+    setFormData(prev => ({
+      ...prev,
+      block: selectedBlock,
+      lotNumber: '',
+      residentName: ''
+    }));
+  };
+
+  // Handle input change
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+
+    // Auto-fill resident name when lot number changes
+    if (name === 'lotNumber') {
+      const selectedResident = residents.find(r => r.lotNumber === value && r.block === formData.block);
+      if (selectedResident) {
+        setFormData(prev => ({
+          ...prev,
+          residentName: selectedResident.fullName || selectedResident.name || ''
+        }));
+      }
+    }
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setFormMessage(null);
+
+    const billData = {
+      ...formData,
+      amount: parseFloat(formData.amount),
+      status: formData.status.toLowerCase()
+    };
+
+    try {
+      const url = editingBill ? `/api/bills/${editingBill.id}` : '/api/bills';
+      const method = editingBill ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(billData)
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setFormMessage({ type: 'success', text: editingBill ? 'Bill updated successfully!' : 'Bill created successfully!' });
+        setTimeout(() => {
+          closeModal();
+          fetchBills();
+        }, 1500);
+      } else {
+        setFormMessage({ type: 'error', text: result.error || 'Failed to save bill' });
+      }
+    } catch (error) {
+      console.error('Error saving bill:', error);
+      setFormMessage({ type: 'error', text: 'Failed to save bill' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Handle mark as paid
+  const handleMarkAsPaid = async (bill) => {
+    try {
+      const response = await fetch(`/api/bills/${bill.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'paid' })
+      });
+
+      if (response.ok) {
+        fetchBills();
+      }
+    } catch (error) {
+      console.error('Error marking bill as paid:', error);
+    }
+  };
+
+  // Handle delete
+  const handleDelete = async (id) => {
+    try {
+      const response = await fetch(`/api/bills/${id}`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        fetchBills();
+      }
+    } catch (error) {
+      console.error('Error deleting bill:', error);
+    }
+  };
 
   return (
     <div className="billing-container">
-      {/* DELETED: Stats Cards Section */}
-      <div className="stats-section">
-        <div className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-icon total-billed">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-                <line x1="16" y1="13" x2="8" y2="13" />
-                <line x1="16" y1="17" x2="8" y2="17" />
-              </svg>
-            </div>
-            <div className="stat-content">
-              <span className="stat-label">Total Billed</span>
-              <span className="stat-value">{formatCurrency(totalBilled)}</span>
-            </div>
-          </div>
+      {/* Page Header */}
+      <div className="sr-header">
+        <div className="sr-title">
+          <p className="sr-subtitle">Manage resident bills, payments, and financial records</p>
+        </div>
+        <button className="sr-add-btn" onClick={openAddViolationModal}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          Create Bill
+        </button>
+      </div>
 
-          <div className="stat-card">
-            <div className="stat-icon total-paid">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                <polyline points="22 4 12 14.01 9 11.01" />
-              </svg>
-            </div>
-            <div className="stat-content">
-              <span className="stat-label">Total Paid</span>
-              <span className="stat-value">{formatCurrency(totalPaid)}</span>
-            </div>
-          </div>
+      {/* Error State */}
+      {error && (
+        <div className="error-state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="15" y1="9" x2="9" y2="15"/>
+            <line x1="9" y1="9" x2="15" y2="15"/>
+          </svg>
+          <p>{error}</p>
+          <button onClick={fetchBills}>Try Again</button>
+        </div>
+      )}
 
-          <div className="stat-card">
-            <div className="stat-icon total-outstanding">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="8" x2="12" y2="12" />
-                <line x1="12" y1="16" x2="12.01" y2="16" />
-              </svg>
-            </div>
-            <div className="stat-content">
-              <span className="stat-label">Outstanding</span>
-              <span className="stat-value">{formatCurrency(totalOutstanding)}</span>
-            </div>
+      {/* Search and Filter Bar */}
+      <div className="sr-search-filter-bar">
+        <div className="sr-filters-row">
+          <div className="sr-filter-group">
+            <label>Search</label>
+            <input
+              type="text"
+              placeholder="Search by resident name, bill reference, or lot number..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
+          <div className="sr-filter-group">
+            <label>Status</label>
+            <select
+              value={filters.status}
+              onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+            >
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="paid">Paid</option>
+            </select>
+          </div>
+          <div className="sr-filter-group">
+            <label>Type</label>
+            <select
+              value={filters.billType}
+              onChange={(e) => setFilters(prev => ({ ...prev, billType: e.target.value }))}
+            >
+              <option value="">All Types</option>
+              {billTypes.map(type => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+          </div>
+        </div>
 
+        <div className="sr-buttons-row">
+          <button className="sr-search-btn" onClick={() => setCurrentPage(1)}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+            Search
+          </button>
+          <button
+            className="sr-reset-btn"
+            onClick={() => {
+              setSearchQuery('');
+              setFilters({ status: '', billType: '' });
+            }}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+              <path d="M3 3v5h5" />
+            </svg>
+            Reset
+          </button>
         </div>
       </div>
 
-      {/* Search/Filter - Horizontal Layout */}
-      <div className="search-filter-bar">
-        <div className="filter-group">
-          <label>Search</label>
-          <input
-            type="text"
-            name="search"
-            placeholder="Search lot number or resident name..."
-            value={filters.search}
-            onChange={handleFilterChange}
-          />
-        </div>
-        <div className="filter-group">
-          <label>Lot Number</label>
-          <input
-            type="text"
-            name="lotNumber"
-            placeholder="Filter by lot number..."
-            value={filters.lotNumber}
-            onChange={handleFilterChange}
-          />
-        </div>
-        <div className="filter-group">
-          <label>Resident Name</label>
-          <input
-            type="text"
-            name="residentName"
-            placeholder="Filter by resident name..."
-            value={filters.residentName}
-            onChange={handleFilterChange}
-          />
-        </div>
-        <div className="filter-group">
-          <label>Bill Type</label>
-          <select
-            name="billType"
-            value={filters.billType}
-            onChange={handleFilterChange}
-          >
-            <option value="">All Types</option>
-            {billTypes.map((type, index) => (
-              <option key={index} value={type}>{type}</option>
-            ))}
-          </select>
-        </div>
-        <div className="filter-group">
-          <label>Status</label>
-          <select
-            name="status"
-            value={filters.status}
-            onChange={handleFilterChange}
-          >
-            <option value="">All Statuses</option>
-            <option value="paid">Paid</option>
-            <option value="unpaid">Unpaid</option>
-            <option value="overdue">Overdue</option>
-            <option value="partial">Partial</option>
-          </select>
-        </div>
-        <button className="clear-btn" onClick={clearFilters}>Clear</button>
-      </div>
-
-      {/* Table */}
-      <div className="table-container">
-        <table className="billing-table">
-          <thead>
-            <tr>
-              <th>Lot Number</th>
-              <th>Resident Name</th>
-              <th>Bill Type</th>
-              <th>Amount</th>
-              <th>Due Date</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(() => {
-              if (filteredBills.length === 0) {
-                return (
-                  <tr>
-                    <td colSpan="7" className="empty-row">
-                      {(filters.search || filters.lotNumber || filters.residentName || filters.billType || filters.status)
-                        ? 'No bills found matching your search' 
-                        : 'No bills logged yet'}
-                    </td>
-                  </tr>
-                );
-              }
-              
-              return filteredBills.map((bill) => (
-                <tr key={bill.id}>
-                  <td>{bill.lotNumber || '-'}</td>
-                  <td>{bill.residentName || '-'}</td>
-                  <td>{bill.billType || '-'}</td>
-                  <td>{formatCurrency(bill.amount)}</td>
-                  <td>{formatDate(bill.dueDate)}</td>
-                  <td>
-                    <span className={getStatusBadgeClass(bill.status)}>
-                      {formatStatus(bill.status)}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="action-buttons">
-                      <button className="view-btn" onClick={() => handleViewDetails(bill)}>View</button>
-                      <button className="edit-btn" onClick={() => handleEdit(bill)}>Edit</button>
+      {/* Table Section */}
+      <section className="sr-table-section">
+        <h3 className="sr-table-title">Billing List</h3>
+        <div className="sr-table-container">
+          <table className="sr-table">
+            <thead>
+              <tr>
+                <th>Resident Name</th>
+                <th>Bill Type</th>
+                <th>Amount</th>
+                <th>Date Issued</th>
+                <th>Due Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="sr-loading-cell">
+                    <div className="sr-loading-state">
+                      <div className="sr-spinner"></div>
+                      <span>Loading bills...</span>
                     </div>
                   </td>
                 </tr>
-              ));
-            })()}
-          </tbody>
-        </table>
-      </div>
+              ) : paginatedBills.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="sr-empty-row">
+                    No bills found
+                  </td>
+                </tr>
+              ) : (
+                paginatedBills.map(bill => {
+                  return (
+                    <tr key={bill.id}>
+                      <td>{bill.residentName || '-'}</td>
+                      <td>
+                        <span className={`sr-bill-type-badge ${bill.billType.toLowerCase().replace(' ', '-')}`}>
+                          {bill.billType}
+                        </span>
+                      </td>
+                      <td className="amount">{formatCurrency(bill.amount)}</td>
+                      <td className="date-issued">{bill.dateIssued ? formatDate(bill.dateIssued) : '-'}</td>
+                      <td className="due-date">{formatDate(bill.dueDate)}</td>
+                      <td>
+                        <span className={`sr-status-badge status-${(bill.status || 'unpaid').toLowerCase()}`}>
+                          {bill.status?.charAt(0).toUpperCase() + bill.status?.slice(1)}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="sr-table-actions">
+                          <button className="sr-view-btn" onClick={() => viewBillDetails(bill)}>View</button>
+                          <button className="sr-edit-btn" onClick={() => openEditModal(bill)}>Edit</button>
+                          <button className="sr-delete-btn" onClick={() => handleDelete(bill.id)}>Delete</button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-      {/* View Modal */}
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="billing-admin-admin-pagination">
+          <button className="admin-admin-admin-admin-pagination-btn" onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="11 17 6 12 11 7" />
+              <polyline points="18 17 13 12 18 7" />
+            </svg>
+          </button>
+          <button className="admin-admin-admin-admin-pagination-btn" onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
+
+          <div className="billing-admin-admin-admin-admin-pagination-info">
+            Page {currentPage} of {totalPages}
+          </div>
+
+          <button className="admin-admin-admin-admin-pagination-btn" onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === totalPages}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </button>
+          <button className="admin-admin-admin-admin-pagination-btn" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="13 17 18 12 13 7" />
+              <polyline points="6 17 11 12 6 7" />
+            </svg>
+          </button>
+
+          <select
+            className="items-per-page"
+            value={itemsPerPage}
+            onChange={(e) => {
+              setItemsPerPage(Number(e.target.value));
+              setCurrentPage(1);
+            }}
+          >
+            <option value={10}>10 / page</option>
+            <option value={25}>25 / page</option>
+            <option value={50}>50 / page</option>
+          </select>
+        </div>
+      )}
+
+      {/* Create/Edit Modal */}
+      {showModal && (
+        <div className="sr-modal-overlay" onClick={closeModal}>
+          <div className="sr-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="sr-modal-header">
+              <h3 style={{ textAlign: 'center', flex: 1 }}>{editingBill ? 'Edit Bill' : 'Create New Bill'}</h3>
+              <button className="sr-modal-close" onClick={closeModal}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+            <form onSubmit={handleSubmit}>
+              <div className="sr-modal-form">
+                {formMessage && (
+                  <div className={`admin-admin-form-message ${formMessage.type}`}>
+                    {formMessage.text}
+                  </div>
+                )}
+
+                <div className="sr-form-row">
+                  <div className="sr-form-group">
+                    <label>Block <span className="required">*</span></label>
+                    <select
+                      name="block"
+                      value={formData.block}
+                      onChange={handleBlockChange}
+                      required
+                    >
+                      <option value="">Select Block</option>
+                      {uniqueBlocks.map(block => (
+                        <option key={block} value={block}>{block}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="sr-form-group">
+                    <label>Lot Number <span className="required">*</span></label>
+                    <select
+                      name="lotNumber"
+                      value={formData.lotNumber}
+                      onChange={handleInputChange}
+                      required
+                    >
+                      <option value="">Select Lot Number</option>
+                      {filteredResidents.map(resident => (
+                        <option key={resident.id} value={resident.lotNumber}>
+                          {resident.lotNumber}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="sr-form-group">
+                    <label>Resident Name</label>
+                    <input
+                      type="text"
+                      name="residentName"
+                      value={formData.residentName}
+                      readOnly
+                      placeholder="Auto-filled from lot"
+                    />
+                  </div>
+
+                  <div className="sr-form-group">
+                    <label>Bill Type <span className="required">*</span></label>
+                    <select
+                      name="billType"
+                      value={formData.billType}
+                      onChange={handleInputChange}
+                      required
+                    >
+                      {billTypes.map(type => (
+                        <option key={type} value={type}>{type}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="sr-form-group">
+                    <label>Amount <span className="required">*</span></label>
+                    <input
+                      type="number"
+                      name="amount"
+                      value={formData.amount}
+                      onChange={handleInputChange}
+                      placeholder="0.00"
+                      step="0.01"
+                      min="0"
+                      required
+                    />
+                  </div>
+
+                  <div className="sr-form-group">
+                    <label>Due Date <span className="required">*</span></label>
+                    <input
+                      type="date"
+                      name="dueDate"
+                      value={formData.dueDate}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+
+                  <div className="sr-form-group">
+                    <label>Billing Period</label>
+                    <input
+                      type="text"
+                      name="billingPeriod"
+                      value={formData.billingPeriod}
+                      onChange={handleInputChange}
+                      placeholder="e.g., January 2024"
+                    />
+                  </div>
+
+                  <div className="sr-form-group">
+                    <label>Status <span className="required">*</span></label>
+                    <select
+                      name="status"
+                      value={formData.status}
+                      onChange={handleInputChange}
+                      required
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="paid">Paid</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="sr-modal-actions" style={{ justifyContent: 'center', gap: '20px' }}>
+                  <button type="button" className="sr-cancel-btn" onClick={closeModal} style={{ padding: '10px 100px', fontSize: '16px' }}>
+                    Cancel
+                  </button>
+                  <button type="submit" className="sr-submit-btn" disabled={submitting} style={{ padding: '10px 100px', fontSize: '16px' }}>
+                    {submitting ? 'Saving...' : (editingBill ? 'Update Bill' : 'Create Bill')}
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* View Details Modal */}
       {showViewModal && selectedBill && (
-        <div className="modal-overlay" onClick={() => setShowViewModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
+        <div className="billing-admin-admin-modal-overlay" onClick={closeModal}>
+          <div className="billing-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="billing-admin-admin-modal-header">
               <h2>Bill Details</h2>
-              <button className="modal-close" onClick={() => setShowViewModal(false)}>×</button>
+              <button className="billing-admin-admin-modal-close" onClick={closeModal}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
             </div>
-            <div className="modal-body">
-              <div className="detail-row">
-                <span className="detail-label">Lot Number:</span>
-                <span className="detail-value">{selectedBill.lotNumber || '-'}</span>
+            <div className="admin-admin-modal-body">
+              {/* Simple Bill Info */}
+              <div className="bill-detail-header">
+                <h3>{selectedBill.billType}</h3>
+                <p className="bill-ref">Reference: {selectedBill.billReference}</p>
               </div>
-              <div className="detail-row">
-                <span className="detail-label">Resident Name:</span>
-                <span className="detail-value">{selectedBill.residentName || '-'}</span>
-              </div>
-              <div className="detail-row">
-                <span className="detail-label">Bill Reference:</span>
-                <span className="detail-value">{selectedBill.billReference || '-'}</span>
-              </div>
-              <div className="detail-row">
-                <span className="detail-label">Bill Type:</span>
-                <span className="detail-value">{selectedBill.billType || '-'}</span>
-              </div>
-              <div className="detail-row">
-                <span className="detail-label">Amount:</span>
-                <span className="detail-value">{formatCurrency(selectedBill.amount)}</span>
-              </div>
-              <div className="detail-row">
-                <span className="detail-label">Due Date:</span>
-                <span className="detail-value">{formatDate(selectedBill.dueDate)}</span>
-              </div>
-              <div className="detail-row">
-                <span className="detail-label">Status:</span>
-                <span className={getStatusBadgeClass(selectedBill.status)}>
-                  {formatStatus(selectedBill.status)}
-                </span>
-              </div>
-              {selectedBill.paidDate && (
-                <div className="detail-row">
-                  <span className="detail-label">Paid Date:</span>
-                  <span className="detail-value">{formatDate(selectedBill.paidDate)}</span>
+
+              {/* Simple Detail Rows */}
+              <div className="bill-detail-list">
+                <div className="bill-detail-row">
+                  <span className="detail-label">Resident Name</span>
+                  <span className="detail-value">{selectedBill.residentName || 'N/A'}</span>
                 </div>
-              )}
-              {selectedBill.notes && (
-                <div className="detail-row">
-                  <span className="detail-label">Notes:</span>
-                  <span className="detail-value">{selectedBill.notes}</span>
+                <div className="bill-detail-row">
+                  <span className="detail-label">Lot Number</span>
+                  <span className="detail-value">{selectedBill.lotNumber || 'N/A'}</span>
                 </div>
-              )}
+                <div className="bill-detail-row">
+                  <span className="detail-label">Block</span>
+                  <span className="detail-value">{selectedBill.block || 'N/A'}</span>
+                </div>
+                <div className="bill-detail-row">
+                  <span className="detail-label">Date Issued</span>
+                  <span className="detail-value">{selectedBill.dateIssued ? formatDate(selectedBill.dateIssued) : 'N/A'}</span>
+                </div>
+                <div className="bill-detail-row">
+                  <span className="detail-label">Due Date</span>
+                  <span className="detail-value">{formatDate(selectedBill.dueDate)}</span>
+                </div>
+                <div className="bill-detail-row">
+                  <span className="detail-label">Billing Period</span>
+                  <span className="detail-value">{selectedBill.billingPeriod || 'N/A'}</span>
+                </div>
+                <div className="bill-detail-row">
+                  <span className="detail-label">Status</span>
+                  <span className={`detail-value status-${(selectedBill.status || 'unpaid').toLowerCase()}`}>{selectedBill.status?.charAt(0).toUpperCase() + selectedBill.status?.slice(1)}</span>
+                </div>
+                <div className="bill-detail-row total-row">
+                  <span className="detail-label">Total Amount</span>
+                  <span className="detail-value">{formatCurrency(selectedBill.amount)}</span>
+                </div>
+              </div>
             </div>
-            <div className="modal-footer">
-              <button className="modal-btn cancel" onClick={() => setShowViewModal(false)}>Close</button>
+            <div className="billing-admin-admin-modal-footer">
+              <button className="billing-admin-admin-btn-secondary" onClick={closeModal}>Close</button>
+              {selectedBill.status !== 'Paid' && (
+                <button className="billing-admin-admin-btn-primary" onClick={() => { handleMarkAsPaid(selectedBill); closeModal(); }}>
+                  Mark as Paid
+                </button>
+              )}
             </div>
           </div>
         </div>
       )}
 
-      {/* Edit Modal */}
-      {showEditModal && selectedBill && (
-        <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Edit Bill</h2>
-              <button className="modal-close" onClick={() => setShowEditModal(false)}>×</button>
-            </div>
-            <div className="modal-body">
-              <div className="form-group">
-                <label>Amount</label>
-                <input
-                  type="number"
-                  name="amount"
-                  value={editForm.amount}
-                  onChange={handleEditFormChange}
-                  step="0.01"
-                  min="0"
-                />
-              </div>
-              <div className="form-group">
-                <label>Bill Type</label>
-                <select
-                  name="billType"
-                  value={editForm.billType}
-                  onChange={handleEditFormChange}
-                >
-                  {billTypes.map((type, index) => (
-                    <option key={index} value={type}>{type}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Due Date</label>
-                <input
-                  type="date"
-                  name="dueDate"
-                  value={editForm.dueDate}
-                  onChange={handleEditFormChange}
-                />
-              </div>
-              <div className="form-group">
-                <label>Status</label>
-                <select
-                  name="status"
-                  value={editForm.status}
-                  onChange={handleEditFormChange}
-                >
-                  <option value="unpaid">Unpaid</option>
-                  <option value="paid">Paid</option>
-                  <option value="overdue">Overdue</option>
-                  <option value="partial">Partial</option>
-                </select>
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button className="modal-btn cancel" onClick={() => setShowEditModal(false)}>Cancel</button>
-              <button className="modal-btn save" onClick={saveEdit}>Save Changes</button>
-            </div>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 }

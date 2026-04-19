@@ -6,8 +6,9 @@ const RegistrationForm = () => {
     username: '',
     password: '',
     role: 'homeowner', // Default to homeowner for staff registrations
+    full_name: '',
     block: '',
-    lot: ''
+    lot_number: ''
   });
 
   const handleChange = (e) => {
@@ -40,7 +41,7 @@ const RegistrationForm = () => {
       
       if (response.ok) {
         alert('Registration successful!');
-        setFormData({ username: '', password: '', role: 'homeowner', block: '', lot: '' });
+        setFormData({ username: '', password: '', role: 'homeowner', block: '', lot_number: '' });
       } else {
         alert(data.error || 'Registration failed');
       }
@@ -95,6 +96,19 @@ const RegistrationForm = () => {
           </select>
         </div>
 
+        {/* Full Name - Required for homeowners */}
+        <div className="input-group">
+          <label>Full Name</label>
+          <input
+            type="text"
+            name="full_name"
+            value={formData.full_name}
+            onChange={handleChange}
+            placeholder="Enter full name"
+            required
+          />
+        </div>
+
         {/* Block and Lot - Required for homeowners */}
         <div className="form-row animate-fade-in">
           <div className="input-group">
@@ -112,8 +126,8 @@ const RegistrationForm = () => {
             <label>Lot</label>
             <input
               type="text"
-              name="lot"
-              value={formData.lot}
+              name="lot_number"
+              value={formData.lot_number}
               onChange={handleChange}
               placeholder="Lot"
               required

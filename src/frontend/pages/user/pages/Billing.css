@@ -222,8 +222,7 @@
 }
 
 .status-badge.overdue {
-  background: #fee2e2;
-  color: #dc2626;
+  display: none;
 }
 
 .view-btn {

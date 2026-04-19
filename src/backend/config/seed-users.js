@@ -16,13 +16,13 @@ async function seedUsers() {
     // Create only 2 resident accounts
     // Resident 1: Block 1, Lot 1
     await client.query(`
-      INSERT INTO residents (username, password_hash, full_name, lot_number, block, phase, email, phone, role, status)
+      INSERT INTO residents (username, passwords, full_name, lot_number, block, phase, email, phone, role, status)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     `, ['resident_1', userPassword, 'Juan Dela Cruz', '1', '1', '1', 'juan@email.com', '09123456789', 'homeowner', 'active']);
     
     // Resident 2: Block 1, Lot 2
     await client.query(`
-      INSERT INTO residents (username, password_hash, full_name, lot_number, block, phase, email, phone, role, status)
+      INSERT INTO residents (username, passwords, full_name, lot_number, block, phase, email, phone, role, status)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     `, ['resident_2', userPassword, 'Maria Santos', '2', '1', '1', 'maria@email.com', '09123456790', 'homeowner', 'active']);
     

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './Sidebar.css';
 import logo from '../../../../assets/logo.png';
-import { DashboardIcon, GisIcon, ResidentIcon, BillingIcon, PaymentsIcon, ViolationsIcon, ReportsIcon, AuditLogsIcon, ProfileIcon, PlusIcon, CloseIcon, FileIcon, UsersIcon, HomeIcon, MoneyIcon, CheckCircleIcon, WarningIcon, InfoIcon, TrashIcon, SearchIcon, EditIcon, CalendarIcon, CheckIcon, DownloadIcon, UploadIcon, ChevronLeftIcon, ChevronRightIcon, MenuIcon as MenuIconComponent } from '../../../../components/Icons';
+import { DashboardIcon, GisIcon, ResidentIcon, BillingIcon, PaymentsIcon, ViolationsIcon, ReportsIcon, AuditLogsIcon, ProfileIcon, UsersIcon, HomeIcon, MoneyIcon, CheckCircleIcon, WarningIcon, InfoIcon, TrashIcon, SearchIcon, EditIcon, CalendarIcon, CheckIcon, DownloadIcon, UploadIcon, ChevronLeftIcon, ChevronRightIcon, MenuIcon as MenuIconComponent } from '../../../../components/Icons';
 
 const Sidebar = ({ onLogout, isDropdown = false }) => {
   const navigate = useNavigate();
@@ -16,12 +16,12 @@ const Sidebar = ({ onLogout, isDropdown = false }) => {
       icon: <DashboardIcon />
     },
     { 
-      label: "GIS MAP", 
+      label: "GIS", 
       path: "/gis",
       icon: <GisIcon />
     },
     { 
-      label: "RESIDENT", 
+      label: "RESIDENTs", 
       path: "/residents",
       icon: <ResidentIcon />
     },

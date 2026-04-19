@@ -10,7 +10,10 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM bills ORDER BY id DESC');
-    // Map to frontend format
+    console.log('GET /api/bills returned:', result.rows.length, 'rows');
+    if (result.rows.length > 0) {
+      console.log('Sample bill:', result.rows[0]);
+    }
     const mapped = result.rows.map(b => ({
       id: b.id,
       billReference: b.bill_reference || `BILL-${b.id.toString().padStart(4, '0')}`,
@@ -20,6 +23,7 @@ router.get('/', async (req, res) => {
       billType: b.bill_type,
       billingPeriod: b.billing_period || 'N/A',
       amount: parseFloat(b.amount),
+      dateIssued: b.date_issued,
       dueDate: b.due_date,
       status: b.status,
       datePaid: b.date_paid || null,
@@ -93,21 +97,50 @@ router.get('/user/:lotNumber/unpaid', async (req, res) => {
 // ============ CREATE BILL ============
 router.post('/', async (req, res) => {
   // Handle both camelCase (frontend) and snake_case (server) formats
-  const { lot_number, block, resident_name, bill_type, amount, due_date, status, billing_period,
+  const { lot_number, block, resident_name, bill_type, amount, due_date, dueDate, status, billing_period,
         lotNumber, residentName, billType, billingPeriod } = req.body;
+
+  console.log('POST /api/bills received:', JSON.stringify(req.body, null, 2));
+  console.log('Field extraction:', { lot_number, block, resident_name, bill_type, amount, due_date, dueDate, status, billing_period,
+        lotNumber, residentName, billType, billingPeriod });
 
   // Normalize field names
   const normalizedLotNumber = lot_number || lotNumber;
   const normalizedResidentName = resident_name || residentName;
   const normalizedBillType = bill_type || billType;
   const normalizedBillingPeriod = billing_period || billingPeriod || 'N/A';
+  const normalizedDueDate = due_date || dueDate;
   
   try {
+    // Validate required fields
+    if (!normalizedLotNumber) {
+      console.log('ERROR: lot_number is missing');
+      return res.status(400).json({ error: 'Lot number is required' });
+    }
+    if (!block) {
+      console.log('ERROR: block is missing');
+      return res.status(400).json({ error: 'Block is required' });
+    }
+    if (!amount) {
+      console.log('ERROR: amount is missing');
+      return res.status(400).json({ error: 'Amount is required' });
+    }
+
+    console.log('All validations passed, proceeding with insert');
+    
+    // Convert due_date to proper format for PostgreSQL
+    console.log('Raw due_date from req.body:', normalizedDueDate);
+    const dueDateValue = normalizedDueDate ? new Date(normalizedDueDate).toISOString().split('T')[0] : null;
+    console.log('Converted dueDateValue:', dueDateValue);
+    console.log('Insert params:', [normalizedLotNumber, block, normalizedResidentName, normalizedBillType, normalizedBillingPeriod, amount, dueDateValue, status || 'pending']);
+    
     const result = await pool.query(
-      `INSERT INTO bills (lot_number, block, resident_name, bill_type, billing_period, amount, due_date, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
-      [normalizedLotNumber, block, normalizedResidentName, normalizedBillType, normalizedBillingPeriod, amount, due_date, status || 'unpaid']
+      `INSERT INTO bills (lot_number, block, resident_name, bill_type, billing_period, amount, date_issued, due_date, status)
+       VALUES ($1, $2, $3, $4, $5, $6, CURRENT_DATE, $7, $8) RETURNING *`,
+      [normalizedLotNumber, block, normalizedResidentName, normalizedBillType, normalizedBillingPeriod, amount, dueDateValue, status || 'pending']
     );
+    console.log('Insert result:', result.rows[0]);
+    console.log('Returning bill with id:', result.rows[0].id);
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Error creating bill:', error);
@@ -117,13 +150,14 @@ router.post('/', async (req, res) => {
 
 // ============ UPDATE BILL ============
 router.put('/:id', async (req, res) => {
-  const { lot_number, block, resident_name, bill_type, amount, due_date, status } = req.body;
+  const { lot_number, block, resident_name, bill_type, amount, due_date, dueDate, status } = req.body;
   
   try {
+    const normalizedDueDate = due_date || dueDate;
     const result = await pool.query(
       `UPDATE bills SET lot_number = $1, block = $2, resident_name = $3, bill_type = $4, amount = $5, due_date = $6, status = $7, updated_at = CURRENT_TIMESTAMP 
        WHERE id = $8 RETURNING *`,
-      [lot_number, block, resident_name, bill_type, amount, due_date, status, req.params.id]
+      [lot_number, block, resident_name, bill_type, amount, normalizedDueDate, status, req.params.id]
     );
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Bill not found' });

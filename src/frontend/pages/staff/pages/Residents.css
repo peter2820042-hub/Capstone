@@ -1,5 +1,70 @@
 /* Staff Residents Page Styles - Unique */
 
+/* Toast Notification Styles */
+.sr-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 9999;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  animation: slideIn 0.3s ease;
+}
+
+.sr-toast.success {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+.sr-toast.error {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.sr-toast svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.sr-toast span {
+  flex: 1;
+}
+
+.sr-toast-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  opacity: 0.7;
+}
+
+.sr-toast-close:hover {
+  opacity: 1;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
 /* Container */
 .sr-container {
   padding: 24px;
@@ -282,7 +347,7 @@
 
 .sr-table th {
   padding: 20px 16px;
-  text-align: left;
+  text-align: center !important;
   font-weight: 600;
   color: #ffffff;
   text-transform: uppercase;
@@ -296,6 +361,8 @@
   border-bottom: 1px solid #e5e7eb;
   color: #374151;
   font-size: 15px;
+  text-align: center !important;
+  vertical-align: middle;
 }
 
 .sr-table tbody tr {
@@ -313,7 +380,7 @@
 
 .sr-table th {
   padding: 20px 16px;
-  text-align: left;
+  text-align: center;
   font-weight: 600;
   color: #ffffff;
   text-transform: uppercase;
@@ -327,6 +394,8 @@
   border-bottom: 1px solid #e5e7eb;
   color: #374151;
   font-size: 15px;
+  text-align: center;
+  vertical-align: middle;
 }
 
 .sr-table tbody tr {
@@ -375,42 +444,49 @@
   font-weight: 600;
 }
 
+/* Resident Actions Column */
+.resident-tbl-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px;
+  vertical-align: middle;
+  text-align: center;
+  width: 100%;
+}
+
+.resident-tbl-view-btn {
+  padding: 6px 14px;
+  background: #3b82f6;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  min-height: 28px;
+}
+
+.resident-tbl-view-btn:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+}
+
+.resident-tbl-view-btn:active {
+  transform: translateY(0);
+}
+
 /* Actions Column */
 .sr-actions {
   display: flex;
   gap: 8px;
-}
-
-.sr-view-btn {
-  padding: 6px 12px;
-  border: none;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  background: #dbeafe;
-  color: #1d4ed8;
-}
-
-.sr-view-btn:hover {
-  background: #bfdbfe;
-}
-
-.sr-view-btn {
-  padding: 6px 12px;
-  border: none;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  background: #dbeafe;
-  color: #1d4ed8;
-}
-
-.sr-view-btn:hover {
-  background: #bfdbfe;
 }
 
 /* Role Badge */

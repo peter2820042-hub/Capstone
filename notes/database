@@ -1,0 +1,42 @@
+## Residents Table Structure
+
+Here's the complete schema for the `residents` table in the Sentrina database:
+
+### Table Definition (sql/01-create-tables.sql:37)
+
+| Column | Type | Constraints | Default |
+|--------|------|-------------|---------|
+| `id` | SERIAL | PRIMARY KEY | Auto-increment |
+| `username` | VARCHAR(100) | UNIQUE, NOT NULL | - |
+| `password_hash` | VARCHAR(255) | NULL allowed | - |
+| `full_name` | VARCHAR(255) | NOT NULL | - |
+| `lot_number` | VARCHAR(50) | NULL allowed | - |
+| `block` | VARCHAR(50) | NULL allowed | - |
+| `email` | VARCHAR(255) | NULL allowed | - |
+| `phone` | VARCHAR(50) | NULL allowed | - |
+| `profile_image` | TEXT | NULL allowed | - |
+| `role` | VARCHAR(50) | - | 'homeowner' |
+| `status` | VARCHAR(50) | - | 'active' |
+| `date_registered` | DATE | - | CURRENT_DATE |
+| `last_login` | TIMESTAMP | NULL allowed | - |
+| `created_at` | TIMESTAMP | - | CURRENT_TIMESTAMP |
+| `updated_at` | TIMESTAMP | - | CURRENT_TIMESTAMP |
+
+### Sample Data
+
+| id | username | full_name | lot_number | block | email | role | status |
+|----|----------|-----------|------------|-------|-------|------|--------|
+| 1 | juan101 | Juan dela Cruz | 101 | A | juan@example.com | homeowner | active |
+| 2 | maria102 | Maria Santos | 102 | A | maria@example.com | homeowner | active |
+| 3 | pedro201 | Pedro Garcia | 201 | B | pedro@example.com | homeowner | active |
+| 4 | ana202 | Ana Reyes | 202 | B | ana@example.com | homeowner | active |
+
+### API Endpoints (server/routes/residents.js)
+
+- **GET** `/api/residents` - Get all residents
+- **GET** `/api/residents/search?full_name=&block=&lot=` - Search residents
+- **GET** `/api/residents/:id` - Get single resident
+- **POST** `/api/residents` - Create resident
+- **PUT** `/api/residents/:id` - Update resident
+- **DELETE** `/api/residents/:id` - Delete resident
+- **DELETE** `/api/residents/clear-all` - Clear all residents

@@ -5,9 +5,13 @@ const RegistrationForm = () => {
   const [formData, setFormData] = useState({
     username: '',
     password: '',
-    role: '', // Idinagdag na role
+    role: '',
+    full_name: '',
+    email: '',
+    phone: '',
+    position: '',
     block: '',
-    lot: ''
+    lot_number: ''
   });
 
   const handleChange = (e) => {
@@ -18,9 +22,21 @@ const RegistrationForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Simpleng validation para sa role
+    // Validation for role
     if (!formData.role) {
       alert("Mangyaring pumili ng role.");
+      return;
+    }
+
+    // Validation for admin/staff
+    if ((formData.role === 'admin' || formData.role === 'staff') && !formData.full_name) {
+      alert("Mangyaring magbigay ng full name para sa admin/staff.");
+      return;
+    }
+
+    // Validation for homeowner
+    if (formData.role === 'homeowner' && (!formData.full_name || !formData.block || !formData.lot)) {
+      alert("Mangyaring magbigay ng full name, block, at lot para sa homeowner.");
       return;
     }
 
@@ -35,7 +51,19 @@ const RegistrationForm = () => {
       
       if (response.ok) {
         alert('Registration successful!');
-        setFormData({ username: '', password: '', role: '', block: '', lot: '' });
+        setFormData({ 
+          username: '', 
+          password: '', 
+          role: '', 
+          full_name: '',
+          email: '',
+          phone: '',
+          position: '',
+          block: '', 
+          lot_number: '' 
+        });
+        // Navigate to accounts page to see the new account
+        window.location.href = '/accounts';
       } else {
         alert(data.error || 'Registration failed');
       }
@@ -93,30 +121,110 @@ const RegistrationForm = () => {
           </select>
         </div>
 
-        {/* Conditional Fields: Lalabas lang kung Homeowner ang pinili */}
-        {formData.role === 'homeowner' && (
-          <div className="form-row animate-fade-in">
+        {/* Admin/Staff Fields: Full Name, Email, Phone, Position */}
+        {(formData.role === 'admin' || formData.role === 'staff') && (
+          <div className="animate-fade-in">
             <div className="input-group">
-              <label>Block</label>
+              <label>Full Name</label>
               <input
                 type="text"
-                name="block"
-                value={formData.block}
+                name="full_name"
+                value={formData.full_name}
                 onChange={handleChange}
-                placeholder="Block"
+                placeholder="Enter full name"
+                required={formData.role === 'admin' || formData.role === 'staff'}
+              />
+            </div>
+            <div className="input-group">
+              <label>Email</label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="Enter email (optional)"
+              />
+            </div>
+            <div className="input-group">
+              <label>Phone</label>
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="09XXXXXXXXX (optional)"
+              />
+            </div>
+            <div className="input-group">
+              <label>Position</label>
+              <input
+                type="text"
+                name="position"
+                value={formData.position}
+                onChange={handleChange}
+                placeholder={formData.role === 'admin' ? 'Administrator' : 'Staff position'}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Conditional Fields: Lalabas lang kung Homeowner ang pinili */}
+        {formData.role === 'homeowner' && (
+          <div className="animate-fade-in">
+            <div className="input-group">
+              <label>Full Name</label>
+              <input
+                type="text"
+                name="full_name"
+                value={formData.full_name}
+                onChange={handleChange}
+                placeholder="Enter full name"
                 required={formData.role === 'homeowner'}
               />
             </div>
             <div className="input-group">
-              <label>Lot</label>
+              <label>Email</label>
               <input
-                type="text"
-                name="lot"
-                value={formData.lot}
+                type="email"
+                name="email"
+                value={formData.email}
                 onChange={handleChange}
-                placeholder="Lot"
-                required={formData.role === 'homeowner'}
+                placeholder="Enter email (optional)"
               />
+            </div>
+            <div className="input-group">
+              <label>Phone</label>
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="09XXXXXXXXX (optional)"
+              />
+            </div>
+            <div className="form-row">
+              <div className="input-group">
+                <label>Block</label>
+                <input
+                  type="text"
+                  name="block"
+                  value={formData.block}
+                  onChange={handleChange}
+                  placeholder="Block"
+                  required={formData.role === 'homeowner'}
+                />
+              </div>
+              <div className="input-group">
+                <label>Lot</label>
+                <input
+                  type="text"
+                  name="lot_number"
+                  value={formData.lot_number}
+                  onChange={handleChange}
+                  placeholder="Lot"
+                  required={formData.role === 'homeowner'}
+                />
+              </div>
             </div>
           </div>
         )}

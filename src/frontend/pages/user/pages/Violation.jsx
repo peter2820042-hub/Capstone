@@ -2,8 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import './Violation.css';
 
 function Violation(props) {
-  // Get user from props or fall back to localStorage
-  const user = props.user || JSON.parse(localStorage.getItem('user') || '{}');
+  // Get user from props or fall back to sessionStorage
+  const user = props.user || JSON.parse(sessionStorage.getItem('user') || '{}');
   // Filter states
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');

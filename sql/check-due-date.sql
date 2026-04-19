@@ -1,0 +1,1 @@
+SELECT id, lot_number, amount, due_date, date_issued, status FROM bills ORDER BY id DESC LIMIT 5;

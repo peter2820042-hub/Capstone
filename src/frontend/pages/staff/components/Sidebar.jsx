@@ -21,9 +21,19 @@ const Sidebar = ({ onLogout, isDropdown = false }) => {
       icon: <GisIcon />
     },
     { 
-      label: "Resident", 
+      label: "Residents", 
       path: "/residents",
       icon: <ResidentIcon />
+    },
+    { 
+      label: "PAYMENTs", 
+      path: "/payment",
+      icon: <PaymentsIcon />
+    },
+    { 
+      label: "BILLING", 
+      path: "/billing",
+      icon: <BillingIcon />
     },
     { 
       label: "VIOLATIONS", 
@@ -34,16 +44,6 @@ const Sidebar = ({ onLogout, isDropdown = false }) => {
       label: "REPORTS", 
       path: "/reports",
       icon: <ReportsIcon />
-    },
-    { 
-      label: "BILLING", 
-      path: "/billing",
-      icon: <BillingIcon />
-    },
-    { 
-      label: "PAYMENT", 
-      path: "/payment",
-      icon: <PaymentsIcon />
     },
     { 
       label: "PROFILE", 

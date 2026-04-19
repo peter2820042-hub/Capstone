@@ -10,15 +10,15 @@ function Residents() {
   const [formData, setFormData] = useState({
     username: '',
     password: '',
-    full_name: '',
+    fullName: '',
     email: '',
     phone: '',
     block: '',
-    lot_number: ''
+    lot: '',
+    role: 'Resident'
   });
-
-  const [toast, setToast] = useState(null);
   const [formMessage, setFormMessage] = useState(null);
+  const [toast, setToast] = useState(null);
 
   // Auto-dismiss toast after 3 seconds
   useEffect(() => {
@@ -40,11 +40,6 @@ function Residents() {
 
   // For dropdown options
   const [availableBlocks, setAvailableBlocks] = useState([]);
-  const [availableLots, setAvailableLots] = useState([]);
-
-  const [initialLoadDone, setInitialLoadDone] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 10;
 
   const fetchResidents = async () => {
     try {
@@ -55,13 +50,7 @@ function Residents() {
       
       // Extract unique blocks and lots for dropdowns
       const blocks = [...new Set(residentsData.map(r => r.block).filter(Boolean))].sort();
-      const lots = [...new Set(residentsData.map(r => r.lotNumber).filter(Boolean))].sort((a, b) => {
-        const numA = parseInt(a) || 0;
-        const numB = parseInt(b) || 0;
-        return numA - numB;
-      });
       setAvailableBlocks(blocks);
-      setAvailableLots(lots);
     } catch (error) {
       console.error('Error fetching residents:', error);
     } finally {
@@ -82,36 +71,28 @@ function Residents() {
     });
   };
 
-
-
-
-
-  // Compute filtered lots based on selected block using useMemo
-  const filteredLots = useMemo(() => {
-    if (filters.block) {
-      return [...new Set(
-        residents
-          .filter(r => r.block === filters.block)
-          .map(r => r.lotNumber)
-          .filter(Boolean)
-      )].sort((a, b) => {
-        const numA = parseInt(a) || 0;
-        const numB = parseInt(b) || 0;
-        return numA - numB;
-      });
+  // Filter lots based on selected block
+  const computedAvailableLots = useMemo(() => {
+    const targetBlock = filters.block;
+    
+    // Get unique lot numbers with a single pass through the data
+    const lotSet = new Set();
+    for (const resident of residents) {
+      if (resident.lotNumber && (!targetBlock || resident.block === targetBlock)) {
+        lotSet.add(resident.lotNumber);
+      }
     }
-    // Reset to all lots when no block is selected
-    return [...new Set(residents.map(r => r.lotNumber).filter(Boolean))].sort((a, b) => {
-      const numA = parseInt(a) || 0;
-      const numB = parseInt(b) || 0;
-      return numA - numB;
-    });
-  }, [filters.block, residents]);
+    
+    // Convert to array and sort numerically
+    return Array.from(lotSet).sort((a, b) => (parseInt(a, 10) || 0) - (parseInt(b, 10) || 0));
+  }, [residents, filters.block]);
 
-  // Use filtered lots for the dropdown
-  const displayedLots = filters.block ? filteredLots : availableLots;
+  // Flag to track if initial fetch is done
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 10;
 
-  // Fetch dropdown options on component mount
+  // Fetch dropdown options on component mount (but don't display residents until search)
   useEffect(() => {
     (async () => {
       try {
@@ -119,15 +100,9 @@ function Residents() {
         const data = await response.json();
         const residentsData = Array.isArray(data) ? data : (data.residents || []);
         
-        // Extract unique blocks and lots for dropdowns
+        // Extract unique blocks for dropdowns
         const blocks = [...new Set(residentsData.map(r => r.block).filter(Boolean))].sort();
-        const lots = [...new Set(residentsData.map(r => r.lotNumber).filter(Boolean))].sort((a, b) => {
-          const numA = parseInt(a) || 0;
-          const numB = parseInt(b) || 0;
-          return numA - numB;
-        });
         setAvailableBlocks(blocks);
-        setAvailableLots(lots);
       } catch (error) {
         console.error('Error fetching residents:', error);
       } finally {
@@ -155,18 +130,18 @@ function Residents() {
       const data = await response.json();
 
       if (response.ok) {
-        setToast({ type: 'success', text: 'Resident added successfully!' });
+        setFormMessage({ type: 'success', text: 'Resident added successfully!' });
         setToast({ type: 'success', message: 'Resident added successfully!' });
-        setFormData({ username: '', password: '', full_name: '', email: '', phone: '', block: '', lot_number: '' });
+        setFormData({ username: '', password: '', fullName: '', email: '', phone: '', block: '', lot: '' });
         fetchResidents();
         setTimeout(() => setShowModal(false), 1500);
       } else {
-        setToast({ type: 'error', text: data.error || data.message || 'Failed to add resident' });
-        setToast({ type: 'error', message: data.error || data.message || 'Failed to add resident' });
+        setFormMessage({ type: 'error', text: data.message || 'Failed to add resident' });
+        setToast({ type: 'error', message: data.message || 'Failed to add resident' });
       }
     } catch (error) {
       console.error('Error adding resident:', error);
-      setToast({ type: 'error', text: 'An error occurred. Please try again.' });
+      setFormMessage({ type: 'error', text: 'An error occurred. Please try again.' });
       setToast({ type: 'error', message: 'An error occurred. Please try again.' });
     }
   };
@@ -188,7 +163,7 @@ function Residents() {
             </svg>
           )}
           <span>{toast.message}</span>
-          <button className="sr-toast-close" onClick={() => setToast(null)}>×</button>
+          <button className="sr-toast-close" onClick={() => setToast(null)}>A-</button>
         </div>
       )}
       <div className="sr-header">
@@ -237,7 +212,7 @@ function Residents() {
               disabled={!filters.block && availableBlocks.length > 0}
             >
               <option value="">All Lots</option>
-              {displayedLots.map(lot => (
+              {computedAvailableLots.map(lot => (
                 <option key={lot} value={lot}>{lot}</option>
               ))}
             </select>
@@ -271,7 +246,7 @@ function Residents() {
         </div>
         <div className="sr-buttons-row">
           <button className="sr-search-btn" onClick={() => {
-            setCurrentPage(1);
+            setCurrentPage(1); // Reset to first page on search
             (async () => {
               setLoading(true);
               try {
@@ -329,10 +304,12 @@ function Residents() {
           <thead>
             <tr>
               <th>Full Name</th>
-              <th>Block</th>
               <th>Lot</th>
+              <th>Date Registered</th>
               <th>Email</th>
               <th>Phone</th>
+              <th>Block</th>
+              <th>Role</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
@@ -350,7 +327,7 @@ function Residents() {
             ) : !initialLoadDone ? (
               <tr>
                 <td colSpan={9} className="sr-empty-row">
-                  Maglagay ng criteria sa paghahanap ng resident
+                  Enter criteria to search for residents
                 </td>
               </tr>
             ) : residents.length === 0 ? (
@@ -365,17 +342,23 @@ function Residents() {
                 .map((resident) => (
                   <tr key={resident.id}>
                     <td>{resident.fullName || '-'}</td>
-                    <td>{resident.block || '-'}</td>
                     <td>{resident.lotNumber || '-'}</td>
+                    <td>{resident.dateRegistered ? new Date(resident.dateRegistered).toLocaleDateString() : '-'}</td>
                     <td>{resident.email || '-'}</td>
                     <td>{resident.phone || '-'}</td>
+                    <td>{resident.block || '-'}</td>
+                    <td>
+                      <span className={`sr-role-badge role-${(resident.role || 'homeowner').toLowerCase()}`}>
+                        {resident.role || 'homeowner'}
+                      </span>
+                    </td>
                     <td>
                       <span className={`sr-status-badge status-${(resident.status || 'active').toLowerCase()}`}>
                         {resident.status || 'active'}
                       </span>
                     </td>
-                    <td className="resident-tbl-actions">
-                      <button className="resident-tbl-view-btn" onClick={() => { setSelectedResident(resident); setShowViewModal(true); }}>
+                    <td className="sr-table-actions">
+                      <button className="sr-view-btn" onClick={() => { setSelectedResident(resident); setShowViewModal(true); }}>
                         View
                       </button>
                     </td>
@@ -395,6 +378,11 @@ function Residents() {
               <button className="sr-modal-close" onClick={() => setShowModal(false)}>X</button>
             </div>
             <form className="sr-modal-form" onSubmit={handleSubmit}>
+              {formMessage && (
+                <div className={`sr-message ${formMessage.type}`}>
+                  {formMessage.text}
+                </div>
+              )}
               <div className="sr-form-row">
                 <div className="sr-form-group">
                   <label>Username <span className="required">*</span></label>
@@ -420,8 +408,8 @@ function Residents() {
                   <label>Full Name</label>
                   <input
                     type="text"
-                    name="full_name"
-                    value={formData.full_name}
+                    name="fullName"
+                    value={formData.fullName}
                     onChange={handleInputChange}
                     placeholder="Enter full name"
                   />
@@ -461,13 +449,14 @@ function Residents() {
                   <label>Lot <span className="required">*</span></label>
                   <input
                     type="text"
-                    name="lot_number"
-                    value={formData.lot_number}
+                    name="lot"
+                    value={formData.lot}
                     onChange={handleInputChange}
                     placeholder="e.g., 101"
                     required
                   />
                 </div>
+
               </div>
               <div className="sr-modal-actions" style={{ justifyContent: 'center', gap: '20px' }}>
                 <button type="button" className="sr-cancel-btn" onClick={() => setShowModal(false)} style={{ padding: '10px 100px', fontSize: '16px' }}>
