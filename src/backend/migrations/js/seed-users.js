@@ -1,5 +1,5 @@
 // Seed Script - Create 2 test resident accounts
-import pool from '../config/db.js';
+import pool from '../../config/db.js';
 import bcrypt from 'bcrypt';
 
 async function seedUsers() {

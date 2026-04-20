@@ -2,7 +2,7 @@
 
 Here's the complete schema for the `residents` table in the Sentrina database:
 
-### Table Definition (sql/01-create-tables.sql:37)
+### Table Definition (src/backend/migrations/sql/01-create-tables.sql:37)
 
 | Column | Type | Constraints | Default |
 |--------|------|-------------|---------|

@@ -48,7 +48,7 @@ Ang Sentrina Property Management System ay may built-in na Role-Based Access Con
 
 - server/routes/auth.js - Login/Register/Logout logic
 - src/App.jsx - Route handling based on role
-- src/backend/config/create-tables.js - Database schema
+- src/backend/migrations/js/create-tables.js - Database schema
 - src/frontend/pages/admin/components/Sidebar.jsx - Admin menu
 - src/frontend/pages/staff/components/Sidebar.jsx - Staff menu
 - src/frontend/pages/user/components/Sidebar.jsx - User menu

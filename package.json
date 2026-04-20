@@ -9,9 +9,9 @@
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "format": "prettier --write .",
-    "db:init": "node src/backend/config/init-db.js",
-    "db:tables": "node src/backend/config/create-tables.js",
-    "db:seed": "node src/backend/config/seed-users.js",
+    "db:init": "node src/backend/migrations/js/init-db.js",
+    "db:tables": "node src/backend/migrations/js/create-tables.js",
+    "db:seed": "node src/backend/migrations/js/seed-users.js",
     "server": "node server/server.js",
     "screenshot": "node scripts/screenshots.js"
   },

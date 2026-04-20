@@ -1,5 +1,5 @@
 // src/backend/scripts/init-db.js
-import pool from '../config/db.js';
+import pool from '../../config/db.js';
 
 async function createDatabase() {
   const client = await pool.connect();

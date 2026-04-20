@@ -1,5 +1,5 @@
 // Script to update passwords in the database
-import pool from './db.js';
+import pool from '../../config/db.js';
 import bcrypt from 'bcrypt';
 
 async function updatePasswords() {

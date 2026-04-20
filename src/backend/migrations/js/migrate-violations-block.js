@@ -1,5 +1,5 @@
 // Migration: Add block column to violations table
-import pool from '../config/db.js';
+import pool from '../../config/db.js';
 
 async function migrate() {
   const client = await pool.connect();

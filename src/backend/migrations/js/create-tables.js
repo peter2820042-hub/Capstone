@@ -1,5 +1,5 @@
 // Database Migration Script - Creates all required tables for Sentrina
-import pool from './db.js';
+import pool from '../../config/db.js';
 
 async function createTables() {
   const client = await pool.connect();

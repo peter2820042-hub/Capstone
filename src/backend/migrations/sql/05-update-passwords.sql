@@ -14,4 +14,4 @@
 -- UPDATE admins SET password_hash = '$2a$10$...' WHERE username = 'admin';
 -- UPDATE staffs SET password_hash = '$2a$10$...' WHERE username = 'staff';
 
--- To update passwords, use the Node.js script: node src/backend/config/update-passwords.js
+-- To update passwords, use the Node.js script: node src/backend/migrations/js/update-passwords.js

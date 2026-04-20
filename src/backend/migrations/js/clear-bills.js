@@ -1,7 +1,7 @@
 // Clear Bills Data Script
 // Run this to delete all data from the bills table
 
-import pool from './db.js';
+import pool from '../../config/db.js';
 
 async function clearBills() {
   const client = await pool.connect();

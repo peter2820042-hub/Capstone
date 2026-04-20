@@ -1,5 +1,5 @@
 // Migration Script - Add missing columns to existing tables
-import pool from '../config/db.js';
+import pool from '../../config/db.js';
 
 async function migrateTables() {
   const client = await pool.connect();
