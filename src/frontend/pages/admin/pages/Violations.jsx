@@ -6,14 +6,16 @@ function Violations() {
   const [residents, setResidents] = useState([]);
   const [filteredResidents, setFilteredResidents] = useState([]);
 
-  // Search and filter states
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState('');
-  const [filterType, setFilterType] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
+  // Filter state - unified object like staff
+  const [filters, setFilters] = useState({
+    search: '',
+    violationType: '',
+    status: ''
+  });
 
   // Add Modal - Resident search
-  const [residentSearch, setResidentSearch] = useState('');
+  // eslint-disable-next-line no-empty-pattern
+  const [] = useState('');
 
   // Modal states
   const [showViewModal, setShowViewModal] = useState(false);
@@ -29,6 +31,7 @@ function Violations() {
     violationType: '',
     description: '',
     penalty: '',
+    status: 'pending',
     dateIssued: new Date().toISOString().split('T')[0]
   });
 
@@ -43,8 +46,18 @@ function Violations() {
     'Others'
   ];
 
-  const [message, setMessage] = useState({ type: '', text: '' });
+  const [toast, setToast] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // Auto-dismiss toast after 3 seconds
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => {
+        setToast(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   useEffect(() => {
     fetch('/api/violations')
@@ -69,35 +82,12 @@ function Violations() {
   const handleBlockChange = (e) => {
     const selectedBlock = e.target.value;
     setFormData(prev => ({ ...prev, block: selectedBlock, lotNumber: '', residentName: '' }));
-    setResidentSearch('');
-  };
-
-  // Handle resident search in Add Modal
-  const handleResidentSearchChange = (e) => {
-    setResidentSearch(e.target.value);
-    setFormData(prev => ({ ...prev, block: '', lotNumber: '', residentName: '' }));
-  };
-
-  // Filter residents for Add Modal based on search
-  const searchedResidents = residents.filter(resident => {
-    if (!residentSearch) return true;
-    const search = residentSearch.toLowerCase();
-    return (
-      (resident.fullName && resident.fullName.toLowerCase().includes(search)) ||
-      (resident.lotNumber && resident.lotNumber.toLowerCase().includes(search)) ||
-      (resident.block && resident.block.toLowerCase().includes(search))
-    );
-  });
-
-  // Handle selecting a resident from search results
-  const handleResidentSelect = (resident) => {
-    setFormData(prev => ({
-      ...prev,
-      block: resident.block,
-      lotNumber: resident.lotNumber,
-      residentName: resident.fullName || ''
-    }));
-    setResidentSearch('');
+    // Filter residents by selected block
+    if (selectedBlock) {
+      setFilteredResidents(residents.filter(r => r.block === selectedBlock));
+    } else {
+      setFilteredResidents(residents);
+    }
   };
 
   // Handle lot selection change
@@ -121,10 +111,10 @@ function Violations() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleAddSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    setMessage({ type: '', text: '' });
+    setToast(null);
 
     // Get user from sessionStorage for authorization
     const user = JSON.parse(sessionStorage.getItem('user') || '{}');
@@ -162,7 +152,7 @@ function Violations() {
           });
         }
 
-        setMessage({ type: 'success', text: 'Violation added successfully! Bill created for penalty amount.' });
+        setToast({ type: 'success', message: 'Violation added successfully! Bill created for penalty amount.' });
         setFormData({
           lotNumber: '',
           block: '',
@@ -170,25 +160,23 @@ function Violations() {
           violationType: '',
           description: '',
           penalty: '',
+          status: 'pending',
           dateIssued: new Date().toISOString().split('T')[0]
         });
-        setResidentSearch('');
         fetch('/api/violations').then(res => res.json()).then(data => setViolations(data || []));
         setTimeout(() => {
           setShowAddModal(false);
-          setMessage({ type: '', text: '' });
+          setToast(null);
         }, 1500);
       } else {
-        setMessage({ type: 'error', text: data.error || 'Failed to add violation' });
+        setToast({ type: 'error', message: data.error || 'Failed to add violation' });
       }
     } catch {
-      setMessage({ type: 'error', text: 'Cannot connect to server' });
+      setToast({ type: 'error', message: 'Cannot connect to server' });
     } finally {
       setSubmitting(false);
     }
   };
-
-
 
   const handleViewViolation = (violation) => {
     setSelectedViolation(violation);
@@ -204,19 +192,53 @@ function Violations() {
       violationType: violation.violationType || '',
       description: violation.description || '',
       penalty: violation.fine || '',
+      status: violation.status || 'pending',
       dateIssued: violation.dateIssued ? violation.dateIssued.split('T')[0] : new Date().toISOString().split('T')[0]
     });
     setShowEditModal(true);
   };
 
-  const handleDeleteViolation = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this violation?')) {
-      return;
-    }
+  const handleUpdateSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setToast(null);
 
     // Get user from sessionStorage for authorization
     const user = JSON.parse(sessionStorage.getItem('user') || '{}');
 
+    try {
+      const response = await fetch(`/api/violations/${selectedViolation.id}`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user': JSON.stringify(user)
+        },
+        body: JSON.stringify(formData)
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setToast({ type: 'success', message: 'Violation updated successfully!' });
+        fetch('/api/violations').then(res => res.json()).then(data => setViolations(data || []));
+        setTimeout(() => {
+          setShowEditModal(false);
+          setToast(null);
+        }, 1500);
+      } else {
+        setToast({ type: 'error', message: data.error || 'Failed to update violation' });
+      }
+    } catch {
+      setToast({ type: 'error', message: 'Cannot connect to server' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteViolation = async (id) => {
+    // Get user from sessionStorage for authorization
+    const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+    
     try {
       const response = await fetch(`/api/violations/${id}`, {
         method: 'DELETE',
@@ -227,27 +249,90 @@ function Violations() {
       });
 
       if (response.ok) {
-        setMessage({ type: 'success', text: 'Violation deleted successfully!' });
+        setToast({ type: 'success', message: 'Violation deleted successfully!' });
         fetch('/api/violations').then(res => res.json()).then(data => setViolations(data || []));
-        setTimeout(() => setMessage({ type: '', text: '' }), 2000);
+        setTimeout(() => setToast(null), 2000);
       } else {
-        setMessage({ type: 'error', text: 'Failed to delete violation' });
+        setToast({ type: 'error', message: 'Failed to delete violation' });
       }
     } catch {
-      setMessage({ type: 'error', text: 'Cannot connect to server' });
+      setToast({ type: 'error', message: 'Cannot connect to server' });
+    }
+  };
+
+  const handleResolve = async (violationId) => {
+    // Get user from sessionStorage for authorization
+    const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+    
+    try {
+      const response = await fetch(`/api/violations/${violationId}`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user': JSON.stringify(user)
+        },
+        body: JSON.stringify({ status: 'resolved' })
+      });
+
+      if (response.ok) {
+        setToast({ type: 'success', message: 'Violation resolved!' });
+        fetch('/api/violations').then(res => res.json()).then(data => setViolations(data || []));
+        setShowViewModal(false);
+        setTimeout(() => setToast(null), 3000);
+      }
+    } catch (err) {
+      console.error('Error resolving violation:', err);
+    }
+  };
+
+  const handleMarkAsPaid = async (violationId) => {
+    // Get user from sessionStorage for authorization
+    const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+    
+    try {
+      const response = await fetch(`/api/violations/${violationId}`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user': JSON.stringify(user)
+        },
+        body: JSON.stringify({ status: 'paid' })
+      });
+
+      if (response.ok) {
+        setToast({ type: 'success', message: 'Violation marked as paid!' });
+        fetch('/api/violations').then(res => res.json()).then(data => setViolations(data || []));
+        setShowViewModal(false);
+        setTimeout(() => setToast(null), 3000);
+      }
+    } catch (err) {
+      console.error('Error marking as paid:', err);
     }
   };
 
   // Filter violations based on search and filter criteria
   const filteredViolations = violations.filter(violation => {
-    const matchesSearch = searchQuery === '' || 
-      (violation.residentName && violation.residentName.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (violation.lotNumber && violation.lotNumber.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (violation.block && violation.block.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (violation.violationType && violation.violationType.toLowerCase().includes(searchQuery.toLowerCase()));
+    const { search, violationType, status } = filters;
     
-    const matchesStatus = filterStatus === '' || violation.status === filterStatus;
-    const matchesType = filterType === '' || violation.violationType === filterType;
+    // Search filter
+    let matchesSearch = true;
+    if (search) {
+      const searchLower = search.toLowerCase();
+      const searchFields = [
+        violation.lotNumber,
+        violation.residentName,
+        violation.violationType,
+        violation.block
+      ].filter(Boolean).map(f => f.toLowerCase());
+      
+      matchesSearch = searchFields.some(field => field.includes(searchLower));
+    }
+    
+    // Status filter - match exact status
+    const matchesStatus = !status || violation.status?.toLowerCase() === status.toLowerCase();
+    
+    // Type filter
+    const matchesType = !violationType || violation.violationType === violationType;
     
     return matchesSearch && matchesStatus && matchesType;
   });
@@ -262,8 +347,27 @@ function Violations() {
   };
 
   return (
-    <div className="billing-container">
-      {/* Header */}
+    <div className="violations-container">
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`sr-toast ${toast.type}`}>
+          {toast.type === 'success' ? (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M20 6L9 17l-5-5" />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+          )}
+          <span>{toast.message}</span>
+          <button className="sr-toast-close" onClick={() => setToast(null)}>×</button>
+        </div>
+      )}
+
+      {/* Page Header */}
       <div className="sr-header">
         <div className="sr-title">
           <p className="sr-subtitle">Manage and monitor community policy infractions</p>
@@ -276,52 +380,53 @@ function Violations() {
         </button>
       </div>
 
-      {/* Message */}
-      {message.text && (
-        <div className={`message ${message.type}`}>
-          {message.text}
-        </div>
-      )}
-
       {/* Search and Filter Bar */}
       <div className="sr-search-filter-bar">
         <div className="sr-filters-row">
           <div className="sr-filter-group">
-            <label>Search</label>
-            <input
-              type="text"
-              placeholder="Search by name, block, lot..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+            <div className="filter-field">
+              <label>Search</label>
+              <input
+                type="text"
+                placeholder="Search by name, block, lot..."
+                value={filters.search || ''}
+                onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+              />
+            </div>
           </div>
           <div className="sr-filter-group">
-            <label>Status</label>
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-            >
-              <option value="">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="paid">Paid</option>
-              <option value="unpaid">Unpaid</option>
-            </select>
+            <div className="filter-field">
+              <label>Status</label>
+              <select
+                value={filters.status || ''}
+                onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+              >
+                <option value="">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="paid">Paid</option>
+                <option value="unpaid">Unpaid</option>
+                <option value="resolved">Resolved</option>
+              </select>
+            </div>
           </div>
           <div className="sr-filter-group">
-            <label>Type</label>
-            <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-            >
-              <option value="">All Types</option>
-              {violationTypes.map(type => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </select>
+            <div className="filter-field">
+              <label>Type</label>
+              <select
+                value={filters.violationType || ''}
+                onChange={(e) => setFilters(prev => ({ ...prev, violationType: e.target.value }))}
+              >
+                <option value="">All Types</option>
+                {violationTypes.map((type) => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
+
         <div className="sr-buttons-row">
-          <button className="sr-search-btn" onClick={() => setCurrentPage(1)}>
+          <button className="sr-search-btn" onClick={() => {}}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="11" cy="11" r="8" />
               <path d="m21 21-4.35-4.35" />
@@ -329,12 +434,8 @@ function Violations() {
             Search
           </button>
           <button
-            className="sr-reset-btn"
-            onClick={() => {
-              setSearchQuery('');
-              setFilterStatus('');
-              setFilterType('');
-            }}
+            className="sr-clear-btn"
+            onClick={() => setFilters({ search: '', violationType: '', status: '' })}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
@@ -384,25 +485,10 @@ function Violations() {
                     </span>
                   </td>
                   <td>
-                    <div className="sr-table-actions" style={{ display: 'flex', flexDirection: 'row', gap: '8px' }}>
-                      <button
-                        className="sr-view-btn"
-                        onClick={() => handleViewViolation(violation)}
-                      >
-                        View
-                      </button>
-                      <button
-                        className="sr-edit-btn"
-                        onClick={() => handleEditViolation(violation)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="sr-delete-btn"
-                        onClick={() => handleDeleteViolation(violation.id)}
-                      >
-                        Delete
-                      </button>
+                    <div className="sr-table-actions">
+                      <button className="sr-view-btn" onClick={() => handleViewViolation(violation)}>View</button>
+                      <button className="sr-edit-btn" onClick={() => handleEditViolation(violation)}>Edit</button>
+                      <button className="sr-delete-btn" onClick={() => handleDeleteViolation(violation.id)}>Delete</button>
                     </div>
                   </td>
                 </tr>
@@ -415,69 +501,104 @@ function Violations() {
 
       {/* View Modal */}
       {showViewModal && selectedViolation && (
-        <div className="billing-admin-admin-modal-overlay" onClick={() => setShowViewModal(false)}>
-          <div className="billing-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="billing-admin-admin-modal-header">
-              <h2>Violation Details</h2>
-              <button className="billing-admin-admin-modal-close" onClick={() => setShowViewModal(false)}>
+        <div className="violation-view-admin-admin-modal-overlay" onClick={() => setShowViewModal(false)}>
+          <div className="violation-view-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="violation-view-admin-admin-modal-header">
+              <div className="violation-view-admin-admin-modal-header-info">
+                <h3>{selectedViolation.violationType}</h3>
+                <span className="violation-view-modal-id">Status: {selectedViolation.status}</span>
+              </div>
+              <button className="violation-view-admin-admin-modal-close" onClick={() => setShowViewModal(false)}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <line x1="18" y1="6" x2="6" y2="18" />
                   <line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
               </button>
             </div>
-            <div className="admin-admin-modal-body">
-              <div className="bill-detail-header">
-                <h3>{selectedViolation.violationType}</h3>
-                <p className="bill-ref">Status: {selectedViolation.status}</p>
+            <div className="violation-view-admin-admin-modal-content">
+              <div className="violation-view-modal-section">
+                <h4 className="violation-view-modal-section-title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                  Resident Information
+                </h4>
+                <div className="violation-view-modal-grid">
+                  <div className="violation-view-modal-item">
+                    <span className="violation-view-modal-label">Resident Name</span>
+                    <span className="violation-view-modal-value">{selectedViolation.residentName || 'N/A'}</span>
+                  </div>
+                  <div className="violation-view-modal-item">
+                    <span className="violation-view-modal-label">Block</span>
+                    <span className="violation-view-modal-value">{selectedViolation.block || 'N/A'}</span>
+                  </div>
+                  <div className="violation-view-modal-item">
+                    <span className="violation-view-modal-label">Lot Number</span>
+                    <span className="violation-view-modal-value">{selectedViolation.lotNumber || 'N/A'}</span>
+                  </div>
+                </div>
               </div>
 
-              <div className="bill-detail-list">
-                <div className="bill-detail-row">
-                  <span className="detail-label">Resident Name</span>
-                  <span className="detail-value">{selectedViolation.residentName || 'N/A'}</span>
-                </div>
-                <div className="bill-detail-row">
-                  <span className="detail-label">Lot Number</span>
-                  <span className="detail-value">{selectedViolation.lotNumber || 'N/A'}</span>
-                </div>
-                <div className="bill-detail-row">
-                  <span className="detail-label">Block</span>
-                  <span className="detail-value">{selectedViolation.block || 'N/A'}</span>
-                </div>
-                <div className="bill-detail-row">
-                  <span className="detail-label">Date Issued</span>
-                  <span className="detail-value">{formatDate(selectedViolation.dateIssued)}</span>
-                </div>
-                <div className="bill-detail-row">
-                  <span className="detail-label">Fine Amount</span>
-                  <span className="detail-value">
-                    {selectedViolation.fine 
-                      ? `₱${parseFloat(selectedViolation.fine).toFixed(2)}` 
-                      : 'N/A'}
-                  </span>
-                </div>
-                <div className="bill-detail-row total-row">
-                  <span className="detail-label">Status</span>
-                  <span className={`detail-value status-${(selectedViolation.status || 'unpaid').toLowerCase()}`}>
-                    {selectedViolation.status}
-                  </span>
-                </div>
-                <div className="bill-detail-row">
-                  <span className="detail-label">Description</span>
-                  <span className="detail-value">{selectedViolation.description || 'N/A'}</span>
+              <div className="violation-view-modal-section">
+                <h4 className="violation-view-modal-section-title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                  </svg>
+                  Violation Details
+                </h4>
+                <div className="violation-view-modal-grid">
+                  <div className="violation-view-modal-item">
+                    <span className="violation-view-modal-label">Violation Type</span>
+                    <span className="violation-view-modal-value">{selectedViolation.violationType || 'N/A'}</span>
+                  </div>
+                  <div className="violation-view-modal-item">
+                    <span className="violation-view-modal-label">Date Issued</span>
+                    <span className="violation-view-modal-value">{formatDate(selectedViolation.dateIssued)}</span>
+                  </div>
+                  <div className="violation-view-modal-item">
+                    <span className="violation-view-modal-label">Fine Amount</span>
+                    <span className="violation-view-modal-value fine-amount">
+                      {selectedViolation.fine 
+                        ? `₱${parseFloat(selectedViolation.fine).toFixed(2)}` 
+                        : 'N/A'}
+                    </span>
+                  </div>
+                  <div className="violation-view-modal-item">
+                    <span className="violation-view-modal-label">Status</span>
+                    <span className={`sr-status-badge status-${(selectedViolation.status || 'unpaid').toLowerCase()}`}>
+                      {selectedViolation.status}
+                    </span>
+                  </div>
+                  <div className="violation-view-modal-item full-width">
+                    <span className="violation-view-modal-label">Description</span>
+                    <span className="violation-view-modal-value">{selectedViolation.description || 'N/A'}</span>
+                  </div>
                 </div>
               </div>
             </div>
             <div className="billing-admin-admin-modal-footer">
               <button className="billing-admin-admin-btn-secondary" onClick={() => setShowViewModal(false)}>Close</button>
+              {selectedViolation.status === 'pending' && (
+                <>
+                  <button className="billing-admin-admin-btn-primary" onClick={() => handleResolve(selectedViolation.id)}>
+                    Resolve
+                  </button>
+                  <button className="billing-admin-admin-btn-primary" onClick={() => handleMarkAsPaid(selectedViolation.id)}>
+                    Mark Paid
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
       )}
 
       {/* Edit Modal */}
-      {showEditModal && selectedViolation && (
+      {showEditModal && (
         <div className="sr-modal-overlay" onClick={() => setShowEditModal(false)}>
           <div className="sr-modal" onClick={(e) => e.stopPropagation()}>
             <div className="sr-modal-header">
@@ -489,51 +610,115 @@ function Violations() {
                 </svg>
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="sr-modal-form">
-              {message.text && (
-                <div className={`admin-admin-form-message ${message.type}`}>
-                  {message.text}
+            <form onSubmit={handleUpdateSubmit} className="sr-modal-form">
+              {toast && (
+                <div className={`sr-message ${toast.type}`}>
+                  {toast.type === 'success' ? (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M20 6L9 17l-5-5" />
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="8" x2="12" y2="12" />
+                      <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                  )}
+                  <span>{toast.message}</span>
                 </div>
               )}
 
               <div className="sr-form-row">
                 <div className="sr-form-group">
                   <label>Block <span className="required">*</span></label>
-                  <select name="block" value={formData.block} onChange={handleBlockChange} required>
+                  <select
+                    name="block"
+                    value={formData.block}
+                    onChange={handleBlockChange}
+                    required
+                  >
                     <option value="">Select Block</option>
-                    {uniqueBlocks.map((block) => (<option key={block} value={block}>{block}</option>))}
+                    {uniqueBlocks.map((block) => (
+                      <option key={block} value={block}>{block}</option>
+                    ))}
                   </select>
                 </div>
                 <div className="sr-form-group">
                   <label>Lot Number <span className="required">*</span></label>
-                  <select name="lotNumber" value={formData.lotNumber} onChange={handleLotChange} required>
+                  <select
+                    name="lotNumber"
+                    value={formData.lotNumber}
+                    onChange={handleLotChange}
+                    required
+                  >
                     <option value="">Select Lot</option>
-                    {filteredResidents.map((resident) => (<option key={resident.lotNumber} value={resident.lotNumber}>{resident.lotNumber}</option>))}
+                    {filteredResidents.map((resident) => (
+                      <option key={resident.lotNumber} value={resident.lotNumber}>{resident.lotNumber}</option>
+                    ))}
                   </select>
                 </div>
                 <div className="sr-form-group">
                   <label>Resident Name</label>
-                  <input type="text" name="residentName" value={formData.residentName} onChange={handleChange} readOnly placeholder="Auto-filled from lot" />
+                  <input
+                    type="text"
+                    name="residentName"
+                    value={formData.residentName}
+                    onChange={handleChange}
+                    readOnly
+                    placeholder="Auto-filled from lot"
+                  />
                 </div>
               </div>
 
               <div className="sr-form-row">
                 <div className="sr-form-group">
                   <label>Violation Type <span className="required">*</span></label>
-                  <select name="violationType" value={formData.violationType} onChange={handleChange} required>
+                  <select
+                    name="violationType"
+                    value={formData.violationType}
+                    onChange={handleChange}
+                    required
+                  >
                     <option value="">Select type</option>
-                    {violationTypes.map((type) => (<option key={type} value={type}>{type}</option>))}
+                    {violationTypes.map((type) => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
                   </select>
                 </div>
                 <div className="sr-form-group">
                   <label>Fine Amount</label>
-                  <input type="number" name="penalty" value={formData.penalty} onChange={handleChange} min="0" step="0.01" />
+                  <input
+                    type="number"
+                    name="penalty"
+                    value={formData.penalty}
+                    onChange={handleChange}
+                    min="0"
+                    step="0.01"
+                  />
                 </div>
               </div>
 
               <div className="sr-form-group">
+                <label>Status</label>
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                >
+                  <option value="pending">Pending</option>
+                  <option value="resolved">Resolved</option>
+                  <option value="paid">Paid</option>
+                </select>
+              </div>
+
+              <div className="sr-form-group">
                 <label>Description</label>
-                <textarea name="description" value={formData.description} onChange={handleChange} rows="3" />
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  rows="3"
+                />
               </div>
 
               <div className="sr-modal-actions" style={{ justifyContent: 'center', gap: '20px' }}>
@@ -541,7 +726,7 @@ function Violations() {
                   Cancel
                 </button>
                 <button type="submit" className="sr-submit-btn" disabled={submitting} style={{ padding: '10px 100px', fontSize: '16px' }}>
-                  {submitting ? 'Saving...' : 'Save Changes'}
+                  {submitting ? 'Updating...' : 'Update'}
                 </button>
               </div>
             </form>
@@ -562,10 +747,21 @@ function Violations() {
                 </svg>
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="sr-modal-form">
-              {message.text && (
-                <div className={`admin-admin-form-message ${message.type}`}>
-                  {message.text}
+            <form onSubmit={handleAddSubmit} className="sr-modal-form">
+              {toast && (
+                <div className={`sr-message ${toast.type}`}>
+                  {toast.type === 'success' ? (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M20 6L9 17l-5-5" />
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="8" x2="12" y2="12" />
+                      <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                  )}
+                  <span>{toast.message}</span>
                 </div>
               )}
 
@@ -584,13 +780,13 @@ function Violations() {
                     {filteredResidents.map((resident) => (<option key={resident.lotNumber} value={resident.lotNumber}>{resident.lotNumber}</option>))}
                   </select>
                 </div>
+              </div>
+      
+              <div className="sr-form-row">
                 <div className="sr-form-group">
                   <label>Resident Name</label>
                   <input type="text" name="residentName" value={formData.residentName} onChange={handleChange} readOnly placeholder="Auto-filled from lot" />
                 </div>
-              </div>
-
-              <div className="sr-form-row">
                 <div className="sr-form-group">
                   <label>Violation Type <span className="required">*</span></label>
                   <select name="violationType" value={formData.violationType} onChange={handleChange} required>
@@ -606,7 +802,12 @@ function Violations() {
 
               <div className="sr-form-group">
                 <label>Description</label>
-                <textarea name="description" value={formData.description} onChange={handleChange} rows="3" />
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  rows="3"
+                />
               </div>
 
               <div className="sr-modal-actions" style={{ justifyContent: 'center', gap: '20px' }}>

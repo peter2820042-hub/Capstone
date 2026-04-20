@@ -1,17 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import './Payment.css';
 
+// PayMonggo public key (loaded from backend)
+let paymongoPublicKey = null;
+
 function Payment({ user }) {
   // Payment form states
   const [selectedBills, setSelectedBills] = useState([]);
   const [paymentMethod, setPaymentMethod] = useState('');
-  // Amount is calculated from selected bills
-  // const [amount, setAmount] = useState('');
   const [referenceNumber, setReferenceNumber] = useState('');
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState(null);
+  
+  // PayMonggo GCash states
+  const [, setIsProcessingGCash] = useState(false);
+  const [, setGcashLoading] = useState(false);
 
   // Bills data - will be fetched from database
   const [bills, setBills] = useState([]);
@@ -30,13 +35,26 @@ function Payment({ user }) {
   // Get user's lot number from user prop
   const lotNumber = user?.lotNumber || user?.lotNumber;
 
-  // Payment methods
+  // Payment methods - updated with PayMonggo
   const paymentMethods = [
     { id: 'cash', name: 'Cash'},
-    { id: 'gcash', name: 'GCash'},
-    { id: 'maya', name: 'Maya'},
-    { id: 'bank', name: 'Bank Transfer'}
+    { id: 'gcash', name: 'GCash', icon: '💚' },
+    { id: 'gcrypto', name: 'GCrypto' }
   ];
+
+  // Fetch PayMonggo public key on mount
+  useEffect(() => {
+    const fetchPublicKey = async () => {
+      try {
+        const response = await fetch('/api/payments/public-key');
+        const data = await response.json();
+        paymongoPublicKey = data.publicKey;
+      } catch (err) {
+        console.error('Error fetching PayMonggo public key:', err);
+      }
+    };
+    fetchPublicKey();
+  }, []);
 
   // Fetch unpaid bills from database
   useEffect(() => {
@@ -138,6 +156,80 @@ function Payment({ user }) {
     }
   };
 
+  // Handle GCash payment with PayMonggo
+  const handleGCashPayment = async () => {
+    if (!paymongoPublicKey) {
+      setSubmitError('Payment system not initialized. Please refresh the page.');
+      return;
+    }
+
+    if (selectedBills.length === 0) {
+      setSubmitError('Please select at least one bill to pay');
+      return;
+    }
+
+    setIsProcessingGCash(true);
+    setGcashLoading(true);
+    setSubmitError(null);
+
+    try {
+      const selectedBillsDetails = bills.filter(b => selectedBills.includes(b.id));
+      const billReference = selectedBillsDetails.map(b => b.billNumber).join(', ');
+      const residentName = user?.fullName || 'Resident';
+
+      // Create checkout session with PayMonggo
+      const response = await fetch('/api/payments/gcash/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: totalAmount,
+          billReference,
+          lotNumber,
+          residentName
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create GCash checkout');
+      }
+
+      const checkoutData = await response.json();
+
+      // For now, save the payment as pending and redirect to checkout
+      const paymentDate = new Date().toISOString().split('T')[0];
+      await fetch('/api/payments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lot_number: lotNumber,
+          resident_name: residentName,
+          bill_reference: billReference,
+          amount: totalAmount,
+          payment_date: paymentDate,
+          payment_method: 'gcash',
+          status: 'pending'
+        })
+      });
+
+      // Open PayMonggo checkout in new window
+      window.open(checkoutData.checkoutUrl, '_blank');
+      
+      setSubmitSuccess(true);
+      setSelectedBills([]);
+      setPaymentMethod('');
+      
+      // Reset success message after 5 seconds
+      setTimeout(() => setSubmitSuccess(false), 5000);
+    } catch (err) {
+      setSubmitError(err.message || 'Failed to process GCash payment. Please try again.');
+      console.error('GCash payment error:', err);
+    } finally {
+      setIsProcessingGCash(false);
+      setGcashLoading(false);
+    }
+  };
+
   // Handle payment submission
   const handleSubmitPayment = async (e) => {
     e.preventDefault();
@@ -149,6 +241,12 @@ function Payment({ user }) {
 
     if (!paymentMethod) {
       setSubmitError('Please select a payment method');
+      return;
+    }
+
+    // Handle GCash payment differently
+    if (paymentMethod === 'gcash') {
+      await handleGCashPayment();
       return;
     }
 
@@ -227,13 +325,14 @@ function Payment({ user }) {
   if (error) {
     return (
       <div className="payment-container">
-        <div className="error-state">
+        <h1>Payments</h1>
+        <div className="payment-error-state">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="12" cy="12" r="10" />
             <line x1="12" y1="8" x2="12" y2="12" />
             <line x1="12" y1="16" x2="12.01" y2="16" />
           </svg>
-          <p>{error}</p>
+          <p>Error: {error}</p>
           <button onClick={() => window.location.reload()}>Retry</button>
         </div>
       </div>
@@ -242,10 +341,11 @@ function Payment({ user }) {
 
   return (
     <div className="payment-container">
+      <h1>Payments</h1>
 
       {/* Success Message */}
       {submitSuccess && (
-        <div className="success-message">
+        <div className="payment-success-message">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
             <polyline points="22 4 12 14.01 9 11.01" />
@@ -391,7 +491,7 @@ function Payment({ user }) {
                 {paymentMethods.map(method => (
                   <div
                     key={method.id}
-                    className={`payment-method-option ${paymentMethod === method.id ? 'selected' : ''}`}
+                    className={`payment-method-option ${paymentMethod === method.id ? 'selected' : ''} ${method.id === 'gcash' ? 'gcash-method' : ''}`}
                     onClick={() => setPaymentMethod(method.id)}
                   >
                     <span className="method-icon">{method.icon}</span>

@@ -1,8 +1,7 @@
-/* Admin Profile Page Styles */
+/* Staff Profile Page Styles */
 
 .profile-page {
   padding: 2rem;
-  background: #f8fafc;
   min-height: calc(100vh - 60px);
 }
 
@@ -119,7 +118,7 @@
 }
 
 /* Edit Button */
-.adm-edit-btn {
+.staff-edit-btn {
   padding: 0.75rem 1.5rem;
   background: #4A90E2;
   color: white;
@@ -190,25 +189,25 @@
   gap: 1.5rem;
 }
 
-.admin-admin-form-grid {
+.staff-form-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1.5rem;
 }
 
-.admin-admin-form-item {
+.staff-form-item {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-.admin-admin-form-item label {
+.staff-form-item label {
   font-size: 0.875rem;
   font-weight: 600;
   color: #374151;
 }
 
-.admin-admin-form-item input {
+.staff-form-item input {
   padding: 0.75rem 1rem;
   border: 1px solid #d1d5db;
   border-radius: 8px;
@@ -218,25 +217,27 @@
   transition: all 0.2s ease;
 }
 
-.admin-admin-form-item input:focus {
+.staff-form-item input:focus {
   outline: none;
   border-color: #4A90E2;
   box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15);
 }
 
-.admin-admin-form-item input::placeholder {
+.staff-form-item input::placeholder {
   color: #9ca3af;
 }
 
 /* Form Actions */
-.admin-admin-form-actions {
+.staff-form-actions {
   display: flex;
   gap: 1rem;
   padding-top: 1rem;
   border-top: 1px solid #e2e8f0;
 }
 
-.adm-save-btn {
+.staff-save-btn {
+  padding: 0.75rem 1.5rem;
+  background: #10b981;
   color: white;
   border: none;
   border-radius: 8px;
@@ -246,15 +247,25 @@
   transition: all 0.2s ease;
 }
 
-.save-btn:hover {
+.staff-save-btn:hover {
   background: #059669;
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
 }
 
-.adm-cancel-btn {
+.staff-cancel-btn {
+  padding: 0.75rem 1.5rem;
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
 
-.adm-cancel-btn:hover {
+.cancel-btn:hover {
   background: #f8fafc;
   color: #0f172a;
   border-color: #9ca3af;
@@ -276,17 +287,17 @@
     width: 100%;
   }
 
-  .admin-admin-form-actions {
+  .staff-form-actions {
     flex-direction: column;
   }
 
-  .adm-save-btn,
-  .adm-cancel-btn {
+  .staff-save-btn,
+  .staff-cancel-btn {
     width: 100%;
   }
 
   .info-grid,
-  .admin-admin-form-grid {
+  .staff-form-grid {
     grid-template-columns: 1fr;
   }
 }

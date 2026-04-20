@@ -5,7 +5,6 @@ function Residents() {
   const [residents, setResidents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedResident, setSelectedResident] = useState(null);
   const [formData, setFormData] = useState({
@@ -15,19 +14,11 @@ function Residents() {
     email: '',
     phone: '',
     block: '',
-    lot_number: '',
-    role: 'homeowner'
+    lot_number: ''
   });
-  const [simpleFormData, setSimpleFormData] = useState({
-    username: '',
-    block: '',
-    lot_number: '',
-    full_name: '',
-    password: ''
-  });
-  const [formMessage, setFormMessage] = useState(null);
-  const [simpleMessage, setSimpleMessage] = useState(null);
+
   const [toast, setToast] = useState(null);
+  const [, setFormMessage] = useState(null);
 
   // Auto-dismiss toast after 3 seconds
   useEffect(() => {
@@ -47,8 +38,14 @@ function Residents() {
     status: ''
   });
 
+
   // For dropdown options
   const [availableBlocks, setAvailableBlocks] = useState([]);
+  const [availableLots, setAvailableLots] = useState([]);
+
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 10;
 
   const fetchResidents = async () => {
     try {
@@ -59,7 +56,13 @@ function Residents() {
       
       // Extract unique blocks and lots for dropdowns
       const blocks = [...new Set(residentsData.map(r => r.block).filter(Boolean))].sort();
+      const lots = [...new Set(residentsData.map(r => r.lotNumber).filter(Boolean))].sort((a, b) => {
+        const numA = parseInt(a) || 0;
+        const numB = parseInt(b) || 0;
+        return numA - numB;
+      });
       setAvailableBlocks(blocks);
+      setAvailableLots(lots);
     } catch (error) {
       console.error('Error fetching residents:', error);
     } finally {
@@ -80,28 +83,38 @@ function Residents() {
     });
   };
 
-  // Filter lots based on selected block
-  const computedAvailableLots = useMemo(() => {
-    const targetBlock = filters.block;
-    
-    // Get unique lot numbers with a single pass through the data
-    const lotSet = new Set();
-    for (const resident of residents) {
-      if (resident.lotNumber && (!targetBlock || resident.block === targetBlock)) {
-        lotSet.add(resident.lotNumber);
-      }
+
+
+
+
+
+
+  // Compute filtered lots based on selected block using useMemo
+  const filteredLots = useMemo(() => {
+    if (filters.block) {
+      return [...new Set(
+        residents
+          .filter(r => r.block === filters.block)
+          .map(r => r.lotNumber)
+          .filter(Boolean)
+      )].sort((a, b) => {
+        const numA = parseInt(a) || 0;
+        const numB = parseInt(b) || 0;
+        return numA - numB;
+      });
     }
-    
-    // Convert to array and sort numerically
-    return Array.from(lotSet).sort((a, b) => (parseInt(a, 10) || 0) - (parseInt(b, 10) || 0));
-  }, [residents, filters.block]);
+    // Reset to all lots when no block is selected
+    return [...new Set(residents.map(r => r.lotNumber).filter(Boolean))].sort((a, b) => {
+      const numA = parseInt(a) || 0;
+      const numB = parseInt(b) || 0;
+      return numA - numB;
+    });
+  }, [filters.block, residents]);
 
-  // Flag to track if initial fetch is done
-  const [initialLoadDone, setInitialLoadDone] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 10;
+  // Use filtered lots for the dropdown
+  const displayedLots = filters.block ? filteredLots : availableLots;
 
-  // Fetch dropdown options on component mount (but don't display residents until search)
+  // Fetch dropdown options on component mount
   useEffect(() => {
     (async () => {
       try {
@@ -109,9 +122,15 @@ function Residents() {
         const data = await response.json();
         const residentsData = Array.isArray(data) ? data : (data.residents || []);
         
-        // Extract unique blocks for dropdowns
+        // Extract unique blocks and lots for dropdowns
         const blocks = [...new Set(residentsData.map(r => r.block).filter(Boolean))].sort();
+        const lots = [...new Set(residentsData.map(r => r.lotNumber).filter(Boolean))].sort((a, b) => {
+          const numA = parseInt(a) || 0;
+          const numB = parseInt(b) || 0;
+          return numA - numB;
+        });
         setAvailableBlocks(blocks);
+        setAvailableLots(lots);
       } catch (error) {
         console.error('Error fetching residents:', error);
       } finally {
@@ -123,11 +142,6 @@ function Residents() {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSimpleInputChange = (e) => {
-    const { name, value } = e.target;
-    setSimpleFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
@@ -144,48 +158,18 @@ function Residents() {
       const data = await response.json();
 
       if (response.ok) {
-        setFormMessage({ type: 'success', text: 'Resident added successfully!' });
+        setToast({ type: 'success', text: 'Resident added successfully!' });
         setToast({ type: 'success', message: 'Resident added successfully!' });
         setFormData({ username: '', password: '', full_name: '', email: '', phone: '', block: '', lot_number: '' });
         fetchResidents();
         setTimeout(() => setShowModal(false), 1500);
       } else {
-        setFormMessage({ type: 'error', text: data.error || data.message || 'Failed to add resident' });
+        setToast({ type: 'error', text: data.error || data.message || 'Failed to add resident' });
         setToast({ type: 'error', message: data.error || data.message || 'Failed to add resident' });
       }
     } catch (error) {
       console.error('Error adding resident:', error);
-      setFormMessage({ type: 'error', text: 'An error occurred. Please try again.' });
-      setToast({ type: 'error', message: 'An error occurred. Please try again.' });
-    }
-  };
-
-  const handleSimpleSubmit = async (e) => {
-    e.preventDefault();
-    setSimpleMessage(null);
-
-    try {
-      const response = await fetch('/api/residents', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(simpleFormData)
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setSimpleMessage({ type: 'success', text: 'Resident registered successfully!' });
-        setToast({ type: 'success', message: 'Resident registered successfully!' });
-        setSimpleFormData({ username: '', block: '', lot_number: '', full_name: '', password: '' });
-        fetchResidents();
-        setTimeout(() => setShowRegisterModal(false), 1500);
-      } else {
-        setSimpleMessage({ type: 'error', text: data.error || data.message || 'Failed to register resident' });
-        setToast({ type: 'error', message: data.error || data.message || 'Failed to register resident' });
-      }
-    } catch (error) {
-      console.error('Error registering resident:', error);
-      setSimpleMessage({ type: 'error', text: 'An error occurred. Please try again.' });
+      setToast({ type: 'error', text: 'An error occurred. Please try again.' });
       setToast({ type: 'error', message: 'An error occurred. Please try again.' });
     }
   };
@@ -214,21 +198,12 @@ function Residents() {
         <div className="sr-title">
           <p className="sr-subtitle">Manage and view all registered residents and their account information</p>
         </div>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button className="sr-add-btn" onClick={() => setShowModal(true)}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 5v14M5 12h14" />
-            </svg>
-            Add Resident
-          </button>
-          <button className="sr-add-btn" onClick={() => setShowRegisterModal(true)}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 5v14M5 12h14" />
-            </svg>
-            Register
-          </button>
-
-        </div>
+        <button className="sr-add-btn" onClick={() => setShowModal(true)}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          Add Resident
+        </button>
       </div>
 
       <div className="sr-search-filter-bar">
@@ -238,7 +213,7 @@ function Residents() {
             <input
               type="text"
               name="fullName"
-              placeholder="Search by name..."
+              placeholder="Maglagay ng criteria sa paghahanap ng resident"
               value={filters.fullName}
               onChange={handleFilterChange}
             />
@@ -265,7 +240,7 @@ function Residents() {
               disabled={!filters.block && availableBlocks.length > 0}
             >
               <option value="">All Lots</option>
-              {computedAvailableLots.map(lot => (
+              {displayedLots.map(lot => (
                 <option key={lot} value={lot}>{lot}</option>
               ))}
             </select>
@@ -299,7 +274,7 @@ function Residents() {
         </div>
         <div className="sr-buttons-row">
           <button className="sr-search-btn" onClick={() => {
-            setCurrentPage(1); // Reset to first page on search
+            setCurrentPage(1);
             (async () => {
               setLoading(true);
               try {
@@ -496,7 +471,6 @@ function Residents() {
                     required
                   />
                 </div>
-
               </div>
               <div className="sr-modal-actions" style={{ justifyContent: 'center', gap: '20px' }}>
                 <button type="button" className="sr-cancel-btn" onClick={() => setShowModal(false)} style={{ padding: '10px 100px', fontSize: '16px' }}>
@@ -504,84 +478,6 @@ function Residents() {
                 </button>
                 <button type="submit" className="sr-submit-btn" style={{ padding: '10px 100px', fontSize: '16px' }}>
                   Add
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {showRegisterModal && (
-        <div className="sr-modal-overlay" onClick={() => setShowRegisterModal(false)}>
-          <div className="sr-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="sr-modal-header">
-              <h3 style={{ textAlign: 'center', flex: 1 }}>Register Resident</h3>
-              <button className="sr-modal-close" onClick={() => setShowRegisterModal(false)}>X</button>
-            </div>
-            <form className="sr-modal-form" onSubmit={handleSimpleSubmit}>
-              {simpleMessage && (
-                <div className={`sr-message ${simpleMessage.type}`}>
-                  {simpleMessage.text}
-                </div>
-              )}
-              <div className="sr-form-row">
-                <div className="sr-form-group">
-                  <label>Username <span className="required">*</span></label>
-                  <input
-                    type="text"
-                    name="username"
-                    value={simpleFormData.username}
-                    onChange={handleSimpleInputChange}
-                    required
-                  />
-                </div>
-                <div className="sr-form-group">
-                  <label>Block <span className="required">*</span></label>
-                  <input
-                    type="text"
-                    name="block"
-                    value={simpleFormData.block}
-                    onChange={handleSimpleInputChange}
-                    required
-                  />
-                </div>
-                <div className="sr-form-group">
-                  <label>Lot <span className="required">*</span></label>
-                  <input
-                    type="text"
-                    name="lot_number"
-                    value={simpleFormData.lot_number}
-                    onChange={handleSimpleInputChange}
-                    required
-                  />
-                </div>
-                <div className="sr-form-group">
-                  <label>Full Name <span className="required">*</span></label>
-                  <input
-                    type="text"
-                    name="full_name"
-                    value={simpleFormData.full_name}
-                    onChange={handleSimpleInputChange}
-                    required
-                  />
-                </div>
-                <div className="sr-form-group">
-                  <label>Password <span className="required">*</span></label>
-                  <input
-                    type="password"
-                    name="password"
-                    value={simpleFormData.password}
-                    onChange={handleSimpleInputChange}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="sr-modal-actions" style={{ justifyContent: 'center', gap: '20px' }}>
-                <button type="button" className="sr-cancel-btn" onClick={() => setShowRegisterModal(false)} style={{ padding: '10px 100px', fontSize: '16px' }}>
-                  Cancel
-                </button>
-                <button type="submit" className="sr-submit-btn" style={{ padding: '10px 100px', fontSize: '16px' }}>
-                  Register
                 </button>
               </div>
             </form>

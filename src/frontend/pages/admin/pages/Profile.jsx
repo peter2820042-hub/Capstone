@@ -228,7 +228,7 @@ const Profile = ({ user }) => {
         </div>
         
         {!isEditing && (
-          <button className="edit-btn" onClick={handleEdit}>
+          <button className="staff-edit-btn edit-btn" onClick={handleEdit}>
             Edit Profile
           </button>
         )}
@@ -240,8 +240,8 @@ const Profile = ({ user }) => {
           
           {isEditing ? (
             <div className="edit-form">
-              <div className="admin-admin-form-grid">
-                <div className="admin-admin-form-item">
+              <div className="staff-form-grid">
+                <div className="staff-form-item">
                   <label htmlFor="fullName">Full Name</label>
                   <input
                     type="text"
@@ -252,7 +252,7 @@ const Profile = ({ user }) => {
                     placeholder="Enter full name"
                   />
                 </div>
-                <div className="admin-admin-form-item">
+                <div className="staff-form-item">
                   <label htmlFor="email">Email</label>
                   <input
                     type="email"
@@ -263,7 +263,7 @@ const Profile = ({ user }) => {
                     placeholder="Enter email"
                   />
                 </div>
-                <div className="admin-admin-form-item">
+                <div className="staff-form-item">
                   <label htmlFor="phone">Phone Number</label>
                   <input
                     type="tel"
@@ -276,15 +276,15 @@ const Profile = ({ user }) => {
                 </div>
               </div>
               
-              <div className="admin-admin-form-actions">
+              <div className="staff-form-actions">
                 <button 
                   type="button" 
-                  className="save-btn" 
+                  className="staff-save-btn" 
                   onClick={handleSave}
                 >
                   Save Changes
                 </button>
-                <button type="button" className="cancel-btn" onClick={handleCancel}>
+                <button type="button" className="staff-cancel-btn cancel-btn" onClick={handleCancel}>
                   Cancel
                 </button>
               </div>

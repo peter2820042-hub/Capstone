@@ -100,11 +100,13 @@ const Dashboard = () => {
         </div>
       </div>
 
+      {/* Two Column Layout for Pending Sections */}
+
       {/* KPI Cards */}
       <div className="adm-kpi-grid">
         {/* Card 1: Total Residents */}
         <div className="adm-kpi-card">
-          <div className="adm-kpi-icon residents">
+          <div className="adm-kpi-icon adm-residents">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
               <circle cx="9" cy="7" r="4" />
@@ -120,7 +122,7 @@ const Dashboard = () => {
 
         {/* Card 2: Pending Payment */}
         <div className="adm-kpi-card">
-          <div className="adm-kpi-icon pending">
+          <div className="adm-kpi-icon adm-pending">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="10" />
               <polyline points="12 6 12 12 16 14" />
@@ -134,7 +136,7 @@ const Dashboard = () => {
 
         {/* Card 3: Pending Bill */}
         <div className="adm-kpi-card">
-          <div className="adm-kpi-icon dues">
+          <div className="adm-kpi-icon adm-dues">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="12" y1="1" x2="12" y2="23" />
               <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
@@ -148,7 +150,7 @@ const Dashboard = () => {
 
         {/* Card 4: Pending Violation */}
         <div className="adm-kpi-card">
-          <div className="adm-kpi-icon violations">
+          <div className="adm-kpi-icon adm-violations">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
               <line x1="12" y1="9" x2="12" y2="13" />
@@ -162,7 +164,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Two Column Layout for Pending Sections */}
+      
       <div className="adm-pending-sections-row">
         {/* Pending Bills Section */}
         <div className="adm-pending-bills-section">
@@ -207,8 +209,8 @@ const Dashboard = () => {
           <a href="/violations" className="adm-view-all-link">View All</a>
         </div>
         {pendingViolations.length > 0 ? (
-          <div className="adm-violations-table-container" style={{ flex: 1 }}>
-            <table className="adm-violations-table">
+          <div className="adm-pending-violations-table-container" style={{ flex: 1 }}>
+            <table className="adm-pending-violations-table">
               <thead>
                 <tr>
                   <th>Resident</th>

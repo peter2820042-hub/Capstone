@@ -1,22 +1,13 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Billing.css';
 
 function Billing({ user }) {
-  // Filter states
-  const [statusFilter, setStatusFilter] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-
-  // Bill types for filter dropdown
-  const billTypes = ['Monthly Dues', 'Parking Fee', 'Utility Fee', 'Association Fee', 'Special Assessment', 'Violations', 'Other'];
-
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // Bills data (empty - no API)
+  // Bills data
   const [bills, setBills] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   // Get user's lot number
@@ -38,8 +29,6 @@ function Billing({ user }) {
       } catch (err) {
         setError('Failed to load bills');
         console.error('Error fetching bills:', err);
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -49,41 +38,15 @@ function Billing({ user }) {
   // Selected bill for details modal
   const [selectedBill, setSelectedBill] = useState(null);
 
-  // Get unique statuses for filter dropdown
-  const uniqueStatuses = useMemo(() => {
-    return [...new Set(bills.map(bill => bill.status))];
-  }, [bills]);
-
-  // Filter bills based on search and filters
-  const filteredBills = useMemo(() => {
-    return bills.filter(bill => {
-      // Status filter
-      if (statusFilter && bill.status !== statusFilter) return false;
-
-      // Type filter
-      if (typeFilter && bill.billType !== typeFilter) return false;
-
-      // Search query filter
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        const matchesDescription = bill.description?.toLowerCase().includes(query);
-        const matchesBillNumber = bill.billNumber?.toLowerCase().includes(query);
-        if (!matchesDescription && !matchesBillNumber) return false;
-      }
-
-      return true;
-    });
-  }, [bills, statusFilter, typeFilter, searchQuery]);
-
   // Pagination calculation
-  const totalPages = Math.ceil(filteredBills.length / itemsPerPage);
+  const totalPages = Math.ceil(bills.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedBills = filteredBills.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedBills = bills.slice(startIndex, startIndex + itemsPerPage);
 
   // Calculate totals
-  const totalAmount = filteredBills.reduce((sum, bill) => sum + (bill.amount || 0), 0);
-  const paidAmount = filteredBills.filter(bill => bill.status === 'Paid').reduce((sum, bill) => sum + (bill.amount || 0), 0);
-  const pendingAmount = filteredBills.filter(bill => bill.status === 'Pending').reduce((sum, bill) => sum + (bill.amount || 0), 0);
+  const totalAmount = bills.reduce((sum, bill) => sum + (bill.amount || 0), 0);
+  const paidAmount = bills.filter(bill => bill.status === 'Paid').reduce((sum, bill) => sum + (bill.amount || 0), 0);
+  const pendingAmount = bills.filter(bill => bill.status === 'Pending').reduce((sum, bill) => sum + (bill.amount || 0), 0);
 
   // Format currency (PHP)
   const formatCurrency = (amount) => {
@@ -129,21 +92,21 @@ function Billing({ user }) {
     );
   }
 
-  if (loading) {
-    return (
-      <div className="billing-container">
-        <div className="loading-state">
-          <div className="loading-spinner"></div>
-          <p>Loading bills...</p>
-        </div>
-      </div>
-    );
-  }
+  // Check if there are no bills at all
+  const showEmptyState = bills.length === 0;
 
   return (
     <div className="billing-container">
 
-      {/* Summary Cards */}
+      {/* Page Header */}
+      <div className="page-header">
+        <div className="header-content">
+          <h1>Billing</h1>
+          <p>View and manage your billing statements and payments</p>
+        </div>
+      </div>
+
+      {/* Summary Cards - Always visible */}
       <div className="summary-section">
         <div className="summary-grid">
           <div className="summary-card total">
@@ -186,144 +149,142 @@ function Billing({ user }) {
         </div>
       </div>
 
-      {/* Filters Section */}
-      <div className="filter-section">
-        <div className="filter-row">
-          <div className="user-filter-group">
-            <label>Search</label>
-            <input
-              type="text"
-              placeholder="Search bills..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <div className="user-filter-group">
-            <label>Status</label>
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-              <option value="">All Status</option>
-              <option value="Pending">Pending</option>
-              <option value="Paid">Paid</option>
-            </select>
-          </div>
-          <div className="user-filter-group">
-            <label>Type</label>
-            <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
-              <option value="">All Types</option>
-              {billTypes.map(type => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
 
-      {/* Bills Table */}
+
+      {/* Table Section with Empty State */}
       <div className="table-section">
-        <div className="user-table-container">
-          <table className="bills-table">
-            <thead>
-              <tr>
-                <th>Bill Number</th>
-                <th>Description</th>
-                <th>Amount</th>
-                <th>Due Date</th>
-                <th>Status</th>
-                <th>Paid Date</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedBills.length > 0 ? (
-                paginatedBills.map(bill => (
-                  <tr key={bill.id}>
-                    <td className="bill-number">{bill.billNumber}</td>
-                    <td className="description">{bill.description}</td>
-                    <td className="amount">{formatCurrency(bill.amount)}</td>
-                    <td className="due-date">{formatDate(bill.dueDate)}</td>
-                    <td className="status">
-                      <span className={`status-badge ${bill.status?.toLowerCase()}`}>
-                        {bill.status}
-                      </span>
-                    </td>
-                    <td className="paid-date">{formatDate(bill.paidDate)}</td>
-                    <td className="actions">
-                      <button className="view-btn" onClick={() => viewBillDetails(bill)} title="View Details">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                          <circle cx="12" cy="12" r="3" />
-                        </svg>
-                      </button>
-                    </td>
+        {showEmptyState ? (
+          <div className="empty-state">
+            <div className="empty-state-icon billing-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                <line x1="1" y1="10" x2="23" y2="10" />
+              </svg>
+            </div>
+            <div className="empty-state-content">
+              <h2 className="empty-state-title">No Billing Statements Yet</h2>
+              <p className="empty-state-description">
+                You don't have any billing statements at the moment. Your bills will appear here once they are generated by the administration.
+              </p>
+              <div className="empty-state-hint">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="16" x2="12" y2="12" />
+                  <line x1="12" y1="8" x2="12.01" y2="8" />
+                </svg>
+                <span>Check back later or contact the admin for assistance</span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="user-table-container">
+              <table className="bills-table">
+                <thead>
+                  <tr>
+                    <th>Bill Number</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                    <th>Due Date</th>
+                    <th>Status</th>
+                    <th>Paid Date</th>
+                    <th>Actions</th>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="7" className="no-results">
-                    <div className="no-results-content">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                        <polyline points="14 2 14 8 20 8" />
-                      </svg>
-                      <p>No bills found</p>
-                      {bills.length === 0 && (
-                        <p className="no-bills-hint">Your billing statements will appear here</p>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="user-pagination">
-            <button className="user-user-pagination-btn" onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="11 17 6 12 11 7" />
-                <polyline points="18 17 13 12 18 7" />
-              </svg>
-            </button>
-            <button className="user-user-pagination-btn" onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="15 18 9 12 15 6" />
-              </svg>
-            </button>
-            
-            <div className="user-pagination-pages">
-              {Array.from({ length: totalPages }, (_, i) => i + 1)
-                .filter(page => {
-                  if (totalPages <= 7) return true;
-                  if (page === 1 || page === totalPages) return true;
-                  if (page >= currentPage - 1 && page <= currentPage + 1) return true;
-                  return false;
-                })
-                .map((page, index, array) => (
-                  <React.Fragment key={page}>
-                    {index > 0 && array[index - 1] !== page - 1 && (
-                      <span className="user-pagination-ellipsis">...</span>
-                    )}
-                    <button className={`user-pagination-page ${currentPage === page ? 'active' : ''}`} onClick={() => setCurrentPage(page)}>
-                      {page}
-                    </button>
-                  </React.Fragment>
-                ))}
+                </thead>
+                <tbody>
+                  {paginatedBills.length > 0 ? (
+                    paginatedBills.map(bill => (
+                      <tr key={bill.id}>
+                        <td className="bill-number">{bill.billNumber}</td>
+                        <td className="description">{bill.description}</td>
+                        <td className="amount">{formatCurrency(bill.amount)}</td>
+                        <td className="due-date">{formatDate(bill.dueDate)}</td>
+                        <td className="status">
+                          <span className={`status-badge ${bill.status?.toLowerCase()}`}>
+                            {bill.status}
+                          </span>
+                        </td>
+                        <td className="paid-date">{formatDate(bill.paidDate)}</td>
+                        <td className="actions">
+                          <button className="view-btn" onClick={() => viewBillDetails(bill)} title="View Details">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                              <circle cx="12" cy="12" r="3" />
+                            </svg>
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="7" className="no-results">
+                        <div className="no-results-content">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <circle cx="11" cy="11" r="8" />
+                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                          </svg>
+                          <p>No bills match your filters</p>
+                          <p className="no-bills-hint">Try adjusting your search criteria</p>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
 
-            <button className="user-user-pagination-btn" onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === totalPages}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="9 18 15 12 9 6" />
-              </svg>
-            </button>
-            <button className="user-user-pagination-btn" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="13 17 18 12 13 7" />
-                <polyline points="6 17 11 12 6 7" />
-              </svg>
-            </button>
-          </div>
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="user-pagination">
+                <button className="user-user-pagination-btn" onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="11 17 6 12 11 7" />
+                    <polyline points="18 17 13 12 18 7" />
+                  </svg>
+                </button>
+                <button className="user-user-pagination-btn" onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="15 18 9 12 15 6" />
+                  </svg>
+                </button>
+                
+                <div className="user-pagination-pages">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(page => {
+                      if (totalPages <= 7) return true;
+                      if (page === 1 || page === totalPages) return true;
+                      if (page >= currentPage - 1 && page <= currentPage + 1) return true;
+                      return false;
+                    })
+                    .map((page, index, array) => (
+                      <React.Fragment key={page}>
+                        {index > 0 && array[index - 1] !== page - 1 && (
+                          <span className="user-pagination-ellipsis">...</span>
+                        )}
+                        <button
+                          className={`user-pagination-page ${currentPage === page ? 'active' : ''}`}
+                          onClick={() => setCurrentPage(page)}
+                        >
+                          {page}
+                        </button>
+                      </React.Fragment>
+                    ))}
+                </div>
+
+                <button className="user-user-pagination-btn" onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === totalPages}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </button>
+                <button className="user-user-pagination-btn" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="13 17 18 12 13 7" />
+                    <polyline points="6 17 11 12 6 7" />
+                  </svg>
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
 

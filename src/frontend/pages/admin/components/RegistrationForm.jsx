@@ -73,13 +73,13 @@ const RegistrationForm = () => {
   };
 
   return (
-    <div className="registration-container">
-      <h2 className="registration-title">System Registration</h2>
+    <div className="adm-registration-container">
+      <h2 className="adm-registration-title">System Registration</h2>
       
-      <form onSubmit={handleSubmit} className="registration-form">
+      <form onSubmit={handleSubmit} className="adm-registration-form">
         
         {/* Username */}
-        <div className="input-group">
+        <div className="adm-input-group">
           <label>User Name</label>
           <input
             type="text"
@@ -92,7 +92,7 @@ const RegistrationForm = () => {
         </div>
 
         {/* Password */}
-        <div className="input-group">
+        <div className="adm-input-group">
           <label>Password</label>
           <input
             type="password"
@@ -105,13 +105,13 @@ const RegistrationForm = () => {
         </div>
 
         {/* Role Dropdown */}
-        <div className="input-group">
+        <div className="adm-input-group">
           <label>Role</label>
           <select 
             name="role" 
             value={formData.role} 
             onChange={handleChange} 
-            className="role-select"
+            className="adm-role-select"
             required
           >
             <option value="" disabled>Select a role</option>
@@ -123,8 +123,8 @@ const RegistrationForm = () => {
 
         {/* Admin/Staff Fields: Full Name, Email, Phone, Position */}
         {(formData.role === 'admin' || formData.role === 'staff') && (
-          <div className="animate-fade-in">
-            <div className="input-group">
+          <div className="adm-animate-fade-in">
+            <div className="adm-input-group">
               <label>Full Name</label>
               <input
                 type="text"
@@ -135,7 +135,7 @@ const RegistrationForm = () => {
                 required={formData.role === 'admin' || formData.role === 'staff'}
               />
             </div>
-            <div className="input-group">
+            <div className="adm-input-group">
               <label>Email</label>
               <input
                 type="email"
@@ -145,7 +145,7 @@ const RegistrationForm = () => {
                 placeholder="Enter email (optional)"
               />
             </div>
-            <div className="input-group">
+            <div className="adm-input-group">
               <label>Phone</label>
               <input
                 type="tel"
@@ -155,7 +155,7 @@ const RegistrationForm = () => {
                 placeholder="09XXXXXXXXX (optional)"
               />
             </div>
-            <div className="input-group">
+            <div className="adm-input-group">
               <label>Position</label>
               <input
                 type="text"
@@ -170,8 +170,8 @@ const RegistrationForm = () => {
 
         {/* Conditional Fields: Lalabas lang kung Homeowner ang pinili */}
         {formData.role === 'homeowner' && (
-          <div className="animate-fade-in">
-            <div className="input-group">
+          <div className="adm-animate-fade-in">
+            <div className="adm-input-group">
               <label>Full Name</label>
               <input
                 type="text"
@@ -182,7 +182,7 @@ const RegistrationForm = () => {
                 required={formData.role === 'homeowner'}
               />
             </div>
-            <div className="input-group">
+            <div className="adm-input-group">
               <label>Email</label>
               <input
                 type="email"
@@ -192,7 +192,7 @@ const RegistrationForm = () => {
                 placeholder="Enter email (optional)"
               />
             </div>
-            <div className="input-group">
+            <div className="adm-input-group">
               <label>Phone</label>
               <input
                 type="tel"
@@ -202,8 +202,8 @@ const RegistrationForm = () => {
                 placeholder="09XXXXXXXXX (optional)"
               />
             </div>
-            <div className="form-row">
-              <div className="input-group">
+            <div className="adm-form-row">
+              <div className="adm-input-group">
                 <label>Block</label>
                 <input
                   type="text"
@@ -214,7 +214,7 @@ const RegistrationForm = () => {
                   required={formData.role === 'homeowner'}
                 />
               </div>
-              <div className="input-group">
+              <div className="adm-input-group">
                 <label>Lot</label>
                 <input
                   type="text"
@@ -229,7 +229,7 @@ const RegistrationForm = () => {
           </div>
         )}
 
-        <button type="submit" className="submit-button">
+        <button type="submit" className="adm-submit-button">
           Register Account
         </button>
       </form>

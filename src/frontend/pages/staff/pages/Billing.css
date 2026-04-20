@@ -1677,6 +1677,7 @@
 .sr-table-actions {
   display: flex;
   gap: 8px;
+  justify-content: center;
 }
 
 .sr-view-btn,

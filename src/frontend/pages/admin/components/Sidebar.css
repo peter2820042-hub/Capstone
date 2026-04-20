@@ -1,4 +1,6 @@
-/* Sidebar Styles */
+/* ============ SIDEBAR STYLES ============ */
+/* Same as staff sidebar - exact copy */
+
 .sidebar {
   width: 256px;
   height: 100vh;
@@ -154,7 +156,7 @@
   color: #FF6B6B;
 }
 
-/* Dropdown Menu Styles (used in header) */
+/* Dropdown Menu Styles */
 .sidebar-dropdown {
   position: relative;
   display: inline-block;

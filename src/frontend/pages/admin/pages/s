@@ -82,13 +82,91 @@ const getStatusConfig = (status) => {
   return STATUS_CONFIG[key] || STATUS_CONFIG.default;
 };
 
+// ============================================================================
+// FILTER COMPONENT
+// ============================================================================
 
+const FiltersSection = ({
+  dateFrom, setDateFrom,
+  dateTo, setDateTo,
+  userFilter, setUserFilter,
+  actionFilter, setActionFilter,
+  moduleFilter, setModuleFilter,
+  searchQuery, setSearchQuery,
+  uniqueUsers, uniqueActions, uniqueModules
+}) => {
+  return (
+    <div className="sr-search-filter-bar">
+      <div className="sr-filters-row">
+        <div className="sr-filter-group">
+          <label>Search</label>
+          <input
+            type="text"
+            placeholder="Search logs..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <div className="sr-filter-group">
+          <label>Date From</label>
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+          />
+        </div>
+        <div className="sr-filter-group">
+          <label>Date To</label>
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+          />
+        </div>
+        <div className="sr-filter-group">
+          <label>User</label>
+          <select value={userFilter} onChange={(e) => setUserFilter(e.target.value)}>
+            <option value="">All Users</option>
+            {uniqueUsers.map(user => (
+              <option key={user} value={user}>{user}</option>
+            ))}
+          </select>
+        </div>
+        <div className="sr-filter-group">
+          <label>Action</label>
+          <select value={actionFilter} onChange={(e) => setActionFilter(e.target.value)}>
+            <option value="">All Actions</option>
+            {uniqueActions.map(action => (
+              <option key={action} value={action}>{action}</option>
+            ))}
+          </select>
+        </div>
+        <div className="sr-filter-group">
+          <label>Module</label>
+          <select value={moduleFilter} onChange={(e) => setModuleFilter(e.target.value)}>
+            <option value="">All Modules</option>
+            {uniqueModules.map(module => (
+              <option key={module} value={module}>{module}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 
 function AuditLogs() {
+  // Filter states
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [userFilter, setUserFilter] = useState('');
+  const [actionFilter, setActionFilter] = useState('');
+  const [moduleFilter, setModuleFilter] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -140,10 +218,51 @@ function AuditLogs() {
     fetchAuditLogs();
   }, []);
 
-  // Filter logs - show all logs without filtering
-  const filteredLogs = useMemo(() => {
-    return logs;
+  // Clear filters
+
+  // Get unique values for filters
+  const uniqueUsers = useMemo(() => {
+    return [...new Set(logs.map(log => log.user))].filter(Boolean);
   }, [logs]);
+
+  const uniqueActions = useMemo(() => {
+    return [...new Set(logs.map(log => log.action))].filter(Boolean);
+  }, [logs]);
+
+  const uniqueModules = useMemo(() => {
+    return [...new Set(logs.map(log => log.module))].filter(Boolean);
+  }, [logs]);
+
+  // Filter logs
+  const filteredLogs = useMemo(() => {
+    return logs.filter(log => {
+      // Date filter
+      if (dateFrom && log.timestamp < dateFrom) return false;
+      if (dateTo && log.timestamp > dateTo + ' 23:59:59') return false;
+      
+      // User filter
+      if (userFilter && log.user !== userFilter) return false;
+      
+      // Action filter
+      if (actionFilter && log.action !== actionFilter) return false;
+      
+      // Module filter
+      if (moduleFilter && log.module !== moduleFilter) return false;
+      
+      // Search query
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchesSearch = 
+          log.user?.toLowerCase().includes(query) ||
+          log.action?.toLowerCase().includes(query) ||
+          log.module?.toLowerCase().includes(query) ||
+          log.description?.toLowerCase().includes(query);
+        if (!matchesSearch) return false;
+      }
+      
+      return true;
+    });
+  }, [logs, dateFrom, dateTo, userFilter, actionFilter, moduleFilter, searchQuery]);
 
   // Pagination
   const totalPages = Math.ceil(filteredLogs.length / itemsPerPage);
@@ -208,7 +327,7 @@ function AuditLogs() {
         <div className="header-actions">
           <button className="add-btn" onClick={exportToCSV} disabled={isExportingCSV || filteredLogs.length === 0}>
             {isExportingCSV ? (
-              <Loader2 size={16} className="sr-spinner" />
+              <Loader2 size={16} className="adm-spinner" />
             ) : (
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -220,7 +339,7 @@ function AuditLogs() {
           </button>
           <button className="add-btn" onClick={exportToPDF} disabled={isExportingPDF || filteredLogs.length === 0}>
             {isExportingPDF ? (
-              <Loader2 size={16} className="sr-spinner" />
+              <Loader2 size={16} className="adm-spinner" />
             ) : (
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -234,7 +353,24 @@ function AuditLogs() {
         </div>
       </div>
 
-      
+      {/* Filters Section */}
+      <FiltersSection
+        dateFrom={dateFrom}
+        setDateFrom={setDateFrom}
+        dateTo={dateTo}
+        setDateTo={setDateTo}
+        userFilter={userFilter}
+        setUserFilter={setUserFilter}
+        actionFilter={actionFilter}
+        setActionFilter={setActionFilter}
+        moduleFilter={moduleFilter}
+        setModuleFilter={setModuleFilter}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        uniqueUsers={uniqueUsers}
+        uniqueActions={uniqueActions}
+        uniqueModules={uniqueModules}
+      />
 
       {/* Table Section */}
       <section className="sr-table-section">
@@ -274,47 +410,47 @@ function AuditLogs() {
 
                     return (
                       <tr key={log.id}>
-                        <td className="sr-timestamp-cell">
-                          <span className="sr-date">{formatTimestamp(log.timestamp).split('|')[0]}</span>
-                          <span className="sr-time">{formatTimestamp(log.timestamp).split('|')[1]}</span>
+                        <td className="adm-timestamp-cell">
+                          <span className="adm-date">{formatTimestamp(log.timestamp).split('|')[0]}</span>
+                          <span className="adm-time">{formatTimestamp(log.timestamp).split('|')[1]}</span>
                         </td>
-                        <td className="sr-user-cell">
-                          <div className="sr-user-info">
-                            <div className="sr-user-avatar">
+                        <td className="adm-user-cell">
+                          <div className="adm-user-info">
+                            <div className="adm-user-avatar">
                               {log.profileImage ? (
-                                <img src={log.profileImage} alt={log.user} className="sr-avatar-img" />
+                                <img src={log.profileImage} alt={log.user} className="adm-avatar-img" />
                               ) : (
                                 log.user?.split(' ')[0]?.charAt(0) || '?'
                               )}
                             </div>
-                            <div className="sr-user-details">
-                              <span className="sr-user-name">{log.user?.split(' ')[0] || log.user}</span>
-                              <span className="sr-user-role">{log.userRole || 'N/A'}</span>
+                            <div className="adm-user-details">
+                              <span className="adm-user-name">{log.user?.split(' ')[0] || log.user}</span>
+                              <span className="adm-user-role">{log.userRole || 'N/A'}</span>
                             </div>
                           </div>
                         </td>
-                        <td className="sr-action-cell">
-                          <span className={`sr-action-badge ${actionBadge.bg} ${actionBadge.text} ${actionBadge.border}`}>
+                        <td className="adm-action-cell">
+                          <span className={`adm-action-badge ${actionBadge.bg} ${actionBadge.text} ${actionBadge.border}`}>
                             <ActionIcon size={12} />
                             {log.action}
                           </span>
                         </td>
-                        <td className="sr-module-cell">
-                          <span className={`sr-module-badge ${moduleBadge.bg} ${moduleBadge.text}`}>
+                        <td className="adm-module-cell">
+                          <span className={`adm-module-badge ${moduleBadge.bg} ${moduleBadge.text}`}>
                             {log.module}
                           </span>
                         </td>
-                        <td className="sr-description-cell">
+                        <td className="adm-description-cell">
                           <span title={log.description}>{log.description}</span>
                         </td>
-                        <td className="sr-actions-cell">
-                          <div className="sr-action-buttons">
+                        <td className="adm-actions-cell">
+                          <div className="adm-action-buttons">
                             <button
-                              className="sr-view-btn"
+                              className="adm-view-btn"
                               onClick={() => viewLogDetails(log)}
                               title="View Details"
                             >
-                              View
+                              <Eye size={16} />
                             </button>
                           </div>
                         </td>
@@ -323,12 +459,12 @@ function AuditLogs() {
                   })
                 ) : (
                   <tr>
-                    <td colSpan="6" className="sr-no-results">
-                      <div className="sr-no-results-content">
+                    <td colSpan="6" className="adm-no-results">
+                      <div className="adm-no-results-content">
                         <Search size={48} />
                         <p>No audit logs found</p>
                         {logs.length === 0 && (
-                          <p className="sr-no-logs-hint">Audit logs will appear here once the database is connected</p>
+                          <p className="adm-no-logs-hint">Audit logs will appear here once the database is connected</p>
                         )}
                       </div>
                     </td>
@@ -341,9 +477,9 @@ function AuditLogs() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="sr-pagination">
+          <div className="adm-admin-admin-pagination">
             <button
-              className="sr-pagination-btn"
+              className="adm-admin-admin-admin-admin-pagination-btn"
               onClick={() => setCurrentPage(1)}
               disabled={currentPage === 1}
               title="First Page"
@@ -351,7 +487,7 @@ function AuditLogs() {
               <ChevronFirst size={16} />
             </button>
             <button
-              className="sr-pagination-btn"
+              className="adm-admin-admin-admin-admin-pagination-btn"
               onClick={() => setCurrentPage(currentPage - 1)}
               disabled={currentPage === 1}
               title="Previous Page"
@@ -359,7 +495,7 @@ function AuditLogs() {
               <ChevronLeft size={16} />
             </button>
             
-            <div className="sr-pagination-pages">
+            <div className="adm-admin-admin-pagination-pages">
               {Array.from({ length: totalPages }, (_, i) => i + 1)
                 .filter(page => {
                   if (totalPages <= 7) return true;
@@ -370,10 +506,10 @@ function AuditLogs() {
                 .map((page, index, array) => (
                   <React.Fragment key={page}>
                     {index > 0 && array[index - 1] !== page - 1 && (
-                      <span className="sr-pagination-ellipsis">...</span>
+                      <span className="adm-admin-admin-pagination-ellipsis">...</span>
                     )}
                     <button
-                      className={`sr-pagination-page ${currentPage === page ? 'active' : ''}`}
+                      className={`adm-admin-admin-pagination-page ${currentPage === page ? 'active' : ''}`}
                       onClick={() => setCurrentPage(page)}
                     >
                       {page}
@@ -383,7 +519,7 @@ function AuditLogs() {
             </div>
 
             <button
-              className="sr-pagination-btn"
+              className="adm-admin-admin-admin-admin-pagination-btn"
               onClick={() => setCurrentPage(currentPage + 1)}
               disabled={currentPage === totalPages}
               title="Next Page"
@@ -391,7 +527,7 @@ function AuditLogs() {
               <ChevronRight size={16} />
             </button>
             <button
-              className="sr-pagination-btn"
+              className="adm-admin-admin-admin-admin-pagination-btn"
               onClick={() => setCurrentPage(totalPages)}
               disabled={currentPage === totalPages}
               title="Last Page"
@@ -404,42 +540,42 @@ function AuditLogs() {
 
       {/* Log Details Modal */}
       {selectedLog && (
-        <div className="sr-modal-overlay" onClick={closeModal}>
-          <div className="sr-modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="sr-modal-header">
+        <div className="adm-admin-admin-modal-overlay" onClick={closeModal}>
+          <div className="adm-admin-admin-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="adm-admin-admin-modal-header">
               <h2>Audit Log Details</h2>
-              <button className="sr-modal-close" onClick={closeModal}>
+              <button className="adm-admin-admin-modal-close" onClick={closeModal}>
                 <X size={20} />
               </button>
             </div>
-            <div className="sr-modal-body">
-              <div className="sr-detail-row">
+            <div className="adm-admin-admin-modal-body">
+              <div className="adm-admin-admin-detail-row">
                 <label>Log ID:</label>
                 <span>#{selectedLog.id}</span>
               </div>
-              <div className="sr-detail-row">
+              <div className="adm-admin-admin-detail-row">
                 <label>Timestamp:</label>
                 <span>{formatTimestamp(selectedLog.timestamp)}</span>
               </div>
-              <div className="sr-detail-row">
+              <div className="adm-admin-admin-detail-row">
                 <label>User:</label>
                 <span>{selectedLog.user}</span>
               </div>
-              <div className="sr-detail-row">
+              <div className="adm-admin-admin-detail-row">
                 <label>Action:</label>
                 <span>{selectedLog.action}</span>
               </div>
-              <div className="sr-detail-row">
+              <div className="adm-admin-admin-detail-row">
                 <label>Module:</label>
                 <span>{selectedLog.module}</span>
               </div>
-              <div className="sr-detail-row">
+              <div className="adm-admin-admin-detail-row">
                 <label>Description:</label>
                 <span>{selectedLog.description}</span>
               </div>
             </div>
-            <div className="sr-modal-footer">
-              <button className="sr-modal-btn sr-close" onClick={closeModal}>
+            <div className="adm-admin-admin-modal-footer">
+              <button className="adm-modal-btn adm-close" onClick={closeModal}>
                 Close
               </button>
             </div>

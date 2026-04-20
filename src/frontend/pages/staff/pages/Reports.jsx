@@ -9,9 +9,28 @@ function Reports() {
   const [violations, setViolations] = useState([]);
   const [payments, setPayments] = useState([]);
 
-  // Date filter states
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+
+  // Get status options based on active tab
+  const getStatusOptions = () => {
+    const baseOptions = [{ value: 'all', label: 'All Status' }];
+    switch (activeTab) {
+      case 'billing':
+        return [...baseOptions, { value: 'paid', label: 'Paid' }, { value: 'pending', label: 'Pending' }, { value: 'overdue', label: 'Overdue' }];
+      case 'payments':
+        return [...baseOptions, { value: 'completed', label: 'Completed' }, { value: 'pending', label: 'Pending' }, { value: 'failed', label: 'Failed' }];
+      case 'violations':
+        return [...baseOptions, { value: 'unsettled', label: 'Unsettled' }, { value: 'settled', label: 'Settled' }, { value: 'appealed', label: 'Appealed' }];
+      default:
+        return baseOptions;
+    }
+  };
+
+
 
   // Fetch all data on mount
   useEffect(() => {
@@ -62,17 +81,75 @@ function Reports() {
     });
   };
 
+  // Filter data by status
+  const filterByStatus = (data) => {
+    if (statusFilter === 'all') return data;
+    
+    return data.filter(item => {
+      const itemStatus = (item.status || '').toLowerCase();
+      const selectedStatus = statusFilter.toLowerCase();
+      return itemStatus === selectedStatus;
+    });
+  };
+
   // Get filtered data based on active tab
   const getFilteredData = () => {
+    let data;
     switch (activeTab) {
       case 'billing':
-        return filterByDate(bills, 'dueDate');
+        data = filterByDate(bills, 'dueDate');
+        break;
       case 'violations':
-        return filterByDate(violations, 'dateIssued');
+        data = filterByDate(violations, 'dateIssued');
+        break;
       case 'payments':
-        return filterByDate(payments, 'paymentDate');
+        data = filterByDate(payments, 'paymentDate');
+        break;
       default:
-        return [];
+        data = [];
+    }
+
+    // Apply status filter
+    data = filterByStatus(data);
+    
+    // Apply search filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      return data.filter(item => {
+        if (activeTab === 'billing') {
+          return (item.residentName || '').toLowerCase().includes(term) ||
+                 (item.billType || '').toLowerCase().includes(term) ||
+                 (item.status || '').toLowerCase().includes(term);
+        } else if (activeTab === 'payments') {
+          return (item.residentName || '').toLowerCase().includes(term) ||
+                 (item.billReference || '').toLowerCase().includes(term) ||
+                 (item.status || '').toLowerCase().includes(term);
+        } else if (activeTab === 'violations') {
+          return (item.residentName || '').toLowerCase().includes(term) ||
+                 (item.lotNumber || '').toLowerCase().includes(term) ||
+                 (item.block || '').toLowerCase().includes(term) ||
+                 (item.violationType || '').toLowerCase().includes(term) ||
+                 (item.status || '').toLowerCase().includes(term);
+        }
+        return true;
+      });
+    }
+    
+    return data;
+  };
+
+  // Reset status filter when tab changes
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    // Default to completed for payments, settled for violations, paid for billing
+    if (tab === 'payments') {
+      setStatusFilter('completed');
+    } else if (tab === 'violations') {
+      setStatusFilter('settled');
+    } else if (tab === 'billing') {
+      setStatusFilter('paid');
+    } else {
+      setStatusFilter('all');
     }
   };
 
@@ -94,6 +171,20 @@ function Reports() {
       day: 'numeric',
       year: 'numeric'
     });
+  };
+
+  // Get tab title for table section
+  const getTabTitle = () => {
+    switch (activeTab) {
+      case 'billing':
+        return 'Billing Records';
+      case 'payments':
+        return 'Payment Records';
+      case 'violations':
+        return 'Violation Records';
+      default:
+        return 'Records';
+    }
   };
 
   return (
@@ -128,86 +219,102 @@ function Reports() {
       <div className="report-tabs">
         <button 
           className={`tab ${activeTab === 'billing' ? 'active' : ''}`}
-          onClick={() => setActiveTab('billing')}
+          onClick={() => handleTabChange('billing')}
         >
           Billing
         </button>
         <button 
           className={`tab ${activeTab === 'violations' ? 'active' : ''}`}
-          onClick={() => setActiveTab('violations')}
+          onClick={() => handleTabChange('violations')}
         >
           Violations
         </button>
         <button 
           className={`tab ${activeTab === 'payments' ? 'active' : ''}`}
-          onClick={() => setActiveTab('payments')}
+          onClick={() => handleTabChange('payments')}
         >
           Payments
         </button>
       </div>
 
       {/* Search/Filter - Horizontal Layout */}
-      <div className="staff-search-filter-bar">
-        <div className="staff-filter-group">
-          <label>Search</label>
-          <input
-            type="text"
-            placeholder="Search..."
-          />
-        </div>
-        <div className="staff-filter-group">
-          <label>From Date</label>
-          <input 
-            type="date" 
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-          />
-        </div>
-        <div className="staff-filter-group">
-          <label>To Date</label>
-          <input 
-            type="date" 
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-          />
+      <div className="sr-search-filter-bar">
+        <div className="sr-filters-row">
+          <div className="sr-filter-group">
+            <label>Search</label>
+            <input
+              type="text"
+              placeholder="Search by name, type..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="sr-filter-group">
+            <label>Status</label>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              {getStatusOptions().map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="sr-filter-group">
+            <label>From Date</label>
+            <input 
+              type="date" 
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+            />
+          </div>
+          <div className="sr-filter-group">
+            <label>To Date</label>
+            <input 
+              type="date" 
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+            />
+          </div>
+
         </div>
       </div>
 
-      {/* Data Table */}
-      <div className="staff-table-container">
-        <table className="violations-table">
+      {/* Table Section */}
+      <section className="sr-table-section">
+        <h3 className="sr-table-title">{getTabTitle()}</h3>
+        <div className="sr-table-container">
+          <table className="sr-table">
           <thead>
             <tr>
               {activeTab === 'billing' && (
                 <>
-                  <th>Bill #</th>
-                  <th>Resident</th>
-                  <th>Type</th>
+                  <th>Resident Name</th>
+                  <th>Bill Type</th>
                   <th>Amount</th>
-                  <th>Due Date</th>
                   <th>Status</th>
+                  <th>Actions</th>
                 </>
               )}
               {activeTab === 'violations' && (
                 <>
-                  <th>ID</th>
-                  <th>Lot #</th>
-                  <th>Resident</th>
-                  <th>Type</th>
-                  <th>Penalty</th>
-                  <th>Date</th>
+                  <th>Resident Name</th>
+                  <th>Violation Type</th>
+                  <th>Amount</th>
                   <th>Status</th>
+                  <th>Actions</th>
                 </>
               )}
               {activeTab === 'payments' && (
                 <>
-                  <th>ID</th>
                   <th>Resident</th>
                   <th>Bill Ref</th>
                   <th>Amount</th>
                   <th>Payment Date</th>
-                  <th>Method</th>
                   <th>Status</th>
+                  <th>Action</th>
                 </>
               )}
             </tr>
@@ -215,7 +322,7 @@ function Reports() {
           <tbody>
             {filteredData.length === 0 ? (
               <tr>
-                <td colSpan={activeTab === 'violations' ? 7 : 6} className="staff-empty-row">
+                <td colSpan={activeTab === 'violations' ? 5 : (activeTab === 'billing' ? 5 : (activeTab === 'payments' ? 6 : 8))} className="sr-empty-row">
                   No records found
                 </td>
               </tr>
@@ -224,45 +331,47 @@ function Reports() {
                 <tr key={item.id}>
                   {activeTab === 'billing' && (
                     <>
-                      <td>{item.billNumber || `BILL-${item.id}`}</td>
                       <td>{item.residentName || '-'}</td>
                       <td>{item.billType || '-'}</td>
                       <td style={{ fontWeight: 'bold' }}>{formatCurrency(item.amount)}</td>
-                      <td>{formatDate(item.dueDate)}</td>
                       <td>
                         <span className={`status-badge ${item.status}`}>
                           {item.status}
                         </span>
+                      </td>
+                      <td>
+                        <button className="resident-tbl-view-btn">View</button>
                       </td>
                     </>
                   )}
                   {activeTab === 'violations' && (
                     <>
-                      <td>#{item.id}</td>
-                      <td>{item.lotNumber || '-'}</td>
                       <td>{item.residentName || '-'}</td>
                       <td>{item.violationType || '-'}</td>
-                      <td style={{ fontWeight: 'bold' }}>{formatCurrency(item.penalty || 0)}</td>
-                      <td>{formatDate(item.dateIssued)}</td>
+                      <td style={{ fontWeight: 'bold' }}>{formatCurrency(item.fine || 0)}</td>
                       <td>
                         <span className={`status-badge ${item.status}`}>
                           {item.status}
                         </span>
                       </td>
+                      <td>
+                        <button className="resident-tbl-view-btn">View</button>
+                      </td>
                     </>
                   )}
                   {activeTab === 'payments' && (
                     <>
-                      <td>#{item.id}</td>
                       <td>{item.residentName || '-'}</td>
                       <td>{item.billReference || 'N/A'}</td>
                       <td style={{ fontWeight: 'bold' }}>{formatCurrency(item.amount)}</td>
                       <td>{formatDate(item.paymentDate)}</td>
-                      <td>{item.paymentMethod || 'N/A'}</td>
                       <td>
                         <span className={`status-badge ${item.status}`}>
                           {item.status}
                         </span>
+                      </td>
+                      <td>
+                        <button className="resident-tbl-view-btn">View</button>
                       </td>
                     </>
                   )}
@@ -271,7 +380,8 @@ function Reports() {
             )}
           </tbody>
         </table>
-      </div>
+        </div>
+      </section>
 
       {/* Report Summary */}
       <div className="report-summary">
@@ -279,8 +389,10 @@ function Reports() {
           Showing {filteredData.length} records | Generated: {new Date().toLocaleString()}
         </p>
       </div>
+
     </div>
   );
 }
 
 export default Reports;
+

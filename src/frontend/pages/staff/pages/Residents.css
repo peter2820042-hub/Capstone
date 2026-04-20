@@ -8,13 +8,13 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px 20px;
+  padding: 12px 20px;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
   z-index: 9999;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  animation: slideIn 0.3s ease;
+  animation: sr-slideIn 0.3s ease;
 }
 
 .sr-toast.success {
@@ -54,7 +54,7 @@
   opacity: 1;
 }
 
-@keyframes slideIn {
+@keyframes sr-slideIn {
   from {
     transform: translateX(100%);
     opacity: 0;
@@ -800,23 +800,23 @@
 }
 
 .sr-view-btn-primary {
-  background: #f59e0b;
+  background: #3b82f6;
   color: #ffffff;
 }
 
 .sr-view-btn-primary:hover {
-  background: #d97706;
+  background: #2563eb;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .sr-view-btn-secondary {
-  background: #ef4444;
+  background: #6b7280;
   color: #ffffff;
 }
 
 .sr-view-btn-secondary:hover {
-  background: #dc2626;
+  background: #4b5563;
 }
 
 /* Role Badge */

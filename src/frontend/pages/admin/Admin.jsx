@@ -14,70 +14,58 @@ import Notification from './pages/Notification';
 import Profile from './pages/Profile';
 
 function Admin({ user, onLogout }) {
-  // Default to dashboard
-  const currentPath = window.location.pathname === '/' ? '/dashboard' : window.location.pathname;
-  
   return (
-    <div className="admin-container">
+    <div className="staff-container">
       <Sidebar onLogout={onLogout} />
-      <div className="admin-content">
-        {currentPath === '/dashboard' || currentPath === '/' ? (
-          <>
+      <div className="staff-content">
+        <Routes>
+          <Route path="/" element={<>
             <Header pageName="Dashboard" user={user} />
-            <Dashboard />
-          </>
-        ) : currentPath === '/gis' ? (
-          <>
+            <Dashboard user={user} />
+          </>} />
+          <Route path="/dashboard" element={<>
+            <Header pageName="Dashboard" user={user} />
+            <Dashboard user={user} />
+          </>} />
+          <Route path="/gis" element={<>
             <Header pageName="GIS" user={user} />
             <Gis />
-          </>
-        ) : currentPath === '/residents' ? (
-          <>
-            <Header pageName="Resident" user={user} />
+          </>} />
+          <Route path="/residents" element={<>
+            <Header pageName="Residents" user={user} />
             <Residents />
-          </>
-        ) : currentPath === '/billing' ? (
-          <>
+          </>} />
+          <Route path="/billing" element={<>
             <Header pageName="Billing" user={user} />
             <Billing />
-          </>
-        ) : currentPath === '/payments' ? (
-          <>
+          </>} />
+          <Route path="/payments" element={<>
             <Header pageName="Payments" user={user} />
             <Payments />
-          </>
-        ) : currentPath === '/violations' ? (
-          <>
+          </>} />
+          <Route path="/violations" element={<>
             <Header pageName="Violations" user={user} />
             <Violations />
-          </>
-        ) : currentPath === '/reports' ? (
-          <>
+          </>} />
+          <Route path="/reports" element={<>
             <Header pageName="Reports" user={user} />
             <Reports />
-          </>
-        ) : currentPath === '/audit-logs' ? (
-          <>
+          </>} />
+          <Route path="/audit-logs" element={<>
             <Header pageName="Audit Logs" user={user} />
             <AuditLogs />
-          </>
-        ) : currentPath === '/notification' ? (
-          <>
+          </>} />
+          <Route path="/notification" element={<>
             <Header pageName="Notification" user={user} />
             <Notification />
-          </>
-        ) : currentPath === '/profile' ? (
-          <Profile user={user} />
-        ) : (
-          <>
-            <Header pageName="Dashboard" user={user} />
-            <Dashboard />
-          </>
-        )}
+          </>} />
+          <Route path="/profile" element={
+            <Profile user={user} />
+          } />
+        </Routes>
       </div>
     </div>
   );
 }
 
 export default Admin;
-

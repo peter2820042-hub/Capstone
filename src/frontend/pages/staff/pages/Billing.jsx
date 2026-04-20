@@ -33,12 +33,20 @@ function Billing() {
     residentName: '',
     billType: 'Monthly Dues',
     amount: '',
-    dueDate: '',
-    billingPeriod: '',
-    status: 'pending'
+    dueDate: ''
   });
-  const [formMessage, setFormMessage] = useState(null);
+  const [toast, setToast] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // Auto-dismiss toast after 3 seconds
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => {
+        setToast(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   // Bill types with colors (matching Violations design)
   const billTypes = ['Monthly Dues', 'Parking Fee', 'Utility Fee', 'Association Fee', 'Special Assessment', 'Violations', 'Other'];
@@ -141,16 +149,14 @@ function Billing() {
     setShowViewModal(false);
     setSelectedBill(null);
     setEditingBill(null);
-    setFormMessage(null);
+    setToast(null);
     setFormData({
       lotNumber: '',
       block: '',
       residentName: '',
       billType: 'Monthly Dues',
       amount: '',
-      dueDate: '',
-      billingPeriod: '',
-      status: 'pending'
+      dueDate: ''
     });
   };
 
@@ -162,12 +168,10 @@ function Billing() {
       residentName: '',
       billType: 'Violations',
       amount: '',
-      dueDate: '',
-      billingPeriod: '',
-      status: 'pending'
+      dueDate: ''
     });
     setShowModal(true);
-    setFormMessage(null);
+    setToast(null);
   };
 
   const openEditModal = (bill) => {
@@ -178,9 +182,7 @@ function Billing() {
       residentName: bill.residentName || '',
       billType: bill.billType || 'Monthly Dues',
       amount: bill.amount?.toString() || '',
-      dueDate: bill.dueDate?.split('T')[0] || '',
-      billingPeriod: bill.billingPeriod || '',
-      status: bill.status?.toLowerCase() || 'unpaid'
+      dueDate: bill.dueDate?.split('T')[0] || ''
     });
     setShowModal(true);
   };
@@ -222,12 +224,11 @@ function Billing() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    setFormMessage(null);
+    setToast(null);
 
     const billData = {
       ...formData,
-      amount: parseFloat(formData.amount),
-      status: formData.status.toLowerCase()
+      amount: parseFloat(formData.amount)
     };
 
     try {
@@ -243,17 +244,17 @@ function Billing() {
       const result = await response.json();
 
       if (response.ok) {
-        setFormMessage({ type: 'success', text: editingBill ? 'Bill updated successfully!' : 'Bill created successfully!' });
+        setToast({ type: 'success', message: editingBill ? 'Bill updated successfully!' : 'Bill created successfully!' });
         setTimeout(() => {
           closeModal();
           fetchBills();
         }, 1500);
       } else {
-        setFormMessage({ type: 'error', text: result.error || 'Failed to save bill' });
+        setToast({ type: 'error', message: result.error || 'Failed to save bill' });
       }
     } catch (error) {
       console.error('Error saving bill:', error);
-      setFormMessage({ type: 'error', text: 'Failed to save bill' });
+      setToast({ type: 'error', message: 'Failed to save bill' });
     } finally {
       setSubmitting(false);
     }
@@ -270,6 +271,7 @@ function Billing() {
 
       if (response.ok) {
         fetchBills();
+        setToast({ type: 'success', message: 'Bill marked as paid successfully!' });
       }
     } catch (error) {
       console.error('Error marking bill as paid:', error);
@@ -285,6 +287,7 @@ function Billing() {
 
       if (response.ok) {
         fetchBills();
+        setToast({ type: 'success', message: 'Bill deleted successfully!' });
       }
     } catch (error) {
       console.error('Error deleting bill:', error);
@@ -293,6 +296,25 @@ function Billing() {
 
   return (
     <div className="billing-container">
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`sr-toast ${toast.type}`}>
+          {toast.type === 'success' ? (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M20 6L9 17l-5-5" />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+          )}
+          <span>{toast.message}</span>
+          <button className="sr-toast-close" onClick={() => setToast(null)}>×</button>
+        </div>
+      )}
+
       {/* Page Header */}
       <div className="sr-header">
         <div className="sr-title">
@@ -433,8 +455,6 @@ function Billing() {
                       <td>
                         <div className="sr-table-actions">
                           <button className="sr-view-btn" onClick={() => viewBillDetails(bill)}>View</button>
-                          <button className="sr-edit-btn" onClick={() => openEditModal(bill)}>Edit</button>
-                          <button className="sr-delete-btn" onClick={() => handleDelete(bill.id)}>Delete</button>
                         </div>
                       </td>
                     </tr>
@@ -507,11 +527,6 @@ function Billing() {
             </div>
             <form onSubmit={handleSubmit}>
               <div className="sr-modal-form">
-                {formMessage && (
-                  <div className={`admin-admin-form-message ${formMessage.type}`}>
-                    {formMessage.text}
-                  </div>
-                )}
 
                 <div className="sr-form-row">
                   <div className="sr-form-group">
@@ -596,29 +611,6 @@ function Billing() {
                     />
                   </div>
 
-                  <div className="sr-form-group">
-                    <label>Billing Period</label>
-                    <input
-                      type="text"
-                      name="billingPeriod"
-                      value={formData.billingPeriod}
-                      onChange={handleInputChange}
-                      placeholder="e.g., January 2024"
-                    />
-                  </div>
-
-                  <div className="sr-form-group">
-                    <label>Status <span className="required">*</span></label>
-                    <select
-                      name="status"
-                      value={formData.status}
-                      onChange={handleInputChange}
-                      required
-                    >
-                      <option value="pending">Pending</option>
-                      <option value="paid">Paid</option>
-                    </select>
-                  </div>
                 </div>
 
                 <div className="sr-modal-actions" style={{ justifyContent: 'center', gap: '20px' }}>
@@ -676,10 +668,6 @@ function Billing() {
                 <div className="bill-detail-row">
                   <span className="detail-label">Due Date</span>
                   <span className="detail-value">{formatDate(selectedBill.dueDate)}</span>
-                </div>
-                <div className="bill-detail-row">
-                  <span className="detail-label">Billing Period</span>
-                  <span className="detail-value">{selectedBill.billingPeriod || 'N/A'}</span>
                 </div>
                 <div className="bill-detail-row">
                   <span className="detail-label">Status</span>

@@ -8,10 +8,15 @@ function Reports() {
   const [bills, setBills] = useState([]);
   const [payments, setPayments] = useState([]);
   const [residents, setResidents] = useState([]);
+  const [violations, setViolations] = useState([]);
 
-  // Date filter states
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+
+
 
   // Fetch all data on mount
   useEffect(() => {
@@ -66,9 +71,20 @@ function Reports() {
       }
     };
 
+    const fetchViolations = async () => {
+      try {
+        const response = await fetch('/api/violations');
+        const data = await response.json();
+        setViolations(data);
+      } catch (error) {
+        console.error('Error fetching violations:', error);
+      }
+    };
+
     fetchBills();
     fetchPayments();
     fetchResidents();
+    fetchViolations();
   }, []);
 
   // Filter data by date range
@@ -83,17 +99,102 @@ function Reports() {
     });
   };
 
-  // Get filtered data based on active tab
-  const getFilteredData = () => {
+  // Get status options based on active tab
+  const getStatusOptions = () => {
+    const baseOptions = [{ value: 'all', label: 'All Status' }];
     switch (activeTab) {
       case 'billing':
-        return filterByDate(bills, 'dueDate');
+        return [...baseOptions, { value: 'paid', label: 'Paid' }, { value: 'pending', label: 'Pending' }, { value: 'overdue', label: 'Overdue' }];
       case 'payments':
-        return filterByDate(payments, 'paymentDate');
+        return [...baseOptions, { value: 'completed', label: 'Completed' }, { value: 'pending', label: 'Pending' }, { value: 'failed', label: 'Failed' }];
+      case 'violations':
+        return [...baseOptions, { value: 'unsettled', label: 'Unsettled' }, { value: 'settled', label: 'Settled' }, { value: 'appealed', label: 'Appealed' }];
       case 'residents':
-        return filterByDate(residents, 'dateRegistered');
+        return [...baseOptions, { value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }];
       default:
-        return [];
+        return baseOptions;
+    }
+  };
+
+  // Filter data by status
+  const filterByStatus = (data) => {
+    if (statusFilter === 'all') return data;
+    
+    return data.filter(item => {
+      const itemStatus = (item.status || '').toLowerCase();
+      const selectedStatus = statusFilter.toLowerCase();
+      return itemStatus === selectedStatus;
+    });
+  };
+
+  // Get filtered data based on active tab
+  const getFilteredData = () => {
+    let data;
+    switch (activeTab) {
+      case 'billing':
+        data = filterByDate(bills, 'dueDate');
+        break;
+      case 'payments':
+        data = filterByDate(payments, 'paymentDate');
+        break;
+      case 'residents':
+        data = filterByDate(residents, 'dateRegistered');
+        break;
+      case 'violations':
+        data = filterByDate(violations, 'dateIssued');
+        break;
+      default:
+        data = [];
+    }
+
+    // Apply status filter
+    data = filterByStatus(data);
+    
+    // Apply search filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      return data.filter(item => {
+        if (activeTab === 'billing') {
+          return (item.residentName || '').toLowerCase().includes(term) ||
+                 (item.billType || '').toLowerCase().includes(term) ||
+                 (item.status || '').toLowerCase().includes(term);
+        } else if (activeTab === 'payments') {
+          return (item.residentName || '').toLowerCase().includes(term) ||
+                 (item.billReference || '').toLowerCase().includes(term) ||
+                 (item.status || '').toLowerCase().includes(term);
+        } else if (activeTab === 'violations') {
+          return (item.residentName || '').toLowerCase().includes(term) ||
+                 (item.lotNumber || '').toLowerCase().includes(term) ||
+                 (item.block || '').toLowerCase().includes(term) ||
+                 (item.violationType || '').toLowerCase().includes(term) ||
+                 (item.status || '').toLowerCase().includes(term);
+        } else if (activeTab === 'residents') {
+          return (item.fullName || '').toLowerCase().includes(term) ||
+                 (item.lotNumber || '').toLowerCase().includes(term) ||
+                 (item.block || '').toLowerCase().includes(term) ||
+                 (item.email || '').toLowerCase().includes(term) ||
+                 (item.status || '').toLowerCase().includes(term);
+        }
+        return true;
+      });
+    }
+    
+    return data;
+  };
+
+  // Handle tab change
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    if (tab === 'payments') {
+      setStatusFilter('completed');
+    } else if (tab === 'violations') {
+      setStatusFilter('settled');
+    } else if (tab === 'billing') {
+      setStatusFilter('paid');
+    } else if (tab === 'residents') {
+      setStatusFilter('active');
+    } else {
+      setStatusFilter('all');
     }
   };
 
@@ -115,6 +216,22 @@ function Reports() {
       day: 'numeric',
       year: 'numeric'
     });
+  };
+
+  // Get tab title for table section
+  const getTabTitle = () => {
+    switch (activeTab) {
+      case 'billing':
+        return 'Billing Records';
+      case 'payments':
+        return 'Payment Records';
+      case 'violations':
+        return 'Violation Records';
+      case 'residents':
+        return 'Resident Records';
+      default:
+        return 'Records';
+    }
   };
 
   return (
@@ -149,67 +266,96 @@ function Reports() {
       <div className="report-tabs">
         <button 
           className={`tab ${activeTab === 'billing' ? 'active' : ''}`}
-          onClick={() => setActiveTab('billing')}
+          onClick={() => handleTabChange('billing')}
         >
           Billing
         </button>
         <button 
+          className={`tab ${activeTab === 'violations' ? 'active' : ''}`}
+          onClick={() => handleTabChange('violations')}
+        >
+          Violations
+        </button>
+        <button 
           className={`tab ${activeTab === 'payments' ? 'active' : ''}`}
-          onClick={() => setActiveTab('payments')}
+          onClick={() => handleTabChange('payments')}
         >
           Payments
         </button>
         <button 
           className={`tab ${activeTab === 'residents' ? 'active' : ''}`}
-          onClick={() => setActiveTab('residents')}
+          onClick={() => handleTabChange('residents')}
         >
           Residents
         </button>
       </div>
 
-      {/* Search/Filter - Horizontal Layout */}
-      <div className="admin-admin-search-filter-bar">
-        <div className="admin-admin-filter-group">
-          <label>Search</label>
-          <input
-            type="text"
-            placeholder="Search..."
-          />
-        </div>
-        <div className="admin-admin-filter-group">
-          <label>From Date</label>
-          <input 
-            type="date" 
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-          />
-        </div>
-        <div className="admin-admin-filter-group">
-          <label>To Date</label>
-          <input 
-            type="date" 
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-          />
+      {/* Search/Filter - Staff Style Layout */}
+      <div className="sr-search-filter-bar">
+        <div className="sr-filters-row">
+          <div className="sr-filter-group">
+            <label>Search</label>
+            <input
+              type="text"
+              placeholder="Search by name, type..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="sr-filter-group">
+            <label>Status</label>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              {getStatusOptions().map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="sr-filter-group">
+            <label>From Date</label>
+            <input 
+              type="date" 
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+            />
+          </div>
+          <div className="sr-filter-group">
+            <label>To Date</label>
+            <input 
+              type="date" 
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+            />
+          </div>
         </div>
       </div>
 
-      {/* Report Info Header */}
-      <div className="report-info-header">
-        <p>
-          Showing {filteredData.length} records | Generated: {new Date().toLocaleString()}
-        </p>
-      </div>
 
-      {/* Data Table */}
-      <div className="admin-admin-table-container">
-        <table className="violations-table">
+
+      {/* Table Section */}
+      <section className="sr-table-section">
+        <h3 className="sr-table-title">{getTabTitle()}</h3>
+        <div className="sr-table-container">
+          <table className="sr-table">
           <thead>
             <tr>
               {activeTab === 'billing' && (
                 <>
                   <th>Resident Name</th>
                   <th>Bill Type</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </>
+              )}
+              {activeTab === 'violations' && (
+                <>
+                  <th>Resident Name</th>
+                  <th>Violation Type</th>
                   <th>Amount</th>
                   <th>Status</th>
                   <th>Actions</th>
@@ -276,6 +422,21 @@ function Reports() {
                       </td>
                     </>
                   )}
+                  {activeTab === 'violations' && (
+                    <>
+                      <td>{item.residentName || '-'}</td>
+                      <td>{item.violationType || '-'}</td>
+                      <td style={{ fontWeight: 'bold' }}>{formatCurrency(item.fine || 0)}</td>
+                      <td>
+                        <span className={`status-badge ${item.status}`}>
+                          {item.status}
+                        </span>
+                      </td>
+                      <td>
+                        <button className="view-btn">View</button>
+                      </td>
+                    </>
+                  )}
                   {activeTab === 'residents' && (
                     <>
                       <td>#{item.id}</td>
@@ -293,16 +454,19 @@ function Reports() {
                 </tr>
               ))
             )}
-          </tbody>
-        </table>
-      </div>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
       {/* Report Summary */}
-      <div className="report-summary">
-        <p>
-          Showing {filteredData.length} records | Generated: {new Date().toLocaleString()}
-        </p>
-      </div>
+      {filteredData.length > 0 && (
+        <div className="report-summary">
+          <p>
+            Showing {filteredData.length} records | Generated: {new Date().toLocaleString()}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

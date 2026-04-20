@@ -41,8 +41,18 @@ function Violations() {
     'Others'
   ];
 
-  const [message, setMessage] = useState({ type: '', text: '' });
+  const [toast, setToast] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // Auto-dismiss toast after 3 seconds
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => {
+        setToast(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   useEffect(() => {
     fetch('/api/violations')
@@ -99,12 +109,18 @@ function Violations() {
   const handleAddSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    setMessage({ type: '', text: '' });
+    setToast(null);
+
+    // Get user from sessionStorage for authorization
+    const user = JSON.parse(sessionStorage.getItem('user') || '{}');
 
     try {
       const response = await fetch('/api/violations', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user': JSON.stringify(user)
+        },
         body: JSON.stringify(formData)
       });
 
@@ -131,7 +147,7 @@ function Violations() {
           });
         }
 
-        setMessage({ type: 'success', text: 'Violation added successfully! Bill created for penalty amount.' });
+        setToast({ type: 'success', message: 'Violation added successfully! Bill created for penalty amount.' });
         setFormData({
           lotNumber: '',
           block: '',
@@ -144,13 +160,13 @@ function Violations() {
         fetch('/api/violations').then(res => res.json()).then(data => setViolations(data || []));
         setTimeout(() => {
           setShowAddModal(false);
-          setMessage({ type: '', text: '' });
+          setToast(null);
         }, 1500);
       } else {
-        setMessage({ type: 'error', text: data.error || 'Failed to add violation' });
+        setToast({ type: 'error', message: data.error || 'Failed to add violation' });
       }
     } catch {
-      setMessage({ type: 'error', text: 'Cannot connect to server' });
+      setToast({ type: 'error', message: 'Cannot connect to server' });
     } finally {
       setSubmitting(false);
     }
@@ -179,29 +195,35 @@ function Violations() {
   const handleUpdateSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    setMessage({ type: '', text: '' });
+    setToast(null);
+
+    // Get user from sessionStorage for authorization
+    const user = JSON.parse(sessionStorage.getItem('user') || '{}');
 
     try {
       const response = await fetch(`/api/violations/${selectedViolation.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user': JSON.stringify(user)
+        },
         body: JSON.stringify(formData)
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        setMessage({ type: 'success', text: 'Violation updated successfully!' });
+        setToast({ type: 'success', message: 'Violation updated successfully!' });
         fetch('/api/violations').then(res => res.json()).then(data => setViolations(data || []));
         setTimeout(() => {
           setShowEditModal(false);
-          setMessage({ type: '', text: '' });
+          setToast(null);
         }, 1500);
       } else {
-        setMessage({ type: 'error', text: data.error || 'Failed to update violation' });
+        setToast({ type: 'error', message: data.error || 'Failed to update violation' });
       }
     } catch {
-      setMessage({ type: 'error', text: 'Cannot connect to server' });
+      setToast({ type: 'error', message: 'Cannot connect to server' });
     } finally {
       setSubmitting(false);
     }
@@ -212,36 +234,46 @@ function Violations() {
       return;
     }
 
+    // Get user from sessionStorage for authorization
+    const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+    
     try {
       const response = await fetch(`/api/violations/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: { 'x-user': JSON.stringify(user) }
       });
 
       if (response.ok) {
-        setMessage({ type: 'success', text: 'Violation deleted successfully!' });
+        setToast({ type: 'success', message: 'Violation deleted successfully!' });
         fetch('/api/violations').then(res => res.json()).then(data => setViolations(data || []));
-        setTimeout(() => setMessage({ type: '', text: '' }), 2000);
+        setTimeout(() => setToast(null), 2000);
       } else {
-        setMessage({ type: 'error', text: 'Failed to delete violation' });
+        setToast({ type: 'error', message: 'Failed to delete violation' });
       }
     } catch {
-      setMessage({ type: 'error', text: 'Cannot connect to server' });
+      setToast({ type: 'error', message: 'Cannot connect to server' });
     }
   };
 
   const handleResolve = async (violationId) => {
+    // Get user from sessionStorage for authorization
+    const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+    
     try {
       const response = await fetch(`/api/violations/${violationId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user': JSON.stringify(user)
+        },
         body: JSON.stringify({ status: 'resolved' })
       });
 
       if (response.ok) {
-        setMessage({ type: 'success', text: 'Violation resolved!' });
+        setToast({ type: 'success', message: 'Violation resolved!' });
         fetch('/api/violations').then(res => res.json()).then(data => setViolations(data || []));
         setShowViewModal(false);
-        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+        setTimeout(() => setToast(null), 3000);
       }
     } catch (err) {
       console.error('Error resolving violation:', err);
@@ -249,18 +281,24 @@ function Violations() {
   };
 
   const handleMarkAsPaid = async (violationId) => {
+    // Get user from sessionStorage for authorization
+    const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+    
     try {
       const response = await fetch(`/api/violations/${violationId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user': JSON.stringify(user)
+        },
         body: JSON.stringify({ status: 'paid' })
       });
 
       if (response.ok) {
-        setMessage({ type: 'success', text: 'Violation marked as paid!' });
+        setToast({ type: 'success', message: 'Violation marked as paid!' });
         fetch('/api/violations').then(res => res.json()).then(data => setViolations(data || []));
         setShowViewModal(false);
-        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+        setTimeout(() => setToast(null), 3000);
       }
     } catch (err) {
       console.error('Error marking as paid:', err);
@@ -303,7 +341,26 @@ function Violations() {
   };
 
   return (
-    <div className="billing-container">
+    <div className="violations-container">
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`sr-toast ${toast.type}`}>
+          {toast.type === 'success' ? (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M20 6L9 17l-5-5" />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+          )}
+          <span>{toast.message}</span>
+          <button className="sr-toast-close" onClick={() => setToast(null)}>×</button>
+        </div>
+      )}
+
       {/* Page Header */}
       <div className="sr-header">
         <div className="sr-title">
@@ -316,13 +373,6 @@ function Violations() {
           Add Violation
         </button>
       </div>
-
-      {/* Message */}
-      {message.text && (
-        <div className={`message ${message.type}`}>
-          {message.text}
-        </div>
-      )}
 
       {/* Search and Filter Bar */}
       <div className="sr-search-filter-bar">
@@ -451,91 +501,39 @@ function Violations() {
               </button>
             </div>
             <form onSubmit={handleAddSubmit} className="sr-modal-form">
-              {message.text && (
-                <div className={`admin-admin-form-message ${message.type}`}>
-                  {message.text}
-                </div>
-              )}
 
               <div className="sr-form-row">
                 <div className="sr-form-group">
                   <label>Block <span className="required">*</span></label>
-                  <select
-                    name="block"
-                    value={formData.block}
-                    onChange={handleBlockChange}
-                    required
-                  >
+                  <select name="block" value={formData.block} onChange={handleBlockChange} required>
                     <option value="">Select Block</option>
-                    {uniqueBlocks.map(block => (
-                      <option key={block} value={block}>{block}</option>
-                    ))}
+                    {uniqueBlocks.map((block) => (<option key={block} value={block}>{block}</option>))}
                   </select>
                 </div>
-
                 <div className="sr-form-group">
                   <label>Lot Number <span className="required">*</span></label>
-                  <select
-                    name="lotNumber"
-                    value={formData.lotNumber}
-                    onChange={handleLotChange}
-                    required
-                  >
+                  <select name="lotNumber" value={formData.lotNumber} onChange={handleLotChange} required>
                     <option value="">Select Lot</option>
-                    {filteredResidents.map(resident => (
-                      <option key={resident.lotNumber} value={resident.lotNumber}>
-                        {resident.lotNumber}
-                      </option>
-                    ))}
+                    {filteredResidents.map((resident) => (<option key={resident.lotNumber} value={resident.lotNumber}>{resident.lotNumber}</option>))}
                   </select>
                 </div>
-
+              </div>
+      
+              <div className="sr-form-row">
                 <div className="sr-form-group">
                   <label>Resident Name</label>
-                  <input
-                    type="text"
-                    name="residentName"
-                    value={formData.residentName}
-                    readOnly
-                    placeholder="Auto-filled from lot"
-                  />
+                  <input type="text" name="residentName" value={formData.residentName} onChange={handleChange} readOnly placeholder="Auto-filled from lot" />
                 </div>
-
                 <div className="sr-form-group">
                   <label>Violation Type <span className="required">*</span></label>
-                  <select
-                    name="violationType"
-                    value={formData.violationType}
-                    onChange={handleChange}
-                    required
-                  >
-                    <option value="">Select Type</option>
-                    {violationTypes.map(type => (
-                      <option key={type} value={type}>{type}</option>
-                    ))}
+                  <select name="violationType" value={formData.violationType} onChange={handleChange} required>
+                    <option value="">Select type</option>
+                    {violationTypes.map((type) => (<option key={type} value={type}>{type}</option>))}
                   </select>
                 </div>
-
                 <div className="sr-form-group">
                   <label>Fine Amount</label>
-                  <input
-                    type="number"
-                    name="penalty"
-                    value={formData.penalty}
-                    onChange={handleChange}
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
-
-                <div className="sr-form-group">
-                  <label>Date Issued</label>
-                  <input
-                    type="date"
-                    name="dateIssued"
-                    value={formData.dateIssued}
-                    onChange={handleChange}
-                  />
+                  <input type="number" name="penalty" value={formData.penalty} onChange={handleChange} min="0" step="0.01" />
                 </div>
               </div>
 
@@ -649,11 +647,6 @@ function Violations() {
               </button>
             </div>
             <form onSubmit={handleUpdateSubmit} className="sr-modal-form">
-              {message.text && (
-                <div className={`admin-admin-form-message ${message.type}`}>
-                  {message.text}
-                </div>
-              )}
 
               <div className="sr-form-row">
                 <div className="sr-form-group">

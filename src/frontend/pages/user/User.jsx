@@ -7,6 +7,8 @@ import Gis from './pages/Gis';
 import History from './pages/History';
 import Payment from './pages/Payment';
 import Profile from './pages/Profile';
+import Violation from './pages/Violation';
+import Billing from './pages/Billing';
 
 function User({ user, onLogout }) {
   return (
@@ -35,6 +37,14 @@ function User({ user, onLogout }) {
             <Payment user={user} />
           </>} />
           <Route path="/profile" element={<Profile user={user} />} />
+          <Route path="/violation" element={<>
+            <Header pageName="Violations" user={user} />
+            <Violation user={user} />
+          </>} />
+          <Route path="/billing" element={<>
+            <Header pageName="Billing" user={user} />
+            <Billing user={user} />
+          </>} />
         </Routes>
       </div>
     </div>

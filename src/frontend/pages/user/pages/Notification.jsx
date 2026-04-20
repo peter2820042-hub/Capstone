@@ -4,12 +4,10 @@ import './Notification.css';
 function Notification(props) {
   const user = props.user || JSON.parse(sessionStorage.getItem('user') || '{}');
   const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        setLoading(true);
         const userId = user?.id;
         
         if (userId) {
@@ -29,8 +27,6 @@ function Notification(props) {
       } catch (err) {
         console.error('Error fetching notifications:', err);
         setNotifications([]);
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -95,11 +91,7 @@ function Notification(props) {
           <h3>Notifications</h3>
         </div>
 
-        {loading ? (
-          <div className="loading-state">
-            <div className="spinner"></div>
-          </div>
-        ) : notifications.length === 0 ? (
+        {notifications.length === 0 ? (
           <div className="empty-state">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="48" height="48">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />

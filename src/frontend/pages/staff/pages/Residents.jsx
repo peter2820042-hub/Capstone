@@ -18,7 +18,7 @@ function Residents() {
   });
 
   const [toast, setToast] = useState(null);
-  const [formMessage, setFormMessage] = useState(null);
+  const [, setFormMessage] = useState(null);
 
   // Auto-dismiss toast after 3 seconds
   useEffect(() => {
@@ -210,7 +210,7 @@ function Residents() {
             <input
               type="text"
               name="fullName"
-              placeholder="Search by name..."
+              placeholder="Maglagay ng criteria sa paghahanap ng resident"
               value={filters.fullName}
               onChange={handleFilterChange}
             />
@@ -350,7 +350,7 @@ function Residents() {
             ) : !initialLoadDone ? (
               <tr>
                 <td colSpan={9} className="sr-empty-row">
-                  Maglagay ng criteria sa paghahanap ng resident
+                  Enter criteria to search for residents
                 </td>
               </tr>
             ) : residents.length === 0 ? (

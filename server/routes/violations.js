@@ -128,10 +128,13 @@ router.get('/statistics', async (req, res) => {
 // ============ GET ALL VIOLATIONS ============
 router.get('/', async (req, res) => {
   try {
+    // Get violations with related bill info
     const result = await pool.query(`
-      SELECT v.*, r.full_name as resident_name, r.block as block 
+      SELECT v.*, r.full_name as resident_name, r.block as block,
+             b.id as bill_id, b.bill_type as bill_type, b.amount as bill_amount, b.status as bill_status, b.due_date as bill_due_date
       FROM violations v 
-      LEFT JOIN residents r ON v.lot_number = r.lot_number 
+      LEFT JOIN residents r ON v.lot_number = r.lot_number
+      LEFT JOIN bills b ON v.id = b.violation_id
       ORDER BY v.id DESC
     `);
     // Map to frontend format
@@ -144,7 +147,13 @@ router.get('/', async (req, res) => {
       description: v.description,
       dateIssued: v.date_issued,
       status: v.status,
-      fine: v.penalty
+      fine: v.penalty,
+      // Related bill info
+      billId: v.bill_id,
+      billType: v.bill_type,
+      billAmount: v.bill_amount,
+      billStatus: v.bill_status,
+      billDueDate: v.bill_due_date
     }));
     res.json(mapped);
   } catch (error) {
@@ -187,7 +196,7 @@ router.post('/', async (req, res) => {
           dueDate.setDate(dueDate.getDate() + 30); // Due in 30 days
           
           await pool.query(
-            `INSERT INTO bills (lot_number, resident_name, bill_type, amount, due_date, status, billing_period, related_id, related_type)
+            `INSERT INTO bills (lot_number, resident_name, bill_type, amount, due_date, status, billing_period, violation_id, related_type)
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
             [
               lot_number,

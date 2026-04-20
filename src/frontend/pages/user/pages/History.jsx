@@ -6,7 +6,6 @@ function History({ user }) {
   const [bills, setBills] = useState([]);
   const [payments, setPayments] = useState([]);
   const [violations, setViolations] = useState([]);
-  const [loading, setLoading] = useState(false);
 
   // Get user's lot number
   const lotNumber = user?.lotNumber;
@@ -16,8 +15,6 @@ function History({ user }) {
     if (!lotNumber) return;
 
     const fetchData = async () => {
-      setLoading(true);
-      
       try {
         // Fetch bills
         const billsRes = await fetch(`/api/bills/user/${encodeURIComponent(lotNumber)}`);
@@ -35,8 +32,6 @@ function History({ user }) {
         setViolations(violationsData || []);
       } catch (err) {
         console.error('Error fetching data:', err);
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -60,14 +55,6 @@ function History({ user }) {
       day: 'numeric'
     });
   };
-
-  if (loading) {
-    return (
-      <div className="history-container">
-        <div className="history-loading">Loading...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="history-container">

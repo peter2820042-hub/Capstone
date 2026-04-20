@@ -9,7 +9,13 @@ const router = express.Router();
 // ============ GET ALL BILLS (admin) ============
 router.get('/', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM bills ORDER BY id DESC');
+    // Get bills with violation info
+    const result = await pool.query(`
+      SELECT b.*, v.violation_type, v.description as violation_description, v.date_issued as violation_date, v.status as violation_status
+      FROM bills b 
+      LEFT JOIN violations v ON b.violation_id = v.id 
+      ORDER BY b.id DESC
+    `);
     console.log('GET /api/bills returned:', result.rows.length, 'rows');
     if (result.rows.length > 0) {
       console.log('Sample bill:', result.rows[0]);
@@ -28,7 +34,13 @@ router.get('/', async (req, res) => {
       status: b.status,
       datePaid: b.date_paid || null,
       paymentMethod: b.payment_method || null,
-      amountPaid: b.amount_paid ? parseFloat(b.amount_paid) : null
+      amountPaid: b.amount_paid ? parseFloat(b.amount_paid) : null,
+      // Related violation info
+      violationId: b.violation_id,
+      violationType: b.violation_type,
+      violationDescription: b.violation_description,
+      violationDate: b.violation_date,
+      violationStatus: b.violation_status
     }));
     res.json(mapped);
   } catch (error) {

@@ -7,6 +7,52 @@
   margin: 0 auto;
 }
 
+/* Dashboard Header */
+.use-dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.use-header-text {
+  flex: 1;
+}
+
+.use-dashboard-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0 0 4px 0;
+}
+
+.use-dashboard-subtitle {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.use-datetime-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.use-date-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.use-current-date {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
 /* KPI Grid */
 .use-kpi-grid {
   display: grid;
@@ -38,6 +84,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .use-kpi-icon svg {
@@ -71,6 +118,7 @@
 .use-kpi-content {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .use-kpi-value {
@@ -78,6 +126,9 @@
   font-weight: 700;
   color: #1a1a2e;
   line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .use-kpi-label {
@@ -86,9 +137,291 @@
   margin-top: 4px;
 }
 
+/* Section Header */
+.use-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.use-section-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin: 0;
+}
+
+.use-view-all-link {
+  font-size: 14px;
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.use-view-all-link:hover {
+  text-decoration: underline;
+}
+
+/* Pending Bills Section */
+.use-pending-bills-section {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.use-bills-table-container {
+  overflow-x: auto;
+}
+
+.use-bills-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.use-bills-table th,
+.use-bills-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.use-bills-table th {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: #f9fafb;
+}
+
+.use-bills-table td {
+  font-size: 14px;
+  color: #374151;
+}
+
+.use-bills-table tr:last-child td {
+  border-bottom: none;
+}
+
+.use-bills-table tr:hover td {
+  background: #f9fafb;
+}
+
+/* Status Badge */
+.use-status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.use-status-badge.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.use-status-badge.paid {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.use-status-badge.overdue {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Empty Message */
+.use-empty-message {
+  padding: 40px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+/* Recent Activity Section */
+.use-activity-section {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.use-activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.use-activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  background: #f9fafb;
+  transition: background 0.2s;
+}
+
+.use-activity-item:hover {
+  background: #f3f4f6;
+}
+
+.use-activity-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.use-activity-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.use-activity-icon.payment {
+  background: #d1fae5;
+  color: #10b981;
+}
+
+.use-activity-icon.bill {
+  background: #dbeafe;
+  color: #3b82f6;
+}
+
+.use-activity-icon.violation {
+  background: #fee2e2;
+  color: #ef4444;
+}
+
+.use-activity-icon.info {
+  background: #e5e7eb;
+  color: #6b7280;
+}
+
+.use-activity-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.use-activity-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1a1a2e;
+  margin: 0 0 2px 0;
+}
+
+.use-activity-description {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.use-activity-time {
+  font-size: 12px;
+  color: #9ca3af;
+  white-space: nowrap;
+}
+
+/* Quick Actions Section */
+.use-quick-actions-section {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.use-quick-actions-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin: 0 0 16px 0;
+}
+
+.use-quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.use-quick-action-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  border-radius: 12px;
+  background: #f9fafb;
+  text-decoration: none;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.use-quick-action-card:hover {
+  background: #f3f4f6;
+  transform: translateY(-2px);
+}
+
+.use-quick-action-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.use-quick-action-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.use-quick-action-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  text-align: center;
+}
+
+/* Loading State */
+.use-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.use-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* Responsive */
 @media (max-width: 1200px) {
   .use-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .use-quick-actions-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
@@ -98,7 +431,28 @@
     grid-template-columns: 1fr;
   }
 
+  .use-quick-actions-grid {
+    grid-template-columns: 1fr;
+  }
+
   .use-dashboard-container {
     padding: 16px;
+  }
+
+  .use-dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .use-datetime-section {
+    align-items: flex-start;
+  }
+
+  .use-kpi-card {
+    padding: 16px;
+  }
+
+  .use-kpi-value {
+    font-size: 24px;
   }
 }
